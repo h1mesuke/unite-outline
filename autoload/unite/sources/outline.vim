@@ -100,6 +100,7 @@ function! s:source.gather_candidates(args, context)
   let path = expand('#:p')
   let patterns = g:unite_source_outline_patterns[filetype]
   let lines = getbufline('#', 1, '$')
+  let lnum_width = strlen(len(lines))
 
   let ofs = 0
   if has_key(patterns, 'skip_header')
@@ -132,19 +133,25 @@ function! s:source.gather_candidates(args, context)
   while idx < n_lines
     let line = lines[idx]
     if has_pat_p1 && line =~# pat_p1
-      call add(headings, [ofs + idx + 2, lines[idx + 1]])
+      let next_line = lines[idx + 1]
+      if next_line =~ '\S'
+        call add(headings, [ofs + idx + 2, next_line])
+      endif
       let idx += 2
       continue
     endif
     if has_pat && line =~# pat
       call add(headings, [ofs + idx + 1, line])
     elseif has_pat_n1 && line =~# pat_n1 && idx > 0
-      call add(headings, [ofs + idx - 1, line])
+      let prev_line = lines[idx - 1]
+      if prev_line =~ '\S'
+        call add(headings, [ofs + idx, prev_line])
+      endif
     endif
     let idx += 1
   endwhile
 
-  let format = '%' . strlen(len(lines)) . 'd: %s'
+  let format = '%' . lnum_width . 'd: %s'
   let cands = map(headings, '{
         \ "word": printf(format, v:val[0], v:val[1]),
         \ "source": "outline",
