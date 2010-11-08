@@ -51,6 +51,8 @@ let s:defalut_outline_patterns = {
       \   'heading-1'  : s:shared_pattern['heading-1_sh'],
       \   'heading'    : '^\s*sub\>',
       \   'skip_header': s:shared_pattern.skip_header_sh,
+      \   'skip_begin' : '^=\(cut\)\@!\w\+',
+      \   'skip_end'   : '^=cut',
       \ },
       \ 'php': {
       \   'heading-1'  : s:shared_pattern['heading-1_cpp'],
