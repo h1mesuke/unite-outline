@@ -109,26 +109,33 @@ function! s:source.gather_candidates(args, context)
     let lines = lines[ofs :]
   endif
 
-  let has_pat_1 = has_key(patterns, 'heading-1')
-  if has_pat_1
-    let pat_1 = patterns['heading-1']
+  " eval once
+  let has_pat_p1 = has_key(patterns, 'heading-1')
+  if has_pat_p1
+    let pat_p1 = patterns['heading-1']
   endif
   let has_pat = has_key(patterns, 'heading')
   if has_pat
     let pat = patterns.heading
+  endif
+  let has_pat_n1 = has_key(patterns, 'heading+1')
+  if has_pat_n1
+    let pat_n1 = patterns['heading+1']
   endif
   " collect heading lines
   let headings = []
   let idx = 0 | let n_lines = len(lines)
   while idx < n_lines
     let line = lines[idx]
-    if has_pat_1 && line =~# pat_1
+    if has_pat_p1 && line =~# pat_p1
       call add(headings, [ofs + idx + 2, lines[idx + 1]])
       let idx += 2
       continue
     endif
     if has_pat && line =~# pat
       call add(headings, [ofs + idx + 1, line])
+    elseif has_pat_n1 && line =~# pat_n1 && idx > 0
+      call add(headings, [ofs + idx - 1, line])
     endif
     let idx += 1
   endwhile
