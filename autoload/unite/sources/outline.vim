@@ -48,16 +48,16 @@ function! s:source.gather_candidates(args, context)
   let patterns = g:unite_source_outline_patterns[filetype]
   let lines = getbufline('#', 1, '$')
 
+  let ofs = 0
   if has_key(patterns, 'skip_header')
     let pat = patterns.skip_header
-    let idx = 0
     for line in lines
       if line !~# pat
         break
       endif
-      let idx += 1
+      let ofs += 1
     endfor
-    let lines = lines[idx :]
+    let lines = lines[ofs :]
   endif
 
   let has_pat_1 = has_key(patterns, 'heading-1')
@@ -74,12 +74,12 @@ function! s:source.gather_candidates(args, context)
   while idx < n_lines
     let line = lines[idx]
     if has_pat_1 && line =~# pat_1
-      call add(headings, [idx + 2, lines[idx + 1]])
+      call add(headings, [ofs + idx + 2, lines[idx + 1]])
       let idx += 2
       continue
     endif
     if has_pat && line =~# pat
-      call add(headings, [idx + 1, line])
+      call add(headings, [ofs + idx + 1, line])
     endif
     let idx += 1
   endwhile
