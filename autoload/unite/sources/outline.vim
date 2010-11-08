@@ -117,7 +117,7 @@ function! s:source.gather_candidates(args, context)
     return []
   endif
 
-  if exists('g:unite_source_outline_debug') && g:unite_source_outline_debug && has("reltime")
+  if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
     let start_time = reltime()
   endif
 
@@ -205,15 +205,20 @@ function! s:source.gather_candidates(args, context)
       endwhile
     elseif has_head_p1_pat && line =~# head_p1_pat
       let next_line = lines[idx + 1]
-      if next_line =~ '\S'
+      if next_line =~ '[[:punct:]]\@!\S'
         call add(headings, [ofs + idx + 2, next_line])
+      else
+        let next_line = lines[idx + 2]
+        if next_line =~ '[[:punct:]]\@!\S'
+          call add(headings, [ofs + idx + 3, next_line])
+        endif
       endif
       let idx += 1
     elseif has_head_pat && line =~# head_pat
       call add(headings, [ofs + idx + 1, line])
     elseif has_head_n1_pat && line =~# head_n1_pat && idx > 0
       let prev_line = lines[idx - 1]
-      if prev_line =~ '\S'
+      if prev_line =~ '[[:punct:]]\@!\S'
         call add(headings, [ofs + idx, prev_line])
       endif
     endif
@@ -229,7 +234,7 @@ function! s:source.gather_candidates(args, context)
         \ "action__line": v:val[0],
         \ }')
 
-  if exists('g:unite_source_outline_debug') && g:unite_source_outline_debug && has("reltime")
+  if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
     let used_time = split(reltimestr(reltime(start_time)))[0]
     echomsg "unite-outline: gather_candidates: Finished in " . used_time . " seconds."
   endif
