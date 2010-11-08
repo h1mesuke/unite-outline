@@ -2,7 +2,7 @@
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke
 " Updated : 2010-11-08
-" Version : 0.0.2
+" Version : 0.0.3
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
