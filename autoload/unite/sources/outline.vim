@@ -13,6 +13,8 @@ function! unite#sources#outline#define()
   return s:source
 endfunction
 
+scriptencoding utf-8
+
 let s:shared_pattern = {
       \ 'skip_header_c'  : '^\(/\*\|\s*\*\)',
       \ 'skip_header_cpp': '^\(//\|/\*\|\s*\*\)',
@@ -72,12 +74,17 @@ let s:defalut_outline_patterns = {
       \   'heading'    : '^\s*\(\w\+()\|function\>\)',
       \   'skip_header': s:shared_pattern.skip_header_sh,
       \ },
+      \ 'text': {
+      \   'heading'    : '^\s*\([■□●○◎▲△▼▽★☆]\|[１２３４５６７８９０]\+、\|\d\+\. \|\a\. \)',
+      \ },
       \ 'vim': {
       \   'heading-1'  : '^\s*"\s*[-=]\{10,}\s*$',
       \   'heading'    : '^\s*fu\%[nction]!\= ',
       \   'skip_header': '^"',
       \ },
       \}
+
+scriptencoding
 
 " aliases
 let s:defalut_outline_patterns.cfg   = s:defalut_outline_patterns.dosini
