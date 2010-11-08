@@ -16,8 +16,11 @@ endfunction
 scriptencoding utf-8
 
 let s:shared_pattern = {
-      \ 'skip_header_c'  : '^\(/\*\|\s*\*\)',
-      \ 'skip_header_cpp': '^\(//\|/\*\|\s*\*\)',
+      \ 'skip_header_c'  : ['^/\*', '\*/\s*$'],
+      \ 'skip_header_cpp': {
+      \   'leading'      : '^//',
+      \   'block'        : ['^/\*', '\*/\s*$'],
+      \ },
       \ 'skip_header_sh' : '^#',
       \ 'heading-1_c'    : '^\s*\/\*\s*[-=*]\{10,}\s*$',
       \ 'heading-1_cpp'  : '^\s*\(//\|/\*\)\s*[-=/*]\{10,}\s*$',
@@ -27,7 +30,10 @@ let s:shared_pattern = {
 let s:defalut_outline_patterns = {
       \ 'css': {
       \   'heading-1'  : s:shared_pattern['heading-1_c'],
-      \   'skip_header': s:shared_pattern.skip_header_c,
+      \   'skip_header': {
+      \     'leading'  : '^@charset',
+      \     'block'    : s:shared_pattern.skip_header_c,
+      \   },
       \ },
       \ 'help': {
       \   'heading': '\*\S\+\*',
@@ -57,7 +63,10 @@ let s:defalut_outline_patterns = {
       \ 'php': {
       \   'heading-1'  : s:shared_pattern['heading-1_cpp'],
       \   'heading'    : '^\s*\(class\|function\)\>',
-      \   'skip_header': '^\(<?php\|\(//\|/\*\|\s\*\)\)',
+      \   'skip_header': {
+      \     'leading'  : '^\(<?php\|//\)',
+      \     'block'    : s:shared_pattern.skip_header_c,
+      \   },
       \ },
       \ 'python': {
       \   'heading-1'  : s:shared_pattern['heading-1_sh'],
@@ -117,15 +126,47 @@ function! s:source.gather_candidates(args, context)
   let lines = getbufline('#', 1, '$')
   let lnum_width = strlen(len(lines))
 
+  " skip the header of the file
   let ofs = 0
   if has_key(pattern, 'skip_header')
-    let pat = pattern.skip_header
-    for line in lines
-      if line !~# pat
+    let val_type = type(pattern.skip_header)
+    if val_type == type("")
+      let head_lead_pat = pattern.skip_header
+    elseif val_type == type([])
+      let head_beg_pat = pattern.skip_header[0]
+      let head_end_pat = pattern.skip_header[1]
+    elseif val_type == type({})
+      let head_lead_pat = pattern.skip_header.leading
+      let head_beg_pat = pattern.skip_header.block[0]
+      let head_end_pat = pattern.skip_header.block[1]
+    endif
+    let n_lines = len(lines)
+    let line = lines[0]
+    while ofs < n_lines
+      let line = lines[ofs]
+      if exists('head_beg_pat') && line =~# head_beg_pat
+        let ofs += 1
+        while ofs < n_lines
+          let line = lines[ofs]
+          if line =~# head_end_pat
+            break
+          endif
+          let ofs += 1
+        endwhile
+        let ofs += 1
+      elseif exists('head_lead_pat') && line =~# head_lead_pat
+        let ofs += 1
+        while ofs < n_lines
+          let line = lines[ofs]
+          if line !~# head_lead_pat
+            break
+          endif
+          let ofs += 1
+        endwhile
+      else
         break
       endif
-      let ofs += 1
-    endfor
+    endwhile
     let lines = lines[ofs :]
   endif
 
@@ -153,6 +194,7 @@ function! s:source.gather_candidates(args, context)
   while idx < n_lines
     let line = lines[idx]
     if has_skip_beg_pat && line =~# skip_beg_pat
+      " skip a documentation comment block
       let idx += 1
       while idx < n_lines
         let line = lines[idx]
