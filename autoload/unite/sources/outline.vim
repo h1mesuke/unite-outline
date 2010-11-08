@@ -64,6 +64,8 @@ let s:defalut_outline_patterns = {
       \   'heading-1'  : s:shared_pattern['heading-1_sh'],
       \   'heading'    : '^\s*\(module\|class\|def\)\>',
       \   'skip_header': s:shared_pattern.skip_header_sh,
+      \   'skip_begin' : '^=begin',
+      \   'skip_end'   : '^=end',
       \ },
       \ 'sh': {
       \   'heading-1'  : s:shared_pattern['heading-1_sh'],
@@ -102,13 +104,13 @@ function! s:source.gather_candidates(args, context)
   endif
 
   let path = expand('#:p')
-  let patterns = g:unite_source_outline_patterns[filetype]
+  let pattern = g:unite_source_outline_patterns[filetype]
   let lines = getbufline('#', 1, '$')
   let lnum_width = strlen(len(lines))
 
   let ofs = 0
-  if has_key(patterns, 'skip_header')
-    let pat = patterns.skip_header
+  if has_key(pattern, 'skip_header')
+    let pat = pattern.skip_header
     for line in lines
       if line !~# pat
         break
@@ -119,34 +121,46 @@ function! s:source.gather_candidates(args, context)
   endif
 
   " eval once
-  let has_pat_p1 = has_key(patterns, 'heading-1')
-  if has_pat_p1
-    let pat_p1 = patterns['heading-1']
+  let has_skip_beg_pat = has_key(pattern, 'skip_begin')
+  if has_skip_beg_pat
+    let skip_beg_pat = pattern['skip_begin']
+    let skip_end_pat = pattern['skip_end']
   endif
-  let has_pat = has_key(patterns, 'heading')
-  if has_pat
-    let pat = patterns.heading
+  let has_head_p1_pat = has_key(pattern, 'heading-1')
+  if has_head_p1_pat
+    let head_p1_pat = pattern['heading-1']
   endif
-  let has_pat_n1 = has_key(patterns, 'heading+1')
-  if has_pat_n1
-    let pat_n1 = patterns['heading+1']
+  let has_head_pat = has_key(pattern, 'heading')
+  if has_head_pat
+    let head_pat = pattern.heading
+  endif
+  let has_head_n1_pat = has_key(pattern, 'heading+1')
+  if has_head_n1_pat
+    let head_n1_pat = pattern['heading+1']
   endif
   " collect heading lines
   let headings = []
   let idx = 0 | let n_lines = len(lines)
   while idx < n_lines
     let line = lines[idx]
-    if has_pat_p1 && line =~# pat_p1
+    if has_skip_beg_pat && line =~# skip_beg_pat
+      let idx += 1
+      while idx < n_lines
+        let line = lines[idx]
+        if line =~# skip_end_pat
+          break
+        endif
+        let idx += 1
+      endwhile
+    elseif has_head_p1_pat && line =~# head_p1_pat
       let next_line = lines[idx + 1]
       if next_line =~ '\S'
         call add(headings, [ofs + idx + 2, next_line])
       endif
-      let idx += 2
-      continue
-    endif
-    if has_pat && line =~# pat
+      let idx += 1
+    elseif has_head_pat && line =~# head_pat
       call add(headings, [ofs + idx + 1, line])
-    elseif has_pat_n1 && line =~# pat_n1 && idx > 0
+    elseif has_head_n1_pat && line =~# head_n1_pat && idx > 0
       let prev_line = lines[idx - 1]
       if prev_line =~ '\S'
         call add(headings, [ofs + idx, prev_line])
