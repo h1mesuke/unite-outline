@@ -41,6 +41,10 @@ let s:defalut_outline_patterns = {
       \   'heading'    : '^\s*\(var\s\+\u\w*\s\+=\s\+{\|function\>\)',
       \   'skip_header': s:shared_pattern.skip_header_cpp,
       \ },
+      \ 'mkd': {
+      \   'heading'    : '^#\+',
+      \   'heading+1'  : '^[-=]\+$',
+      \ },
       \ 'perl': {
       \   'heading-1'  : s:shared_pattern['heading-1_sh'],
       \   'heading'    : '^\s*sub\>',
