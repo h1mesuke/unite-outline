@@ -2,37 +2,86 @@
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke
 " Updated : 2010-11-08
-" Version : 0.0.1
+" Version : 0.0.2
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
 "
 "=============================================================================
 
+function! unite#sources#outline#define()
+  return s:source
+endfunction
+
+let s:shared_pattern = {
+      \ 'skip_header_c'  : '^\(/\*\|\s*\*\)',
+      \ 'skip_header_cpp': '^\(//\|/\*\|\s*\*\)',
+      \ 'skip_header_sh' : '^#',
+      \ 'heading-1_c'    : '^\s*\/\*\s*[-=*]\{10,}\s*$',
+      \ 'heading-1_cpp'  : '^\s*\(//\|/\*\)\s*[-=/*]\{10,}\s*$',
+      \ 'heading-1_sh'   : '^\s*#\s*[-=#]\{10,}\s*$',
+      \ }
+
 let s:defalut_outline_patterns = {
+      \ 'css': {
+      \   'heading-1'  : s:shared_pattern['heading-1_c'],
+      \   'skip_header': s:shared_pattern.skip_header_c,
+      \ },
       \ 'help': {
       \   'heading': '\*\S\+\*',
       \ },
+      \ 'html': {
+      \   'heading'    : '<[hH][1-6][^>]*>',
+      \ },
+      \ 'dosini': {
+      \   'heading'    : '^\s*\[[^\]]\+\]',
+      \ },
+      \ 'javascript': {
+      \   'heading-1'  : s:shared_pattern['heading-1_cpp'],
+      \   'heading'    : '^\s*\(var\s\+\u\w*\s\+=\s\+{\|function\>\)',
+      \   'skip_header': s:shared_pattern.skip_header_cpp,
+      \ },
+      \ 'perl': {
+      \   'heading-1'  : s:shared_pattern['heading-1_sh'],
+      \   'heading'    : '^\s*sub\>',
+      \   'skip_header': s:shared_pattern.skip_header_sh,
+      \ },
+      \ 'php': {
+      \   'heading-1'  : s:shared_pattern['heading-1_cpp'],
+      \   'heading'    : '^\s*\(class\|function\)\>',
+      \   'skip_header': '^\(<?php\|\(//\|/\*\|\s\*\)\)',
+      \ },
+      \ 'python': {
+      \   'heading-1'  : s:shared_pattern['heading-1_sh'],
+      \   'heading'    : '^\s*\(class\|def\)\>',
+      \   'skip_header': s:shared_pattern.skip_header_sh,
+      \ },
       \ 'ruby': {
-      \   'heading-1': '^#[-=#]\{10,}\s*$',
-      \   'heading': '^\s*\(module\|class\|def\) ',
-      \   'skip_header': '^#',
+      \   'heading-1'  : s:shared_pattern['heading-1_sh'],
+      \   'heading'    : '^\s*\(module\|class\|def\)\>',
+      \   'skip_header': s:shared_pattern.skip_header_sh,
+      \ },
+      \ 'sh': {
+      \   'heading-1'  : s:shared_pattern['heading-1_sh'],
+      \   'heading'    : '^\s*\(\w\+()\|function\>\)',
+      \   'skip_header': s:shared_pattern.skip_header_sh,
       \ },
       \ 'vim': {
-      \   'heading-1': '^"[-=]\{10,}\s*$',
-      \   'heading': '^\s*function!\= ',
+      \   'heading-1'  : '^\s*"\s*[-=]\{10,}\s*$',
+      \   'heading'    : '^\s*fu\%[nction]!\= ',
       \   'skip_header': '^"',
       \ },
       \}
+
+" aliases
+let s:defalut_outline_patterns.cfg   = s:defalut_outline_patterns.dosini
+let s:defalut_outline_patterns.xhtml = s:defalut_outline_patterns.html
+let s:defalut_outline_patterns.zsh   = s:defalut_outline_patterns.sh
 
 if !exists('g:unite_source_outline_patterns')
   let g:unite_source_outline_patterns = {}
 endif
 call extend(g:unite_source_outline_patterns, s:defalut_outline_patterns, 'keep')
-
-function! unite#sources#outline#define()
-  return s:source
-endfunction
 
 let s:source = {
       \ 'name': 'outline',
