@@ -93,6 +93,10 @@ function! s:source.gather_candidates(args, context)
     return []
   endif
 
+  if exists('g:unite_source_outline_debug') && g:unite_source_outline_debug && has("reltime")
+    let start_time = reltime()
+  endif
+
   let path = expand('#:p')
   let patterns = g:unite_source_outline_patterns[filetype]
   let lines = getbufline('#', 1, '$')
@@ -141,13 +145,20 @@ function! s:source.gather_candidates(args, context)
   endwhile
 
   let format = '%' . strlen(len(lines)) . 'd: %s'
-  return map(headings, '{
+  let cands = map(headings, '{
         \ "word": printf(format, v:val[0], v:val[1]),
         \ "source": "outline",
         \ "kind": "jump_list",
         \ "action__path": path,
         \ "action__line": v:val[0],
         \ }')
+
+  if exists('g:unite_source_outline_debug') && g:unite_source_outline_debug && has("reltime")
+    let used_time = split(reltimestr(reltime(start_time)))[0]
+    echomsg "unite-outline: gather_candidates: Finished in " . used_time . " seconds."
+  endif
+
+  return cands
 endfunction
 
 " vim: filetype=vim
