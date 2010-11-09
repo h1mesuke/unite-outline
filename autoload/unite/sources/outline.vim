@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke
-" Updated : 2010-11-08
+" Updated : 2010-11-09
 " Version : 0.0.3
 "
 " Licensed under the MIT license:
@@ -36,7 +36,7 @@ let s:defalut_outline_patterns = {
       \   },
       \ },
       \ 'help': {
-      \   'heading': '\*\S\+\*',
+      \   'heading-1'  : '^[-=]\{10,}\s*$',
       \ },
       \ 'html': {
       \   'heading'    : '<[hH][1-6][^>]*>',
@@ -173,8 +173,8 @@ function! s:source.gather_candidates(args, context)
   " eval once
   let has_skip_beg_pat = has_key(pattern, 'skip_begin')
   if has_skip_beg_pat
-    let skip_beg_pat = pattern['skip_begin']
-    let skip_end_pat = pattern['skip_end']
+    let skip_beg_pat = pattern.skip_begin
+    let skip_end_pat = pattern.skip_end
   endif
   let has_head_p1_pat = has_key(pattern, 'heading-1')
   if has_head_p1_pat
