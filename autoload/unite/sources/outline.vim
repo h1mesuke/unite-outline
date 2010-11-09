@@ -206,7 +206,6 @@ function! s:source.gather_candidates(args, context)
     let lines = lines[ofs :]
   endif
 
-  " eval once
   if has_key(outline_info, 'create_heading_func')
     let Create_heading = outline_info.create_heading_func
     if type(Create_heading) == type("")
@@ -218,6 +217,8 @@ function! s:source.gather_candidates(args, context)
       endtry
     endif
   endif
+
+  " eval once
   let has_skip_beg_pat = has_key(outline_info, 'skip_begin')
   if has_skip_beg_pat
     let skip_beg_pat = outline_info.skip_begin
@@ -255,8 +256,8 @@ function! s:source.gather_candidates(args, context)
       let next_line = lines[idx + 1]
       if next_line =~ '[[:punct:]]\@!\S'
         if exists('Create_heading')
-          let context = { 'heading_index': idx + 1, 'matched_index': idx, 'lines': lines }
-          let heading = Create_heading('heading-1', next_line, line, context)
+          let heading = Create_heading('heading-1', next_line, line,
+                \ { 'heading_index': idx + 1, 'matched_index': idx, 'lines': lines })
           if heading != ""
             call add(headings, [ofs + idx + 2, heading])
           endif
@@ -267,8 +268,8 @@ function! s:source.gather_candidates(args, context)
         let next_line = lines[idx + 2]
         if next_line =~ '[[:punct:]]\@!\S'
           if exists('Create_heading')
-            let context = { 'heading_index': idx + 2, 'matched_index': idx, 'lines': lines }
-            let heading = Create_heading('heading-1', next_line, line, context)
+            let heading = Create_heading('heading-1', next_line, line,
+                  \ { 'heading_index': idx + 2, 'matched_index': idx, 'lines': lines })
             if heading != ""
               call add(headings, [ofs + idx + 3, heading])
             endif
@@ -280,8 +281,8 @@ function! s:source.gather_candidates(args, context)
       let idx += 1
     elseif has_head_pat && line =~# head_pat
       if exists('Create_heading')
-        let context = { 'heading_index': idx, 'matched_index': idx, 'lines': lines }
-        let heading = Create_heading('heading', line, line, context)
+        let heading = Create_heading('heading', line, line,
+              \ { 'heading_index': idx, 'matched_index': idx, 'lines': lines })
         if heading != ""
           call add(headings, [ofs + idx + 1, heading])
         endif
@@ -292,8 +293,8 @@ function! s:source.gather_candidates(args, context)
       let prev_line = lines[idx - 1]
       if prev_line =~ '[[:punct:]]\@!\S'
         if exists('Create_heading')
-          let context = { 'heading_index': idx - 1, 'matched_index': idx, 'lines': lines }
-          let heading = Create_heading('heading+1', prev_line, line, context)
+          let heading = Create_heading('heading+1', prev_line, line,
+                \ { 'heading_index': idx - 1, 'matched_index': idx, 'lines': lines })
           if heading != ""
             call add(headings, [ofs + idx, heading])
           endif
