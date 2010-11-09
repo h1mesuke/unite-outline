@@ -19,7 +19,7 @@ endfunction
 
 scriptencoding utf-8
 
-function! s:create_help_heeding(which, heading_line, matched_line, context)
+function! s:create_help_heading(which, heading_line, matched_line, context)
   if a:which ==# 'heading-1'
     if a:matched_line =~ '^='
       return unite#sources#outline#indent(1) . a:heading_line
@@ -31,6 +31,15 @@ function! s:create_help_heeding(which, heading_line, matched_line, context)
     if next_line =~ '\*\S\+\*'
       return unite#sources#outline#indent(2) . a:heading_line
     endif
+  endif
+  return ""
+endfunction
+
+function! s:create_html_heading(which, heading_line, matched_line, context)
+  if a:which ==# 'heading'
+    let level = str2nr(matchstr(a:heading_line, '<[hH]\zs[1-6]\ze[^>]*>'))
+    let text = substitute(substitute(a:heading_line, '<[^>]*>', '', 'g'), '^\s*', '', '')
+    return unite#sources#outline#indent(level) . "h" . level. ". " . text
   endif
   return ""
 endfunction
@@ -58,10 +67,11 @@ let s:defalut_outline_info = {
       \ 'help': {
       \   'heading-1'  : '^[-=]\{10,}\s*$',
       \   'heading'    : '^\d\+\.\d\+\s',
-      \   'create_heading_func': function('s:create_help_heeding'),
+      \   'create_heading_func': function('s:create_help_heading'),
       \ },
       \ 'html': {
       \   'heading'    : '<[hH][1-6][^>]*>',
+      \   'create_heading_func': function('s:create_html_heading'),
       \ },
       \ 'dosini': {
       \   'heading'    : '^\s*\[[^\]]\+\]',
@@ -130,7 +140,7 @@ endif
 call extend(g:unite_source_outline_info, s:defalut_outline_info, 'keep')
 
 if !exists('g:unite_source_outline_indent_width')
-  let g:unite_source_outline_indent_width = 4
+  let g:unite_source_outline_indent_width = 2
 endif
 
 let s:source = {
