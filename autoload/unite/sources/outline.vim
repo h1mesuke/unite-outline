@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke
-" Updated : 2010-11-09
+" Updated : 2010-11-10
 " Version : 0.0.3
 "
 " Licensed under the MIT license:
@@ -40,6 +40,15 @@ function! s:create_html_heading(which, heading_line, matched_line, context)
     let level = str2nr(matchstr(a:heading_line, '<[hH]\zs[1-6]\ze[^>]*>'))
     let text = substitute(substitute(a:heading_line, '<[^>]*>', '', 'g'), '^\s*', '', '')
     return unite#sources#outline#indent(level) . "h" . level. ". " . text
+  endif
+  return ""
+endfunction
+
+function! s:create_vim_heading(which, heading_line, matched_line, context)
+  if a:which ==# 'heading-1'
+    return unite#sources#outline#indent(1) . a:heading_line
+  elseif a:which ==# 'heading'
+    return unite#sources#outline#indent(3) . a:heading_line
   endif
   return ""
 endfunction
@@ -123,6 +132,7 @@ let s:defalut_outline_info = {
       \ 'vim': {
       \   'heading-1'  : '^\s*"\s*[-=]\{10,}\s*$',
       \   'heading'    : '^\s*fu\%[nction]!\= ',
+      \   'create_heading_func': function('s:create_vim_heading'),
       \   'skip_header': '^"',
       \ },
       \}
