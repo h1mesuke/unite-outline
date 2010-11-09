@@ -2,7 +2,7 @@
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke
 " Updated : 2010-11-10
-" Version : 0.0.4
+" Version : 0.0.5
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -17,174 +17,61 @@ function! unite#sources#outline#indent(level)
   return printf('%*s', (a:level - 1) * g:unite_source_outline_indent_width, '')
 endfunction
 
-scriptencoding utf-8
-
-function! s:create_help_heading(which, heading_line, matched_line, context)
-  if a:which ==# 'heading-1'
-    if a:matched_line =~ '^='
-      return unite#sources#outline#indent(1) . a:heading_line
-    elseif a:matched_line =~ '^-' && strlen(a:matched_line) > 30
-      return unite#sources#outline#indent(2) . a:heading_line
-    endif
-  elseif a:which ==# 'heading'
-    let next_line = a:context.lines[a:context.matched_index + 1]
-    if next_line =~ '\*\S\+\*'
-      return unite#sources#outline#indent(2) . a:heading_line
-    endif
-  endif
-  return ""
-endfunction
-
-function! s:create_html_heading(which, heading_line, matched_line, context)
-  if a:which ==# 'heading'
-    let level = str2nr(matchstr(a:heading_line, '<[hH]\zs[1-6]\ze[^>]*>'))
-    let text = substitute(substitute(a:heading_line, '<[^>]*>', '', 'g'), '^\s*', '', '')
-    return unite#sources#outline#indent(level) . "h" . level. ". " . text
-  endif
-  return ""
-endfunction
-
-function! s:create_vim_heading(which, heading_line, matched_line, context)
-  if a:which ==# 'heading-1'
-    return unite#sources#outline#indent(1) . a:heading_line
-  elseif a:which ==# 'heading'
-    return unite#sources#outline#indent(3) . a:heading_line
-  endif
-  return ""
-endfunction
-
-let s:shared_pattern = {
-      \ 'c_header'     : ['^/\*', '\*/\s*$'],
-      \ 'c_heading-1'  : '^\s*\/\*\s*[-=*]\{10,}\s*$',
-      \ 'cpp_header': {
-      \   'leading'    : '^//',
-      \   'block'      : ['^/\*', '\*/\s*$'],
-      \ },
-      \ 'cpp_heading-1': '^\s*\(//\|/\*\)\s*[-=/*]\{10,}\s*$',
-      \ 'sh_header'    : '^#',
-      \ 'sh_heading-1' : '^\s*#\s*[-=#]\{10,}\s*$',
-      \ }
-
-let s:defalut_outline_info = {
-      \ 'css': {
-      \   'heading-1'  : s:shared_pattern['c_heading-1'],
-      \   'skip_header': {
-      \     'leading'  : '^@charset',
-      \     'block'    : s:shared_pattern.c_header,
-      \   },
-      \ },
-      \ 'help': {
-      \   'heading-1'  : '^[-=]\{10,}\s*$',
-      \   'heading'    : '^\d\+\.\d\+\s',
-      \   'create_heading_func': function('s:create_help_heading'),
-      \ },
-      \ 'html': {
-      \   'heading'    : '<[hH][1-6][^>]*>',
-      \   'create_heading_func': function('s:create_html_heading'),
-      \ },
-      \ 'dosini': {
-      \   'heading'    : '^\s*\[[^\]]\+\]',
-      \ },
-      \ 'javascript': {
-      \   'heading-1'  : s:shared_pattern['cpp_heading-1'],
-      \   'heading'    : '^\s*\(var\s\+\u\w*\s\+=\s\+{\|function\>\)',
-      \   'skip_header': s:shared_pattern.cpp_header,
-      \ },
-      \ 'mkd': {
-      \   'heading'    : '^#\+',
-      \   'heading+1'  : '^[-=]\+$',
-      \ },
-      \ 'perl': {
-      \   'heading-1'  : s:shared_pattern['sh_heading-1'],
-      \   'heading'    : '^\s*sub\>',
-      \   'skip_header': s:shared_pattern.sh_header,
-      \   'skip_begin' : '^=\(cut\)\@!\w\+',
-      \   'skip_end'   : '^=cut',
-      \ },
-      \ 'php': {
-      \   'heading-1'  : s:shared_pattern['cpp_heading-1'],
-      \   'heading'    : '^\s*\(class\|function\)\>',
-      \   'skip_header': {
-      \     'leading'  : '^\(<?php\|//\)',
-      \     'block'    : s:shared_pattern.c_header,
-      \   },
-      \ },
-      \ 'python': {
-      \   'heading-1'  : s:shared_pattern['sh_heading-1'],
-      \   'heading'    : '^\s*\(class\|def\)\>',
-      \   'skip_header': s:shared_pattern.sh_header,
-      \ },
-      \ 'ruby': {
-      \   'heading-1'  : s:shared_pattern['sh_heading-1'],
-      \   'heading'    : '^\s*\(module\|class\|def\)\>',
-      \   'skip_header': s:shared_pattern.sh_header,
-      \   'skip_begin' : '^=begin',
-      \   'skip_end'   : '^=end',
-      \ },
-      \ 'sh': {
-      \   'heading-1'  : s:shared_pattern['sh_heading-1'],
-      \   'heading'    : '^\s*\(\w\+()\|function\>\)',
-      \   'skip_header': s:shared_pattern.sh_header,
-      \ },
-      \ 'text': {
-      \   'heading'    : '^\s*\([■□●○◎▲△▼▽★☆]\|[１２３４５６７８９０]\+、\|\d\+\. \|\a\. \)',
-      \ },
-      \ 'vim': {
-      \   'heading-1'  : '^\s*"\s*[-=]\{10,}\s*$',
-      \   'heading'    : '^\s*fu\%[nction]!\= ',
-      \   'create_heading_func': function('s:create_vim_heading'),
-      \   'skip_header': '^"',
-      \ },
-      \}
-
-scriptencoding
-
-" aliases
-let s:defalut_outline_info.cfg   = s:defalut_outline_info.dosini
-let s:defalut_outline_info.xhtml = s:defalut_outline_info.html
-let s:defalut_outline_info.zsh   = s:defalut_outline_info.sh
-
 if !exists('g:unite_source_outline_info')
   let g:unite_source_outline_info = {}
 endif
-call extend(g:unite_source_outline_info, s:defalut_outline_info, 'keep')
-
 if !exists('g:unite_source_outline_indent_width')
   let g:unite_source_outline_indent_width = 2
 endif
+
+function! s:get_outline_info(filetype)
+  if has_key(g:unite_source_outline_info, a:filetype)
+    return g:unite_source_outline_info[a:filetype]
+  else
+    try
+      execute 'let outline_info = unite#sources#outline#defaults#' . a:filetype . '#outline_info()'
+      return outline_info
+    catch
+      call unite#print_error(v:throwpoint)
+      call unite#print_error(v:exception)
+      return {}
+    endtry
+  endif
+endfunction
 
 let s:source = {
       \ 'name': 'outline',
       \ }
 
 function! s:source.gather_candidates(args, context)
-  let filetype = getbufvar('#', '&filetype')
-  if !has_key(g:unite_source_outline_info, filetype)
-    return []
-  endif
-
   if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
     let start_time = reltime()
   endif
 
   let path = expand('#:p')
-  let outline_info = g:unite_source_outline_info[filetype]
+  let filetype = getbufvar('#', '&filetype')
+  let outline_info = s:get_outline_info(filetype)
+  if len(outline_info) == 0
+    call unite#print_error("unite-outline: not supported filetype: " . filetype)
+    return []
+  endif
+
   let lines = getbufline('#', 1, '$')
   let lnum_width = strlen(len(lines))
 
   " skip the header of the file
   let ofs = 0
-  if has_key(outline_info, 'skip_header')
-    let val_type = type(outline_info.skip_header)
+  if has_key(outline_info, 'skip') && has_key(outline_info.skip, 'header')
+    let val_type = type(outline_info.skip.header)
     if val_type == type("")
-      let head_lead_pat = outline_info.skip_header
+      let head_lead_pat = outline_info.skip.header
     elseif val_type == type([])
-      let head_beg_pat = outline_info.skip_header[0]
-      let head_end_pat = outline_info.skip_header[1]
+      let head_beg_pat = outline_info.skip.header[0]
+      let head_end_pat = outline_info.skip.header[1]
     elseif val_type == type({})
-      let head_lead_pat = outline_info.skip_header.leading
-      let head_beg_pat = outline_info.skip_header.block[0]
-      let head_end_pat = outline_info.skip_header.block[1]
+      let head_lead_pat = outline_info.skip.header.leading
+      let head_beg_pat = outline_info.skip.header.block[0]
+      let head_end_pat = outline_info.skip.header.block[1]
     endif
     let n_lines = len(lines)
     let line = lines[0]
@@ -216,23 +103,11 @@ function! s:source.gather_candidates(args, context)
     let lines = lines[ofs :]
   endif
 
-  if has_key(outline_info, 'create_heading_func')
-    let Create_heading = outline_info.create_heading_func
-    if type(Create_heading) == type("")
-      try
-        let Create_heading = function(Create_heading)
-      catch
-        call unite#print_error("unite-outline: invalid function name: ". string(Create_heading))
-        unlet Create_heading
-      endtry
-    endif
-  endif
-
   " eval once
-  let has_skip_beg_pat = has_key(outline_info, 'skip_begin')
+  let has_skip_beg_pat = has_key(outline_info, 'skip') && has_key(outline_info.skip, 'begin')
   if has_skip_beg_pat
-    let skip_beg_pat = outline_info.skip_begin
-    let skip_end_pat = outline_info.skip_end
+    let skip_beg_pat = outline_info.skip.begin
+    let skip_end_pat = outline_info.skip.end
   endif
   let has_head_p1_pat = has_key(outline_info, 'heading-1')
   if has_head_p1_pat
@@ -265,8 +140,8 @@ function! s:source.gather_candidates(args, context)
     elseif has_head_p1_pat && line =~# head_p1_pat
       let next_line = lines[idx + 1]
       if next_line =~ '[[:punct:]]\@!\S'
-        if exists('Create_heading')
-          let heading = Create_heading('heading-1', next_line, line,
+        if has_key(outline_info, 'create_heading')
+          let heading = outline_info.create_heading('heading-1', next_line, line,
                 \ { 'heading_index': idx + 1, 'matched_index': idx, 'lines': lines })
           if heading != ""
             call add(headings, [ofs + idx + 2, heading])
@@ -277,8 +152,8 @@ function! s:source.gather_candidates(args, context)
       else
         let next_line = lines[idx + 2]
         if next_line =~ '[[:punct:]]\@!\S'
-          if exists('Create_heading')
-            let heading = Create_heading('heading-1', next_line, line,
+          if has_key(outline_info, 'create_heading')
+            let heading = outline_info.create_heading('heading-1', next_line, line,
                   \ { 'heading_index': idx + 2, 'matched_index': idx, 'lines': lines })
             if heading != ""
               call add(headings, [ofs + idx + 3, heading])
@@ -290,8 +165,8 @@ function! s:source.gather_candidates(args, context)
       endif
       let idx += 1
     elseif has_head_pat && line =~# head_pat
-      if exists('Create_heading')
-        let heading = Create_heading('heading', line, line,
+      if has_key(outline_info, 'create_heading')
+        let heading = outline_info.create_heading('heading', line, line,
               \ { 'heading_index': idx, 'matched_index': idx, 'lines': lines })
         if heading != ""
           call add(headings, [ofs + idx + 1, heading])
@@ -302,8 +177,8 @@ function! s:source.gather_candidates(args, context)
     elseif has_head_n1_pat && line =~# head_n1_pat && idx > 0
       let prev_line = lines[idx - 1]
       if prev_line =~ '[[:punct:]]\@!\S'
-        if exists('Create_heading')
-          let heading = Create_heading('heading+1', prev_line, line,
+        if has_key(outline_info, 'create_heading')
+          let heading = outline_info.create_heading('heading+1', prev_line, line,
                 \ { 'heading_index': idx - 1, 'matched_index': idx, 'lines': lines })
           if heading != ""
             call add(headings, [ofs + idx, heading])
