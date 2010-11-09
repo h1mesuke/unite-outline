@@ -16,23 +16,23 @@ endfunction
 scriptencoding utf-8
 
 let s:shared_pattern = {
-      \ 'skip_header_c'  : ['^/\*', '\*/\s*$'],
-      \ 'skip_header_cpp': {
-      \   'leading'      : '^//',
-      \   'block'        : ['^/\*', '\*/\s*$'],
+      \ 'c_header'     : ['^/\*', '\*/\s*$'],
+      \ 'c_heading-1'  : '^\s*\/\*\s*[-=*]\{10,}\s*$',
+      \ 'cpp_header': {
+      \   'leading'    : '^//',
+      \   'block'      : ['^/\*', '\*/\s*$'],
       \ },
-      \ 'skip_header_sh' : '^#',
-      \ 'heading-1_c'    : '^\s*\/\*\s*[-=*]\{10,}\s*$',
-      \ 'heading-1_cpp'  : '^\s*\(//\|/\*\)\s*[-=/*]\{10,}\s*$',
-      \ 'heading-1_sh'   : '^\s*#\s*[-=#]\{10,}\s*$',
+      \ 'cpp_heading-1': '^\s*\(//\|/\*\)\s*[-=/*]\{10,}\s*$',
+      \ 'sh_header'    : '^#',
+      \ 'sh_heading-1' : '^\s*#\s*[-=#]\{10,}\s*$',
       \ }
 
 let s:defalut_outline_patterns = {
       \ 'css': {
-      \   'heading-1'  : s:shared_pattern['heading-1_c'],
+      \   'heading-1'  : s:shared_pattern['c_heading-1'],
       \   'skip_header': {
       \     'leading'  : '^@charset',
-      \     'block'    : s:shared_pattern.skip_header_c,
+      \     'block'    : s:shared_pattern.c_header,
       \   },
       \ },
       \ 'help': {
@@ -45,45 +45,45 @@ let s:defalut_outline_patterns = {
       \   'heading'    : '^\s*\[[^\]]\+\]',
       \ },
       \ 'javascript': {
-      \   'heading-1'  : s:shared_pattern['heading-1_cpp'],
+      \   'heading-1'  : s:shared_pattern['cpp_heading-1'],
       \   'heading'    : '^\s*\(var\s\+\u\w*\s\+=\s\+{\|function\>\)',
-      \   'skip_header': s:shared_pattern.skip_header_cpp,
+      \   'skip_header': s:shared_pattern.cpp_header,
       \ },
       \ 'mkd': {
       \   'heading'    : '^#\+',
       \   'heading+1'  : '^[-=]\+$',
       \ },
       \ 'perl': {
-      \   'heading-1'  : s:shared_pattern['heading-1_sh'],
+      \   'heading-1'  : s:shared_pattern['sh_heading-1'],
       \   'heading'    : '^\s*sub\>',
-      \   'skip_header': s:shared_pattern.skip_header_sh,
+      \   'skip_header': s:shared_pattern.sh_header,
       \   'skip_begin' : '^=\(cut\)\@!\w\+',
       \   'skip_end'   : '^=cut',
       \ },
       \ 'php': {
-      \   'heading-1'  : s:shared_pattern['heading-1_cpp'],
+      \   'heading-1'  : s:shared_pattern['cpp_heading-1'],
       \   'heading'    : '^\s*\(class\|function\)\>',
       \   'skip_header': {
       \     'leading'  : '^\(<?php\|//\)',
-      \     'block'    : s:shared_pattern.skip_header_c,
+      \     'block'    : s:shared_pattern.c_header,
       \   },
       \ },
       \ 'python': {
-      \   'heading-1'  : s:shared_pattern['heading-1_sh'],
+      \   'heading-1'  : s:shared_pattern['sh_heading-1'],
       \   'heading'    : '^\s*\(class\|def\)\>',
-      \   'skip_header': s:shared_pattern.skip_header_sh,
+      \   'skip_header': s:shared_pattern.sh_header,
       \ },
       \ 'ruby': {
-      \   'heading-1'  : s:shared_pattern['heading-1_sh'],
+      \   'heading-1'  : s:shared_pattern['sh_heading-1'],
       \   'heading'    : '^\s*\(module\|class\|def\)\>',
-      \   'skip_header': s:shared_pattern.skip_header_sh,
+      \   'skip_header': s:shared_pattern.sh_header,
       \   'skip_begin' : '^=begin',
       \   'skip_end'   : '^=end',
       \ },
       \ 'sh': {
-      \   'heading-1'  : s:shared_pattern['heading-1_sh'],
+      \   'heading-1'  : s:shared_pattern['sh_heading-1'],
       \   'heading'    : '^\s*\(\w\+()\|function\>\)',
-      \   'skip_header': s:shared_pattern.skip_header_sh,
+      \   'skip_header': s:shared_pattern.sh_header,
       \ },
       \ 'text': {
       \   'heading'    : '^\s*\([■□●○◎▲△▼▽★☆]\|[１２３４５６７８９０]\+、\|\d\+\. \|\a\. \)',
@@ -194,7 +194,7 @@ function! s:source.gather_candidates(args, context)
   while idx < n_lines
     let line = lines[idx]
     if has_skip_beg_pat && line =~# skip_beg_pat
-      " skip a documentation comment block
+      " skip a documentation block
       let idx += 1
       while idx < n_lines
         let line = lines[idx]
