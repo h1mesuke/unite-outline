@@ -24,21 +24,6 @@ if !exists('g:unite_source_outline_indent_width')
   let g:unite_source_outline_indent_width = 2
 endif
 
-function! s:get_outline_info(filetype)
-  if has_key(g:unite_source_outline_info, a:filetype)
-    return g:unite_source_outline_info[a:filetype]
-  else
-    try
-      execute 'let outline_info = unite#sources#outline#defaults#' . a:filetype . '#outline_info()'
-      return outline_info
-    catch
-      call unite#print_error(v:throwpoint)
-      call unite#print_error(v:exception)
-      return {}
-    endtry
-  endif
-endfunction
-
 let s:source = {
       \ 'name': 'outline',
       \ }
@@ -206,6 +191,33 @@ function! s:source.gather_candidates(args, context)
   endif
 
   return cands
+endfunction
+
+function! s:get_outline_info(filetype)
+  if has_key(g:unite_source_outline_info, a:filetype)
+    return g:unite_source_outline_info[a:filetype]
+  else
+    let tries = [
+          \ 'outline#',
+          \ 'unite#sources#outline#',
+          \ 'unite#sources#outline#defaults#',
+          \ ]
+    for path in tries
+      let load_func = path . a:filetype . '#outline_info'
+      try
+        execute 'let outline_info = ' . load_func . '()'
+        let g:unite_source_outline_info[a:filetype] = outline_info
+        return outline_info
+      catch /^Vim\%((\a\+)\)\=:E117:/
+        " no file or undefined, go next
+      catch
+        " error on eval
+        call unite#print_error(v:throwpoint)
+        call unite#print_error(v:exception)
+      endtry
+    endfor
+  endif
+  return {}
 endfunction
 
 " vim: filetype=vim
