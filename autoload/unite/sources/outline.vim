@@ -2,7 +2,7 @@
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke
 " Updated : 2010-11-10
-" Version : 0.0.5
+" Version : 0.0.6
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -23,6 +23,12 @@ endif
 if !exists('g:unite_source_outline_indent_width')
   let g:unite_source_outline_indent_width = 2
 endif
+if !exists('g:unite_source_outline_cache_buffers')
+  let g:unite_source_outline_cache_buffers = 10
+endif
+if !exists('g:unite_source_outline_cache_limit')
+  let g:unite_source_outline_cache_limit = 1000
+endif
 
 let s:source = {
       \ 'name': 'outline',
@@ -33,7 +39,12 @@ function! s:source.gather_candidates(args, context)
     let start_time = reltime()
   endif
 
+  let force = (len(a:args) > 0 && a:args[0] == '!')
   let path = expand('#:p')
+  if s:cache.has(path) && !force
+    return s:cache.read(path)
+  endif
+
   let filetype = getbufvar('#', '&filetype')
   let outline_info = s:get_outline_info(filetype)
   if len(outline_info) == 0
@@ -42,7 +53,8 @@ function! s:source.gather_candidates(args, context)
   endif
 
   let lines = getbufline('#', 1, '$')
-  let lnum_width = strlen(len(lines))
+  let N_lines = len(lines)
+  let lnum_width = strlen(N_lines)
 
   " skip the header of the file
   let ofs = 0
@@ -63,13 +75,11 @@ function! s:source.gather_candidates(args, context)
       let header_end   = outline_info.skip.header.block[1]
     endif
 
-    let n_lines = len(lines)
-    let line = lines[0]
-    while ofs < n_lines
+    while ofs < N_lines
       let line = lines[ofs]
       if skip_header_lead && line =~# header_lead
         let ofs += 1
-        while ofs < n_lines
+        while ofs < N_lines
           let line = lines[ofs]
           if line !~# header_lead
             break
@@ -78,7 +88,7 @@ function! s:source.gather_candidates(args, context)
         endwhile
       elseif skip_header_block && line =~# header_begin
         let ofs += 1
-        while ofs < n_lines
+        while ofs < N_lines
           let line = lines[ofs]
           if line =~# header_end
             break
@@ -194,6 +204,10 @@ function! s:source.gather_candidates(args, context)
         \ "action__line": v:val[0],
         \ }')
 
+  if N_lines > g:unite_source_outline_cache_limit
+    call s:cache.write(path, cands)
+  endif
+
   if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
     let used_time = split(reltimestr(reltime(start_time)))[0]
     echomsg "unite-outline: gather_candidates: Finished in " . used_time . " seconds."
@@ -227,6 +241,36 @@ function! s:get_outline_info(filetype)
     endfor
   endif
   return {}
+endfunction
+
+let s:cache = { 'data': {} }
+
+function! s:cache.has(path)
+  return has_key(self.data, a:path)
+endfunction
+
+function! s:cache.read(path)
+  let item = self.data[a:path]
+  return item.candidates
+endfunction
+
+function! s:cache.write(path, cands)
+  let self.data[a:path] = {
+        \ 'candidates': a:cands,
+        \ 'touched': localtime(), 
+        \ }
+  if len(self.data) > g:unite_source_outline_cache_buffers
+    echomsg "cache size = " . len(self.data)
+    let oldest = sort(items(self.data), 's:compare_timestamp')[0]
+    unlet self.data[oldest[0]]
+    echomsg "cache size = " . len(self.data)
+  endif
+endfunction
+
+function! s:compare_timestamp(item1, item2)
+  let t1 = a:item1[1].touched
+  let t2 = a:item2[1].touched
+  return t1 == t2 ? 0 : t1 > t2 ? 1 : -1
 endfunction
 
 " vim: filetype=vim
