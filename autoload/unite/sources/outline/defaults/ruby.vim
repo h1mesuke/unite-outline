@@ -19,8 +19,7 @@ let s:outline_info = {
       \ 'heading'  : '^\s*\(module\|class\|def\)\>',
       \ 'skip': {
       \   'header': unite#sources#outline#shared#pattern('sh', 'header'),
-      \   'begin' : '^=begin',
-      \   'end'   : '^=end',
+      \   'block' : ['^=begin', '^=end'],
       \ },
       \}
 

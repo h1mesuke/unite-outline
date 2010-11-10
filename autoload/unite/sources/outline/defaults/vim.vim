@@ -15,10 +15,12 @@ function! unite#sources#outline#defaults#vim#outline_info()
 endfunction
 
 let s:outline_info = {
-      \   'heading-1'  : '^\s*"\s*[-=]\{10,}\s*$',
-      \   'heading'    : '^\s*fu\%[nction]!\= ',
-      \   'skip_header': '^"',
-      \ }
+      \ 'heading-1': '^\s*"\s*[-=]\{10,}\s*$',
+      \ 'heading'  : '^\s*fu\%[nction]!\= ',
+      \ 'skip': {
+      \   'header': '^"',
+      \ },
+      \}
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
   if a:which ==# 'heading-1'

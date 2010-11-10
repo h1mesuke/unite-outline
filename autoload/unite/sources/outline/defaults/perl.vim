@@ -18,9 +18,8 @@ let s:outline_info = {
       \ 'heading-1': unite#sources#outline#shared#pattern('sh', 'heading-1'),
       \ 'heading'  : '^\s*sub\>',
       \ 'skip': {
-      \   'header': s:shared_pattern.sh_header,
-      \   'begin' : '^=\(cut\)\@!\w\+',
-      \   'end'   : '^=cut',
+      \   'header': unite#sources#outline#shared#pattern('sh', 'header'),
+      \   'block' : ['^=\(cut\)\@!\w\+', '^=cut'],
       \ },
       \}
 

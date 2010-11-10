@@ -47,40 +47,45 @@ function! s:source.gather_candidates(args, context)
   " skip the header of the file
   let ofs = 0
   if has_key(outline_info, 'skip') && has_key(outline_info.skip, 'header')
+    " eval once
     let val_type = type(outline_info.skip.header)
     if val_type == type("")
-      let head_lead_pat = outline_info.skip.header
+      let skip_header_lead = 1 | let skip_header_block = 0
+      let header_lead  = outline_info.skip.header
     elseif val_type == type([])
-      let head_beg_pat = outline_info.skip.header[0]
-      let head_end_pat = outline_info.skip.header[1]
+      let skip_header_lead = 0 | let skip_header_block = 1
+      let header_begin = outline_info.skip.header[0]
+      let header_end   = outline_info.skip.header[1]
     elseif val_type == type({})
-      let head_lead_pat = outline_info.skip.header.leading
-      let head_beg_pat = outline_info.skip.header.block[0]
-      let head_end_pat = outline_info.skip.header.block[1]
+      let skip_header_lead = 1 | let skip_header_block = 1
+      let header_lead  = outline_info.skip.header.leading
+      let header_begin = outline_info.skip.header.block[0]
+      let header_end   = outline_info.skip.header.block[1]
     endif
+
     let n_lines = len(lines)
     let line = lines[0]
     while ofs < n_lines
       let line = lines[ofs]
-      if exists('head_beg_pat') && line =~# head_beg_pat
+      if skip_header_lead && line =~# header_lead
         let ofs += 1
         while ofs < n_lines
           let line = lines[ofs]
-          if line =~# head_end_pat
+          if line !~# header_lead
+            break
+          endif
+          let ofs += 1
+        endwhile
+      elseif skip_header_block && line =~# header_begin
+        let ofs += 1
+        while ofs < n_lines
+          let line = lines[ofs]
+          if line =~# header_end
             break
           endif
           let ofs += 1
         endwhile
         let ofs += 1
-      elseif exists('head_lead_pat') && line =~# head_lead_pat
-        let ofs += 1
-        while ofs < n_lines
-          let line = lines[ofs]
-          if line !~# head_lead_pat
-            break
-          endif
-          let ofs += 1
-        endwhile
       else
         break
       endif
@@ -89,22 +94,22 @@ function! s:source.gather_candidates(args, context)
   endif
 
   " eval once
-  let has_skip_beg_pat = has_key(outline_info, 'skip') && has_key(outline_info.skip, 'begin')
-  if has_skip_beg_pat
-    let skip_beg_pat = outline_info.skip.begin
-    let skip_end_pat = outline_info.skip.end
+  let skip_block = has_key(outline_info, 'skip') && has_key(outline_info.skip, 'block')
+  if skip_block
+    let skip_block_begin = outline_info.skip.block[0]
+    let skip_block_end   = outline_info.skip.block[1]
   endif
-  let has_head_p1_pat = has_key(outline_info, 'heading-1')
-  if has_head_p1_pat
-    let head_p1_pat = outline_info['heading-1']
+  let match_head_prev = has_key(outline_info, 'heading-1')
+  if match_head_prev
+    let head_prev = outline_info['heading-1']
   endif
-  let has_head_pat = has_key(outline_info, 'heading')
-  if has_head_pat
-    let head_pat = outline_info.heading
+  let match_head_line = has_key(outline_info, 'heading')
+  if match_head_line
+    let head_line = outline_info.heading
   endif
-  let has_head_n1_pat = has_key(outline_info, 'heading+1')
-  if has_head_n1_pat
-    let head_n1_pat = outline_info['heading+1']
+  let match_head_next = has_key(outline_info, 'heading+1')
+  if match_head_next
+    let head_next = outline_info['heading+1']
   endif
 
   " collect heading lines
@@ -112,17 +117,18 @@ function! s:source.gather_candidates(args, context)
   let idx = 0 | let n_lines = len(lines)
   while idx < n_lines
     let line = lines[idx]
-    if has_skip_beg_pat && line =~# skip_beg_pat
+    if skip_block && line =~# skip_block_begin
       " skip a documentation block
       let idx += 1
       while idx < n_lines
         let line = lines[idx]
-        if line =~# skip_end_pat
+        if line =~# skip_block_end
           break
         endif
         let idx += 1
       endwhile
-    elseif has_head_p1_pat && line =~# head_p1_pat
+    elseif match_head_prev && line =~# head_prev
+      " matched: heading-1
       let next_line = lines[idx + 1]
       if next_line =~ '[[:punct:]]\@!\S'
         if has_key(outline_info, 'create_heading')
@@ -135,6 +141,7 @@ function! s:source.gather_candidates(args, context)
           call add(headings, [ofs + idx + 2, next_line])
         endif
       else
+        " see one more next
         let next_line = lines[idx + 2]
         if next_line =~ '[[:punct:]]\@!\S'
           if has_key(outline_info, 'create_heading')
@@ -149,7 +156,8 @@ function! s:source.gather_candidates(args, context)
         endif
       endif
       let idx += 1
-    elseif has_head_pat && line =~# head_pat
+    elseif match_head_line && line =~# head_line
+      " matched: heading
       if has_key(outline_info, 'create_heading')
         let heading = outline_info.create_heading('heading', line, line,
               \ { 'heading_index': idx, 'matched_index': idx, 'lines': lines })
@@ -159,7 +167,8 @@ function! s:source.gather_candidates(args, context)
       else
         call add(headings, [ofs + idx + 1, line])
       endif
-    elseif has_head_n1_pat && line =~# head_n1_pat && idx > 0
+    elseif match_head_next && line =~# head_next && idx > 0
+      " matched: heading+1
       let prev_line = lines[idx - 1]
       if prev_line =~ '[[:punct:]]\@!\S'
         if has_key(outline_info, 'create_heading')
