@@ -1,6 +1,6 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/html.vim
-" Author  : h1mesuke
+" Author  : h1mesuke <himesuke@gmail.com>
 " Updated : 2010-11-10
 "
 " Licensed under the MIT license:
