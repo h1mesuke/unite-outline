@@ -47,8 +47,8 @@ ToDo			|unite-outline-todo|
 
 unite-outline は、ファイルの見出しを抽出し、|unite| のインターフェースを使って
 それらを一覧表示、各見出しへのジャンプ機能を提供する source です。見出しを抽出
-するためのパターン及び見出しレベルの決定ロジックをファイルタイプごとに設定する
-ことができ、高度なカスタマイズの自由度を持っています。
+するためのパターンおよび見出しレベルの決定ロジックをファイルタイプごとに設定す
+ることができ、高度なカスタマイズの自由度を持っています。
 
 ==============================================================================
 インストール					*unite-outline-install*
@@ -68,7 +68,7 @@ unite-outline は、ファイルの見出しを抽出し、|unite| のインタ�
 ==============================================================================
 使い方						*unite-outline-usage*
 
-|unite| の使い方については、unite のヘルプを参照のこと。ここでは、unite
+|unite| の使い方については、unite のヘルプを参照して下さい。ここでは、unite
 の source である unite-outline の使い方を説明します。
 
 ファイルの見出し一覧を表示するには、source として outline を指定し、:Unite を
@@ -85,7 +85,7 @@ unite-outline は、ファイルの見出しを抽出し、|unite| のインタ�
 目以降は見出し一覧の表示が高速になります。
 
 キャッシュの内容を破棄し、見出しの抽出をやり直したい場合は、outline の引数に
-! を指定して :Unite を実行します。
+"!" を指定して :Unite を実行します。
 >
 	:Unite outline:!
 <
@@ -100,21 +100,26 @@ unite-outline は、ファイルの見出しを抽出し、|unite| のインタ�
 
 g:unite_source_outline_info		*g:unite_source_outline_info*
 		ファイルタイプごとの outline info を格納する辞書。
-		outline info については |unite-source-outline-info| を参照のこと。
+		outline info については |unite-source-outline-customize| を参
+		照して下さい。
+
 		初期値は {}
 
 g:unite_source_outline_indent_width	*g:unite_source_outline_indent_width*
 		見出しレベルに応じて設定されるインデントの幅。
+
 		初期値は 2
 
 g:unite_source_outline_cache_buffers	*g:unite_source_outline_cache_buffers*
 		見出しをキャッシュするバッファ数の上限。これを超えた分は参照時
 		刻の古いものから削除されます。
+
 		初期値は 10
 
 g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
 		見出し抽出の対象ファイルの行数がこの変数に設定した値より大きい
 		場合、抽出した見出しをキャッシュします。
+
 		初期値は 100
 
 ==============================================================================
@@ -124,7 +129,7 @@ unite-outline では、ファイルタイプごとの見出しの抽出パター
 決定ロジック（関数）などを outline info と呼ばれる辞書によって定義します。これ
 を vimrc にて、あるいは所定の位置に配置した VimScript によって記述することで、
 ファイルタイプごとの見出し抽出と見出し一覧の作成を自在にカスタマイズすることが
-可能です。
+できます。
 
 ------------------------------------------------------------------------------
 outline info の探索				*unite-outline-info-find*
@@ -182,8 +187,8 @@ heading-1	文字列（任意）			*unite-outline-info-heading-1*
 	-----------------------------------------
 	見出し２
 <
-	  のような、飾りの枠線の下にくるタイプの見出しを抽出することがで
-	  きます。また、
+	のような、飾りの枠線の下にくるタイプの見出しを抽出することができます。
+	また、
 >
 	/****************************************
 	 *
@@ -303,8 +308,8 @@ skip_header()	関数（任意）			*unite-outline-info-skip_header()*
 
 	設定されていると、見出しの抽出に先立って呼ばれ、{lines} における、返値
 	（整数）で指定される添字の行までをスキップします。この関数を定義するこ
-	とによって、skip.header属性では指定が難しいタイプのヘッダをスキップす
-	ることができます。
+	とによって、skip.header属性では指定が難しいタイプのヘッダのスキップを
+	実装できます。
 
 	skip_header() 関数に渡される引数は以下の通りです。
 	
@@ -320,9 +325,6 @@ unite#sources#outline#indent({level})		*unite#sources#outline#indent()*
 	見出しレベル {level} に応じたインデントのための空白文字列を返します。
 	インデントの幅には |g:unite_source_outline_indent_width| の値が考慮さ
 	れます。
-		
-	outline info の create_header() 関数が見出し文字列を作成する際に使用す
-	ることを想定しています。
 
 ==============================================================================
 TODO						*unite-outline-todo*
