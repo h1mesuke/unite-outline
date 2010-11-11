@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke
-" Updated : 2010-11-10
+" Updated : 2010-11-11
 " Version : 0.0.6
 "
 " Licensed under the MIT license:
@@ -17,21 +17,31 @@ function! unite#sources#outline#indent(level)
   return printf('%*s', (a:level - 1) * g:unite_source_outline_indent_width, '')
 endfunction
 
+"-----------------------------------------------------------------------------
+" Variables
+
 if !exists('g:unite_source_outline_info')
   let g:unite_source_outline_info = {}
 endif
+
 if !exists('g:unite_source_outline_indent_width')
   let g:unite_source_outline_indent_width = 2
 endif
+
 if !exists('g:unite_source_outline_cache_buffers')
   let g:unite_source_outline_cache_buffers = 10
 endif
+
 if !exists('g:unite_source_outline_cache_limit')
-  let g:unite_source_outline_cache_limit = 1000
+  let g:unite_source_outline_cache_limit = 100
 endif
+
+"-----------------------------------------------------------------------------
+" Source
 
 let s:source = {
       \ 'name': 'outline',
+      \ 'is_volatile': 1,
       \ }
 
 function! s:source.gather_candidates(args, context)
@@ -54,10 +64,8 @@ function! s:source.gather_candidates(args, context)
 
   let lines = getbufline('#', 1, '$')
   let N_lines = len(lines)
-  let lnum_width = strlen(N_lines)
 
   " skip the header of the file
-  let ofs = 0
   if has_key(outline_info, 'skip') && has_key(outline_info.skip, 'header')
     " eval once
     let val_type = type(outline_info.skip.header)
@@ -75,32 +83,33 @@ function! s:source.gather_candidates(args, context)
       let header_end   = outline_info.skip.header.block[1]
     endif
 
-    while ofs < N_lines
-      let line = lines[ofs]
+    let idx = 0
+    while idx < N_lines
+      let line = lines[idx]
       if skip_header_lead && line =~# header_lead
-        let ofs += 1
-        while ofs < N_lines
-          let line = lines[ofs]
+        let idx += 1
+        while idx < N_lines
+          let line = lines[idx]
           if line !~# header_lead
             break
           endif
-          let ofs += 1
+          let idx += 1
         endwhile
       elseif skip_header_block && line =~# header_begin
-        let ofs += 1
-        while ofs < N_lines
-          let line = lines[ofs]
+        let idx += 1
+        while idx < N_lines
+          let line = lines[idx]
           if line =~# header_end
             break
           endif
-          let ofs += 1
+          let idx += 1
         endwhile
-        let ofs += 1
+        let idx += 1
       else
         break
       endif
     endwhile
-    let lines = lines[ofs :]
+    let lines = lines[idx :]
   endif
 
   " eval once
@@ -122,7 +131,7 @@ function! s:source.gather_candidates(args, context)
     let head_next = outline_info['heading+1']
   endif
 
-  " collect heading lines
+  " collect headings
   let headings = []
   let idx = 0 | let n_lines = len(lines)
   while idx < n_lines
@@ -145,10 +154,10 @@ function! s:source.gather_candidates(args, context)
           let heading = outline_info.create_heading('heading-1', next_line, line,
                 \ { 'heading_index': idx + 1, 'matched_index': idx, 'lines': lines })
           if heading != ""
-            call add(headings, [ofs + idx + 2, heading])
+            call add(headings, [heading, next_line])
           endif
         else
-          call add(headings, [ofs + idx + 2, next_line])
+          call add(headings, [next_line, next_line])
         endif
       else
         " see one more next
@@ -158,10 +167,10 @@ function! s:source.gather_candidates(args, context)
             let heading = outline_info.create_heading('heading-1', next_line, line,
                   \ { 'heading_index': idx + 2, 'matched_index': idx, 'lines': lines })
             if heading != ""
-              call add(headings, [ofs + idx + 3, heading])
+              call add(headings, [heading, next_line])
             endif
           else
-            call add(headings, [ofs + idx + 3, next_line])
+            call add(headings, [next_line, next_line])
           endif
         endif
       endif
@@ -172,10 +181,10 @@ function! s:source.gather_candidates(args, context)
         let heading = outline_info.create_heading('heading', line, line,
               \ { 'heading_index': idx, 'matched_index': idx, 'lines': lines })
         if heading != ""
-          call add(headings, [ofs + idx + 1, heading])
+          call add(headings, [heading, line])
         endif
       else
-        call add(headings, [ofs + idx + 1, line])
+        call add(headings, [line, line])
       endif
     elseif match_head_next && line =~# head_next && idx > 0
       " matched: heading+1
@@ -185,23 +194,22 @@ function! s:source.gather_candidates(args, context)
           let heading = outline_info.create_heading('heading+1', prev_line, line,
                 \ { 'heading_index': idx - 1, 'matched_index': idx, 'lines': lines })
           if heading != ""
-            call add(headings, [ofs + idx, heading])
+            call add(headings, [heading, prev_line])
           endif
         else
-          call add(headings, [ofs + idx, prev_line])
+          call add(headings, [prev_line, prev_line])
         endif
       endif
     endif
     let idx += 1
   endwhile
 
-  let format = '%' . lnum_width . 'd: %s'
   let cands = map(headings, '{
-        \ "word": printf(format, v:val[0], v:val[1]),
+        \ "word": v:val[0],
         \ "source": "outline",
         \ "kind": "jump_list",
         \ "action__path": path,
-        \ "action__line": v:val[0],
+        \ "action__pattern": "^" . s:escape_regex(v:val[1]) . "$",
         \ }')
 
   if N_lines > g:unite_source_outline_cache_limit
@@ -214,6 +222,10 @@ function! s:source.gather_candidates(args, context)
   endif
 
   return cands
+endfunction
+
+function! s:escape_regex(str)
+  return escape(a:str, '^$[].*\~')
 endfunction
 
 function! s:get_outline_info(filetype)
@@ -243,6 +255,9 @@ function! s:get_outline_info(filetype)
   return {}
 endfunction
 
+"-----------------------------------------------------------------------------
+" Cache
+
 let s:cache = { 'data': {} }
 
 function! s:cache.has(path)
@@ -260,10 +275,8 @@ function! s:cache.write(path, cands)
         \ 'touched': localtime(), 
         \ }
   if len(self.data) > g:unite_source_outline_cache_buffers
-    echomsg "cache size = " . len(self.data)
     let oldest = sort(items(self.data), 's:compare_timestamp')[0]
     unlet self.data[oldest[0]]
-    echomsg "cache size = " . len(self.data)
   endif
 endfunction
 
