@@ -1,0 +1,338 @@
+*unite-outline.txt*	ファイルの見出し一覧を表示し、ジャンプ機能を提供する。
+
+Author  : h1mesuke <himesuke@gmail.com>
+License : MIT license {{{
+    Permission is hereby granted, free of charge, to any person obtaining
+    a copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is furnished to do so, subject to
+    the following conditions:
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+}}}
+
+目次						*unite-outline-contents*
+
+概要			|unite-outline-introduction|
+インストール		|unite-outline-install|
+使い方			|unite-outline-usage|
+設定			|unite-outline-configure|
+  変数			  |unite-outline-variables|
+カスタマイズ		|unite-outline-customize|
+  outline info の探索	  |unite-outline-info-find|
+  outline info の作成	  |unite-outline-info-create|
+    heading-1		    |unite-outline-info-heading-1|
+    heading		    |unite-outline-info-heading|
+    heading+1		    |unite-outline-info-heading+1|
+    create_heading()	    |unite-outline-info-create_heading()|
+    skip		    |unite-outline-info-skip|
+    skip_header()	    |unite-outline-info-skip_header()|
+  関数			  |unite-outline-functions|
+ToDo			|unite-outline-todo|
+既知のバグ		|unite-outline-bugs|
+更新履歴		|unite-outline-changelog|
+
+==============================================================================
+概要						*unite-outline-introduction*
+
+unite-outline は、ファイルの見出しを抽出し、|unite| のインターフェースを使って
+それらを一覧表示、各見出しへのジャンプ機能を提供する source です。見出しを抽出
+するためのパターン及び見出しレベルの決定ロジックをファイルタイプごとに設定する
+ことができ、高度なカスタマイズの自由度を持っています。
+
+==============================================================================
+インストール					*unite-outline-install*
+
+配布アーカイブに含まれるファイル群を、パスを保ったまま $HOME/.vim（Windows の
+場合は $HOME/vimfiles）へコピーします。コピー後の配置は
+
+	$HOME/.vim/autoload/unite/sources/outline.vim
+	$HOME/.vim/autoload/unite/sources/outline
+	$HOME/.vim/doc/unite-outline.jax
+
+になります。
+
+インストールに成功すると :Unite outline でファイルの見出し一覧を表示できます。
+（そのファイルタイプ用の outline info が存在する場合）
+
+==============================================================================
+使い方						*unite-outline-usage*
+
+|unite| の使い方については、unite のヘルプを参照のこと。ここでは、unite
+の source である unite-outline の使い方を説明します。
+
+ファイルの見出し一覧を表示するには、source として outline を指定し、:Unite を
+実行します。
+>
+	:Unite outline
+<
+これにより、ファイルタイプごとに定義された outline info にもとづく見出しの抽出
+が行われ、unite のインターフェースを使って見出しの一覧が表示されます。表示され
+た一覧から見出しを選択すると、該当箇所へジャンプできます。
+
+見出し抽出の対象ファイルの行数が変数 |g:unite_source_outline_cache_limit| に設
+定した値より大きかった場合、抽出された見出しはキャッシュされます。よって、２回
+目以降は見出し一覧の表示が高速になります。
+
+キャッシュの内容を破棄し、見出しの抽出をやり直したい場合は、outline の引数に
+! を指定して :Unite を実行します。
+>
+	:Unite outline:!
+<
+もしくは、見出し一覧が表示されている状態（ノーマルモード）で
+|<Plug>(unite_redraw)|（デフォルトのマッピングでは <C-l>）を実行します。
+
+==============================================================================
+設定						*unite-outline-configure*
+
+------------------------------------------------------------------------------
+変数						*unite-outline-variables*
+
+g:unite_source_outline_info		*g:unite_source_outline_info*
+		ファイルタイプごとの outline info を格納する辞書。
+		outline info については |unite-source-outline-info| を参照のこと。
+		初期値は {}
+
+g:unite_source_outline_indent_width	*g:unite_source_outline_indent_width*
+		見出しレベルに応じて設定されるインデントの幅。
+		初期値は 2
+
+g:unite_source_outline_cache_buffers	*g:unite_source_outline_cache_buffers*
+		見出しをキャッシュするバッファ数の上限。これを超えた分は参照時
+		刻の古いものから削除されます。
+		初期値は 10
+
+g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
+		見出し抽出の対象ファイルの行数がこの変数に設定した値より大きい
+		場合、抽出した見出しをキャッシュします。
+		初期値は 100
+
+==============================================================================
+カスタマイズ					*unite-outline-customize*
+
+unite-outline では、ファイルタイプごとの見出しの抽出パターンと、見出しレベルの
+決定ロジック（関数）などを outline info と呼ばれる辞書によって定義します。これ
+を vimrc にて、あるいは所定の位置に配置した VimScript によって記述することで、
+ファイルタイプごとの見出し抽出と見出し一覧の作成を自在にカスタマイズすることが
+可能です。
+
+------------------------------------------------------------------------------
+outline info の探索				*unite-outline-info-find*
+
+見出し一覧の表示を実行した際、対象ファイルのファイルタイプにもとづき outline
+info の探索が実行されます。最初の１回に限り、以下のパスで探索が行われます。
+
+(1) g:unite_source_outline_info.{filetype}
+(2) unite#sources#outline#{filetype}#outline_info()
+(3) unite#sources#outline#defaults#{filetype}#outline_info()
+
+取得された outline info は g:unite_source_outline_info.{filetype} に設定され、
+以後はそこから取得されます。
+
+unite-outline がデフォルトで提供する outline info を上書きする方法は以下の２つです。
+
+1. vimrc にてグローバル変数に設定する
+
+	vimrc にて g:unite_source_outline_info.{filetype} に outline info を設
+	定する。
+
+2. オートロード関数を定義する
+
+	$HOME/.vim/autoload/unite/sources/outline/ に {filetype}.vim を作成し、
+	そこに unite#sources#outline#{filetype}#outline_info() 関数を定義。
+	その返値として outline info を返す。
+
+	こちらは遅延評価になるため必要になるまでロードされません。vimrc を肥大
+	化させることもないので outline info を作り込むのであればこちらの方法が
+	おすすめです。
+
+	$HOME/.vim/autoload/unite/sources/outline/defaults/ にあるデフォルトの
+	outline info がこの方法で定義されており、参考になると思います。
+
+------------------------------------------------------------------------------
+outline info の作成				*unite-outline-info-create*
+
+ourline info の作成は、属性値としてファイルタイプ固有の適正値を設定した辞書を
+定義することで行います。
+
+outline info の属性は以下の通りです。unite-outline はそれぞれの属性に設定され
+た値にもとづいて見出しの抽出を行います。
+
+
+heading-1	文字列（任意）			*unite-outline-info-heading-1*
+
+	「次の行が」見出しであるような行にマッチするパターンを設定します。これ
+	を設定することで、例えば
+>
+	=========================================
+	見出し１
+<
+	や
+>
+	-----------------------------------------
+	見出し２
+<
+	  のような、飾りの枠線の下にくるタイプの見出しを抽出することがで
+	  きます。また、
+>
+	/****************************************
+	 *
+	 *   見出し３
+	 *
+	 ****************************************/
+<
+	こういうタイプの見出しにも対応できるよう、次の行が実質上の空行とみなせ
+	る場合には、もうひとつ次の行も見るにようになっています。
+
+
+heading		文字列（任意） 			*unite-outline-info-heading*
+
+	「その行が」見出しであるような行にマッチするパターンを設定します。
+
+
+heading+1	文字列（任意）			*unite-outline-info-heading+1*
+
+	「前の行が」見出しであるような行にマッチするパターンを設定します。これ
+	を設定することで、例えば Markdown の
+>
+	見出し
+	------
+<
+	のような、下線をともなうタイプの見出しを抽出することができます。
+
+
+create_heading	関数（任意） 		*unite-outline-info-create_heading()*
+
+	create_heading({which},{heading_line}, {matched_line}, {context})
+
+	設定されていると、heading-1, heading, heading+1 によるマッチが成功する
+	たびに呼ばれ、その返値（文字列）が見出し一覧に表示されます。この関数を
+	定義することによって、見出し一覧に設定する文字列の整形、および見出しレ
+	ベル（インデント）の設定を、ユーザーが自由に行うことができます。
+
+	create_heading() 関数に渡される引数は以下の通りです。関数側では、これ
+	らの情報を元に、見出しかどうかの判定や見出しレベルの決定、見出し一覧に
+	表示する文字列の整形を行います。
+	
+	* which - 文字列：マッチの種類
+	          "heading-1", "heading", "heading+1" のいずれか
+	* heading_line - 文字列：見出しとなる行
+	* matched_line - 文字列：マッチした行
+	* context - 辞書：その他の情報、以下の属性を含む
+	  * heading_index - 数値：lines における heading_line の index
+	  * matched_index - 数値：lines における matched_line の index
+	  * lines - リスト：ファイルの全行（ヘッダ除く）
+	  * outline_info - 辞書：outline info
+	
+	create_heading() 関数は文字列を返さなければなりません。その文字列が見
+	出し一覧に表示されます。空文字列を返すと、見出しではないとみなされ、無
+	視されます。
+	
+	参考として、HTML の create_heading() 関数の定義例を示します。
+>
+	function! s:outline_info.create_heading(which, heading_line, matched_line, context)
+	  if a:which ==# 'heading'
+	    let level = str2nr(matchstr(a:heading_line, '<[hH]\zs[1-6]\ze[^>]*>'))
+	    let text = substitute(substitute(a:heading_line, '<[^>]*>', '', 'g'), '^\s*', '', '')
+	    return unite#sources#outline#indent(level) . "h" . level. ". " . text
+	  endif
+	  return ""
+	endfunction
+<	
+
+skip		辞書（任意）				*unite-outline-info-skip*
+
+	見出し抽出の対象としない領域を指定するための辞書です。以下の属性を設定
+	することで、指定の領域を見出し抽出の対象外にできます。
+
+	header	文字列、リスト、辞書のいずれか（任意）
+
+		ファイルの先頭にあるヘッダ部分（作者や著作権の表示がある部分）
+		から見出しが抽出されるのを防ぐために設定します。
+
+		(1) 文字列が設定された場合は、それをパターンとみなし、ファイル
+		の先頭からそのパターンにマッチする行が続く間をスキップします。
+>
+		\ 'skip': {
+		\   'header': '^#',
+		\ },
+<
+		(2) リストが設定された場合は、それをパターンのペアと見なし、フ
+		ァイルの先頭が skip.header[0] にマッチする場合に、
+		skip.header[1] にマッチする行までをスキップします。
+>
+		\ 'skip': {
+		\   'header': ['^/\*', '\*/\s*$'],
+		\ },
+<
+		(3) 辞書が設定された場合は、leading属性に (1) のパターン、
+		block属性に (2) のリストが設定可能で、ファイルの先頭からそれぞ
+		れにマッチする部分をスキップします。
+>
+		\ 'skip': {
+		\   'header': {
+		\     'leading': '^//',
+		\     'block'  : ['^/\*', '\*/\s*$'],
+		\   },
+		\ },
+<
+	block	リスト（任意）
+
+		設定されていると、値をパターンのペアと見なし、ファイル中の、
+		skip.block[0] にマッチする行から skip.block[1] にマッチする行
+		までをスキップします。
+>
+		\ 'skip': {
+		\   'block': ['^=begin', '^=end'],
+		\ },
+<
+
+skip_header()	関数（任意）			*unite-outline-info-skip_header()*
+
+	skip_header({lines},{context})
+
+	設定されていると、見出しの抽出に先立って呼ばれ、{lines} における、返値
+	（整数）で指定される添字の行までをスキップします。この関数を定義するこ
+	とによって、skip.header属性では指定が難しいタイプのヘッダをスキップす
+	ることができます。
+
+	skip_header() 関数に渡される引数は以下の通りです。
+	
+	* lines - リスト：ファイルの全行
+	* context - 辞書：その他の情報、以下の属性を含む
+	  * outline_info - 辞書：outline info
+
+------------------------------------------------------------------------------
+関数						*unite-outline-functions*
+
+unite#sources#outline#indent({level})		*unite#sources#outline#indent()*
+
+	見出しレベル {level} に応じたインデントのための空白文字列を返します。
+	インデントの幅には |g:unite_source_outline_indent_width| の値が考慮さ
+	れます。
+		
+	outline info の create_header() 関数が見出し文字列を作成する際に使用す
+	ることを想定しています。
+
+==============================================================================
+TODO						*unite-outline-todo*
+
+==============================================================================
+既知のバグ					*unite-outline-bugs*
+
+==============================================================================
+更新履歴					*unite-outline-changelog*
+
+https://github.com/h1mesuke/unite-outline/commits/master
+
+vim:tw=78:ts=8:ft=help:norl:noet:ai
