@@ -225,7 +225,8 @@ function! s:source.gather_candidates(args, context)
 
   if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
     let used_time = split(reltimestr(reltime(start_time)))[0]
-    echomsg "unite-outline: gather_candidates: Finished in " . used_time . " seconds."
+    let phl = str2float(used_time) * (100.0 / N_lines)
+    echomsg "unite-outline: used=" . used_time . "s, 100l=". string(phl) . "s"
   endif
 
   return cands
