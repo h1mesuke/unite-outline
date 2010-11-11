@@ -49,7 +49,7 @@ function! s:source.gather_candidates(args, context)
     let start_time = reltime()
   endif
 
-  let force = (len(a:args) > 0 && a:args[0] == '!')
+  let force = ((len(a:args) > 0 && a:args[0] == '!') || a:context.is_redraw)
   let path = expand('#:p')
   if s:cache.has(path) && !force
     return s:cache.read(path)
