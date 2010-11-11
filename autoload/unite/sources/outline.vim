@@ -66,7 +66,10 @@ function! s:source.gather_candidates(args, context)
   let N_lines = len(lines)
 
   " skip the header of the file
-  if has_key(outline_info, 'skip') && has_key(outline_info.skip, 'header')
+  if has_key(outline_info, 'skip_header')
+    let idx = outline_info.skip_header(lines, { 'outline_info': outline_info })
+    let lines = lines[idx :]
+  elseif has_key(outline_info, 'skip') && has_key(outline_info.skip, 'header')
     " eval once
     let val_type = type(outline_info.skip.header)
     if val_type == type("")
