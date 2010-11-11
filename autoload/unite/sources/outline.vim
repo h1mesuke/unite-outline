@@ -274,6 +274,7 @@ endfunction
 
 function! s:cache.read(path)
   let item = self.data[a:path]
+  let item.touched = localtime()
   return item.candidates
 endfunction
 
