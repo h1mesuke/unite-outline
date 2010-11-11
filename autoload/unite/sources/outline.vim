@@ -151,8 +151,9 @@ function! s:source.gather_candidates(args, context)
       let next_line = lines[idx + 1]
       if next_line =~ '[[:punct:]]\@!\S'
         if has_key(outline_info, 'create_heading')
-          let heading = outline_info.create_heading('heading-1', next_line, line,
-                \ { 'heading_index': idx + 1, 'matched_index': idx, 'lines': lines })
+          let heading = outline_info.create_heading('heading-1', next_line, line, {
+                \ 'heading_index': idx + 1, 'matched_index': idx, 'lines': lines,
+                \ 'outline_info': outline_info })
           if heading != ""
             call add(headings, [heading, next_line])
           endif
@@ -164,8 +165,9 @@ function! s:source.gather_candidates(args, context)
         let next_line = lines[idx + 2]
         if next_line =~ '[[:punct:]]\@!\S'
           if has_key(outline_info, 'create_heading')
-            let heading = outline_info.create_heading('heading-1', next_line, line,
-                  \ { 'heading_index': idx + 2, 'matched_index': idx, 'lines': lines })
+            let heading = outline_info.create_heading('heading-1', next_line, line, {
+                  \ 'heading_index': idx + 2, 'matched_index': idx, 'lines': lines,
+                  \ 'outline_info': outline_info })
             if heading != ""
               call add(headings, [heading, next_line])
             endif
@@ -178,8 +180,9 @@ function! s:source.gather_candidates(args, context)
     elseif match_head_line && line =~# head_line
       " matched: heading
       if has_key(outline_info, 'create_heading')
-        let heading = outline_info.create_heading('heading', line, line,
-              \ { 'heading_index': idx, 'matched_index': idx, 'lines': lines })
+        let heading = outline_info.create_heading('heading', line, line, {
+              \ 'heading_index': idx, 'matched_index': idx, 'lines': lines,
+              \ 'outline_info': outline_info })
         if heading != ""
           call add(headings, [heading, line])
         endif
@@ -191,8 +194,9 @@ function! s:source.gather_candidates(args, context)
       let prev_line = lines[idx - 1]
       if prev_line =~ '[[:punct:]]\@!\S'
         if has_key(outline_info, 'create_heading')
-          let heading = outline_info.create_heading('heading+1', prev_line, line,
-                \ { 'heading_index': idx - 1, 'matched_index': idx, 'lines': lines })
+          let heading = outline_info.create_heading('heading+1', prev_line, line, {
+                \ 'heading_index': idx - 1, 'matched_index': idx, 'lines': lines,
+                \ 'outline_info': outline_info })
           if heading != ""
             call add(headings, [heading, prev_line])
           endif
