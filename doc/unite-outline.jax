@@ -101,44 +101,44 @@ ToDo			|unite-outline-todo|
 
 g:unite_source_outline_info		*g:unite_source_outline_info*
 
-		ファイルタイプごとの outline info を格納する辞書。
-		outline info については |unite-source-outline-customize| を参
-		照して下さい。
+	ファイルタイプごとの outline info を格納する辞書。
+	outline info については |unite-source-outline-customize| を参照して下
+	さい。
 
-		初期値は {}
+	初期値は {}
 
-		※デフォルトの outline info はオートロード関数によって遅延ロー
-		ドされます。
+	※デフォルトの outline info はオートロード関数によって遅延ロードされる
+	ため、この辞書の初期値は空になっています。
 
 g:unite_source_outline_indent_width	*g:unite_source_outline_indent_width*
 
-		見出しレベルに応じて設定されるインデントの幅。
-		|unite#sources#outline#indent()| はこの値にもとづいてインデン
-		トのための空白文字列を生成します。
+	見出しレベルに応じて設定されるインデントの幅。
+	|unite#sources#outline#indent()| はこの値にもとづいてインデントのため
+	の空白文字列を生成します。
 
-		初期値は 2
+	初期値は 2
 
 g:unite_source_outline_cache_buffers	*g:unite_source_outline_cache_buffers*
 
-		見出しをキャッシュするバッファ数の上限。これを超えた分は参照時
-		刻の古いものから削除されます。
+	見出しをキャッシュするバッファ数の上限。これを超えた分は参照時刻の古い
+	ものから削除されます。
 
-		初期値は 10
+	初期値は 10
 
 g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
 
-		見出しをキャッシュするバッファの行数しきい値。見出し抽出の対象
-		ファイルの行数がこの変数に設定した値より大きい場合、抽出した見
-		出しはキャッシュされます。
+	見出しをキャッシュするバッファの行数しきい値。見出し抽出の対象ファイル
+	の行数がこの変数に設定した値より大きい場合、抽出した見出しをキャッシュ
+	します。
 
-		初期値は 100
+	初期値は 100
 
 g:unite_source_outline_after_jump_command
 				*g:unite_source_outline_after_jump_command*
 
-		見出しへのジャンプ後に実行するコマンド。
+	見出しへのジャンプ後に実行するコマンド。
 
-		初期値は "normal! ztkj"
+	初期値は "normal! ztkj"
 
 ==============================================================================
 カスタマイズ					*unite-outline-customize*
@@ -162,13 +162,23 @@ info の探索が実行されます。最初の１回に限り、以下のパス
 取得された outline info は g:unite_source_outline_info.{filetype} に設定され、
 以後はそこから取得されます。
 
-unite-outline がデフォルトで提供する outline info を上書きする方法は以下の２つです。
+unite-outline がデフォルトで提供する outline info を上書きする方法は以下の２つ
+です。
 
 1. vimrc にてグローバル変数に設定する
 
 	vimrc にて g:unite_source_outline_info.{filetype} に outline info を設
 	定する。
-
+>
+	let g:unite_source_outline_info.{filetype} = {
+	      \ 'heading-1': '^\s*#\s*[-=#]\{10,}\s*$',
+	      \ 'heading'  : '^\s*\(module\|class\|def\)\>',
+	      \ 'skip': {
+	      \   'header': '^#',
+	      \   'block' : ['^=begin', '^=end'],
+	      \ },
+	      \}
+<
 2. オートロード関数を定義する
 
 	$HOME/.vim/autoload/unite/sources/outline/ に {filetype}.vim を作成し、
@@ -336,6 +346,15 @@ skip_header()	関数（任意）			*unite-outline-info-skip_header()*
 ------------------------------------------------------------------------------
 関数						*unite-outline-functions*
 
+unite#sources#outline#alias({alias}, {src-filetype})
+						*unite#sources#outline#alias()*
+
+	ファイルタイプの別名を設定します。{src-filetype} の outline-info を別
+	のファイルタイプでも利用したい場合に使用します。
+>
+	call unite#sources#outline#alias('xhtml', 'html')
+	call unite#sources#outline#alias('zsh',   'sh')
+<
 unite#sources#outline#indent({level})		*unite#sources#outline#indent()*
 
 	見出しレベル {level} に応じたインデントのための空白文字列を返します。
