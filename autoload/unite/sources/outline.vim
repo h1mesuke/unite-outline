@@ -171,7 +171,7 @@ function! s:source.gather_candidates(args, context)
         endif
         let idx += 1
       endwhile
-    elseif match_head_prev && line =~# head_prev
+    elseif match_head_prev && line =~# head_prev && idx < n_lines - 3
       " matched: heading-1
       let next_line = lines[idx + 1]
       if next_line =~ '[[:punct:]]\@!\S'
@@ -185,7 +185,7 @@ function! s:source.gather_candidates(args, context)
         else
           call add(headings, [next_line, next_line])
         endif
-      else
+      elseif idx < n_lines - 4
         " see one more next
         let next_line = lines[idx + 2]
         if next_line =~ '[[:punct:]]\@!\S'
