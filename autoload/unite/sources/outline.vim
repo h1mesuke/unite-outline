@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-12
+" Updated : 2010-11-13
 " Version : 0.0.8
 " License : MIT license {{{
 "
@@ -38,6 +38,10 @@ function! unite#sources#outline#indent(level)
   return printf('%*s', (a:level - 1) * g:unite_source_outline_indent_width, '')
 endfunction
 
+function! unite#sources#outline#adjust_scroll()
+  execute 'normal! z.'  . winheight(0)/4 . "\<C-e>"
+endfunction
+
 "-----------------------------------------------------------------------------
 " Variables
 
@@ -58,7 +62,7 @@ if !exists('g:unite_source_outline_cache_limit')
 endif
 
 if !exists('g:unite_source_outline_after_jump_command')
-  let g:unite_source_outline_after_jump_command = "normal! z\<CR>kj"
+  let g:unite_source_outline_after_jump_command = 'call unite#sources#outline#adjust_scroll()'
 endif
 
 " aliases
