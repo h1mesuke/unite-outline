@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-11
+" Updated : 2010-11-12
 " Version : 0.0.6
 " License : MIT license {{{
 "
@@ -91,16 +91,21 @@ function! s:source.gather_candidates(args, context)
     let val_type = type(outline_info.skip.header)
     if val_type == type("")
       let skip_header_lead = 1 | let skip_header_block = 0
-      let header_lead  = outline_info.skip.header
+      let header_lead = outline_info.skip.header
     elseif val_type == type([])
       let skip_header_lead = 0 | let skip_header_block = 1
       let header_begin = outline_info.skip.header[0]
       let header_end   = outline_info.skip.header[1]
     elseif val_type == type({})
-      let skip_header_lead = 1 | let skip_header_block = 1
-      let header_lead  = outline_info.skip.header.leading
-      let header_begin = outline_info.skip.header.block[0]
-      let header_end   = outline_info.skip.header.block[1]
+      let skip_header_lead = has_key(outline_info.skip.header, 'leading')
+      if skip_header_lead
+        let header_lead = outline_info.skip.header.leading
+      endif
+      let skip_header_block = has_key(outline_info.skip.header, 'block')
+      if skip_header_block
+        let header_begin = outline_info.skip.header.block[0]
+        let header_end   = outline_info.skip.header.block[1]
+      endif
     endif
 
     let idx = 0
