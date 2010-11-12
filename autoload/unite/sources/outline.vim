@@ -58,7 +58,7 @@ if !exists('g:unite_source_outline_cache_limit')
 endif
 
 if !exists('g:unite_source_outline_after_jump_command')
-  let g:unite_source_outline_after_jump_command = 'normal! ztkj'
+  let g:unite_source_outline_after_jump_command = "normal! z\<CR>kj"
 endif
 
 " aliases
@@ -321,7 +321,9 @@ let s:action_table.jump = {
       \ }
 function! s:action_table.jump.func(candidates)
   call unite#take_action('open', a:candidates)
-  execute g:unite_source_outline_after_jump_command
+  if g:unite_source_outline_after_jump_command != ''
+    execute g:unite_source_outline_after_jump_command
+  endif
 endfunction
 
 let s:source.action_table.jump_list = s:action_table
