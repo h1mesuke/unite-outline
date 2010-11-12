@@ -199,7 +199,7 @@ function! s:source.gather_candidates(args, context)
           else
             call add(headings, [next_line, next_line])
           endif
-        elseif idx < n_lines - 4
+        elseif next_line =~ '\S' && idx < n_lines - 4
           " see one more next
           let next_line = lines[idx + 2]
           if next_line =~ '[[:punct:]]\@!\S'
