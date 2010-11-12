@@ -2,7 +2,7 @@
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
 " Updated : 2010-11-12
-" Version : 0.0.7
+" Version : 0.0.8
 " License : MIT license {{{
 "
 "     Permission is hereby granted, free of charge, to any person obtaining
@@ -28,6 +28,10 @@
 
 function! unite#sources#outline#define()
   return s:source
+endfunction
+
+function! unite#sources#outline#alias(alias, src_filetype)
+  let g:unite_source_outline_info[a:alias] = a:src_filetype
 endfunction
 
 function! unite#sources#outline#indent(level)
@@ -57,6 +61,11 @@ if !exists('g:unite_source_outline_after_jump_command')
   let g:unite_source_outline_after_jump_command = 'normal! ztkj'
 endif
 
+" aliases
+call unite#sources#outline#alias('cfg',   'dosini')
+call unite#sources#outline#alias('xhtml', 'html')
+call unite#sources#outline#alias('zsh',   'sh')
+
 "-----------------------------------------------------------------------------
 " Source
 
@@ -68,138 +77,121 @@ let s:source = {
       \ }
 
 function! s:source.gather_candidates(args, context)
-  if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
-    let start_time = reltime()
-  endif
-
-  let is_force = ((len(a:args) > 0 && a:args[0] == '!') || a:context.is_redraw)
-  let path = expand('#:p')
-  if s:cache.has(path) && !is_force
-    return s:cache.read(path)
-  endif
-
-  let filetype = getbufvar('#', '&filetype')
-  let outline_info = s:get_outline_info(filetype)
-  if len(outline_info) == 0
-    call unite#print_error("unite-outline: not supported filetype: " . filetype)
-    return []
-  endif
-
-  let lines = getbufline('#', 1, '$')
-  let N_lines = len(lines)
-
-  " skip the header of the file
-  if has_key(outline_info, 'skip_header')
-    let idx = outline_info.skip_header(lines, { 'outline_info': outline_info })
-    let lines = lines[idx :]
-
-  elseif has_key(outline_info, 'skip') && has_key(outline_info.skip, 'header')
-    " eval once
-    let val_type = type(outline_info.skip.header)
-    if val_type == type("")
-      let skip_header_lead = 1 | let skip_header_block = 0
-      let header_lead = outline_info.skip.header
-    elseif val_type == type([])
-      let skip_header_lead = 0 | let skip_header_block = 1
-      let header_begin = outline_info.skip.header[0]
-      let header_end   = outline_info.skip.header[1]
-    elseif val_type == type({})
-      let skip_header_lead = has_key(outline_info.skip.header, 'leading')
-      if skip_header_lead
-        let header_lead = outline_info.skip.header.leading
-      endif
-      let skip_header_block = has_key(outline_info.skip.header, 'block')
-      if skip_header_block
-        let header_begin = outline_info.skip.header.block[0]
-        let header_end   = outline_info.skip.header.block[1]
-      endif
+  try
+    if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
+      let start_time = reltime()
     endif
 
-    let idx = 0
-    while idx < N_lines
-      let line = lines[idx]
-      if skip_header_lead && line =~# header_lead
-        let idx += 1
-        while idx < N_lines
-          let line = lines[idx]
-          if line !~# header_lead
-            break
-          endif
-          let idx += 1
-        endwhile
-      elseif skip_header_block && line =~# header_begin
-        let idx += 1
-        while idx < N_lines
-          let line = lines[idx]
-          if line =~# header_end
-            break
-          endif
-          let idx += 1
-        endwhile
-        let idx += 1
-      else
-        break
+    let is_force = ((len(a:args) > 0 && a:args[0] == '!') || a:context.is_redraw)
+    let path = expand('#:p')
+    if s:cache.has(path) && !is_force
+      return s:cache.read(path)
+    endif
+
+    let filetype = getbufvar('#', '&filetype')
+    let outline_info = s:get_outline_info(filetype)
+
+    let lines = getbufline('#', 1, '$')
+    let N_lines = len(lines)
+
+    " skip the header of the file
+    if has_key(outline_info, 'skip_header')
+      let idx = outline_info.skip_header(lines, { 'outline_info': outline_info })
+      let lines = lines[idx :]
+
+    elseif has_key(outline_info, 'skip') && has_key(outline_info.skip, 'header')
+      " eval once
+      let val_type = type(outline_info.skip.header)
+      if val_type == type("")
+        let skip_header_lead = 1 | let skip_header_block = 0
+        let header_lead = outline_info.skip.header
+      elseif val_type == type([])
+        let skip_header_lead = 0 | let skip_header_block = 1
+        let header_begin = outline_info.skip.header[0]
+        let header_end   = outline_info.skip.header[1]
+      elseif val_type == type({})
+        let skip_header_lead = has_key(outline_info.skip.header, 'leading')
+        if skip_header_lead
+          let header_lead = outline_info.skip.header.leading
+        endif
+        let skip_header_block = has_key(outline_info.skip.header, 'block')
+        if skip_header_block
+          let header_begin = outline_info.skip.header.block[0]
+          let header_end   = outline_info.skip.header.block[1]
+        endif
       endif
-    endwhile
-    let lines = lines[idx :]
-  endif
 
-  " eval once
-  let skip_block = has_key(outline_info, 'skip') && has_key(outline_info.skip, 'block')
-  if skip_block
-    let skip_block_begin = outline_info.skip.block[0]
-    let skip_block_end   = outline_info.skip.block[1]
-  endif
-  let match_head_prev = has_key(outline_info, 'heading-1')
-  if match_head_prev
-    let head_prev = outline_info['heading-1']
-  endif
-  let match_head_line = has_key(outline_info, 'heading')
-  if match_head_line
-    let head_line = outline_info.heading
-  endif
-  let match_head_next = has_key(outline_info, 'heading+1')
-  if match_head_next
-    let head_next = outline_info['heading+1']
-  endif
-
-  " collect headings
-  let headings = []
-  let idx = 0 | let n_lines = len(lines)
-  while idx < n_lines
-    let line = lines[idx]
-    if skip_block && line =~# skip_block_begin
-      " skip a documentation block
-      let idx += 1
-      while idx < n_lines
+      let idx = 0
+      while idx < N_lines
         let line = lines[idx]
-        if line =~# skip_block_end
+        if skip_header_lead && line =~# header_lead
+          let idx += 1
+          while idx < N_lines
+            let line = lines[idx]
+            if line !~# header_lead
+              break
+            endif
+            let idx += 1
+          endwhile
+        elseif skip_header_block && line =~# header_begin
+          let idx += 1
+          while idx < N_lines
+            let line = lines[idx]
+            if line =~# header_end
+              break
+            endif
+            let idx += 1
+          endwhile
+          let idx += 1
+        else
           break
         endif
-        let idx += 1
       endwhile
+      let lines = lines[idx :]
+    endif
 
-    elseif match_head_prev && line =~# head_prev && idx < n_lines - 3
-      " matched: heading-1
-      let next_line = lines[idx + 1]
-      if next_line =~ '[[:punct:]]\@!\S'
-        if has_key(outline_info, 'create_heading')
-          let heading = outline_info.create_heading('heading-1', next_line, line, {
-                \ 'heading_index': idx + 1, 'matched_index': idx, 'lines': lines,
-                \ 'outline_info': outline_info })
-          if heading != ""
-            call add(headings, [heading, next_line])
+    " eval once
+    let skip_block = has_key(outline_info, 'skip') && has_key(outline_info.skip, 'block')
+    if skip_block
+      let skip_block_begin = outline_info.skip.block[0]
+      let skip_block_end   = outline_info.skip.block[1]
+    endif
+    let match_head_prev = has_key(outline_info, 'heading-1')
+    if match_head_prev
+      let head_prev = outline_info['heading-1']
+    endif
+    let match_head_line = has_key(outline_info, 'heading')
+    if match_head_line
+      let head_line = outline_info.heading
+    endif
+    let match_head_next = has_key(outline_info, 'heading+1')
+    if match_head_next
+      let head_next = outline_info['heading+1']
+    endif
+
+    " collect headings
+    let headings = []
+    let idx = 0 | let n_lines = len(lines)
+    while idx < n_lines
+      let line = lines[idx]
+      if skip_block && line =~# skip_block_begin
+        " skip a documentation block
+        let idx += 1
+        while idx < n_lines
+          let line = lines[idx]
+          if line =~# skip_block_end
+            break
           endif
-        else
-          call add(headings, [next_line, next_line])
-        endif
-      elseif idx < n_lines - 4
-        " see one more next
-        let next_line = lines[idx + 2]
+          let idx += 1
+        endwhile
+
+      elseif match_head_prev && line =~# head_prev && idx < n_lines - 3
+        " matched: heading-1
+        let next_line = lines[idx + 1]
         if next_line =~ '[[:punct:]]\@!\S'
           if has_key(outline_info, 'create_heading')
             let heading = outline_info.create_heading('heading-1', next_line, line, {
-                  \ 'heading_index': idx + 2, 'matched_index': idx, 'lines': lines,
+                  \ 'heading_index': idx + 1, 'matched_index': idx, 'lines': lines,
                   \ 'outline_info': outline_info })
             if heading != ""
               call add(headings, [heading, next_line])
@@ -207,70 +199,98 @@ function! s:source.gather_candidates(args, context)
           else
             call add(headings, [next_line, next_line])
           endif
+        elseif idx < n_lines - 4
+          " see one more next
+          let next_line = lines[idx + 2]
+          if next_line =~ '[[:punct:]]\@!\S'
+            if has_key(outline_info, 'create_heading')
+              let heading = outline_info.create_heading('heading-1', next_line, line, {
+                    \ 'heading_index': idx + 2, 'matched_index': idx, 'lines': lines,
+                    \ 'outline_info': outline_info })
+              if heading != ""
+                call add(headings, [heading, next_line])
+              endif
+            else
+              call add(headings, [next_line, next_line])
+            endif
+          endif
+        endif
+        let idx += 1
+
+      elseif match_head_line && line =~# head_line
+        " matched: heading
+        if has_key(outline_info, 'create_heading')
+          let heading = outline_info.create_heading('heading', line, line, {
+                \ 'heading_index': idx, 'matched_index': idx, 'lines': lines,
+                \ 'outline_info': outline_info })
+          if heading != ""
+            call add(headings, [heading, line])
+          endif
+        else
+          call add(headings, [line, line])
+        endif
+
+      elseif match_head_next && line =~# head_next && idx > 0
+        " matched: heading+1
+        let prev_line = lines[idx - 1]
+        if prev_line =~ '[[:punct:]]\@!\S'
+          if has_key(outline_info, 'create_heading')
+            let heading = outline_info.create_heading('heading+1', prev_line, line, {
+                  \ 'heading_index': idx - 1, 'matched_index': idx, 'lines': lines,
+                  \ 'outline_info': outline_info })
+            if heading != ""
+              call add(headings, [heading, prev_line])
+            endif
+          else
+            call add(headings, [prev_line, prev_line])
+          endif
         endif
       endif
       let idx += 1
+    endwhile
 
-    elseif match_head_line && line =~# head_line
-      " matched: heading
-      if has_key(outline_info, 'create_heading')
-        let heading = outline_info.create_heading('heading', line, line, {
-              \ 'heading_index': idx, 'matched_index': idx, 'lines': lines,
-              \ 'outline_info': outline_info })
-        if heading != ""
-          call add(headings, [heading, line])
-        endif
-      else
-        call add(headings, [line, line])
-      endif
+    let cands = map(headings, '{
+          \ "word": v:val[0],
+          \ "source": "outline",
+          \ "kind": "jump_list",
+          \ "action__path": path,
+          \ "action__pattern": "^" . s:escape_regex(v:val[1]) . "$",
+          \ }')
 
-    elseif match_head_next && line =~# head_next && idx > 0
-      " matched: heading+1
-      let prev_line = lines[idx - 1]
-      if prev_line =~ '[[:punct:]]\@!\S'
-        if has_key(outline_info, 'create_heading')
-          let heading = outline_info.create_heading('heading+1', prev_line, line, {
-                \ 'heading_index': idx - 1, 'matched_index': idx, 'lines': lines,
-                \ 'outline_info': outline_info })
-          if heading != ""
-            call add(headings, [heading, prev_line])
-          endif
-        else
-          call add(headings, [prev_line, prev_line])
-        endif
-      endif
+    if N_lines > g:unite_source_outline_cache_limit
+      call s:cache.write(path, cands)
     endif
-    let idx += 1
-  endwhile
 
-  let cands = map(headings, '{
-        \ "word": v:val[0],
-        \ "source": "outline",
-        \ "kind": "jump_list",
-        \ "action__path": path,
-        \ "action__pattern": "^" . s:escape_regex(v:val[1]) . "$",
-        \ }')
+    if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
+      let used_time = split(reltimestr(reltime(start_time)))[0]
+      let phl = str2float(used_time) * (100.0 / N_lines)
+      echomsg "unite-outline: used=" . used_time . "s, 100l=". string(phl) . "s"
+    endif
 
-  if N_lines > g:unite_source_outline_cache_limit
-    call s:cache.write(path, cands)
-  endif
-
-  if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
-    let used_time = split(reltimestr(reltime(start_time)))[0]
-    let phl = str2float(used_time) * (100.0 / N_lines)
-    echomsg "unite-outline: used=" . used_time . "s, 100l=". string(phl) . "s"
-  endif
-
-  return cands
+    return cands
+  catch
+    call unite#print_error(v:throwpoint)
+    call unite#print_error(v:exception)
+    return []
+  endtry
 endfunction
 
 function! s:escape_regex(str)
   return escape(a:str, '^$[].*\~')
 endfunction
 
-function! s:get_outline_info(filetype)
+function! s:get_outline_info(filetype, ...)
+  if a:0 && a:filetype == a:1
+    throw "unite-outline: get_outline_info: infinite recursive call for '" . a:1 . "'"
+  endif
   if has_key(g:unite_source_outline_info, a:filetype)
-    return g:unite_source_outline_info[a:filetype]
+    if type(g:unite_source_outline_info[a:filetype]) == type("")
+      " resolve an alias
+      let src_filetype = g:unite_source_outline_info[a:filetype]
+      return s:get_outline_info(src_filetype, (a:0 ? a:1 : a:filetype))
+    else
+      return g:unite_source_outline_info[a:filetype]
+    endif
   else
     let tries = [
           \ 'outline#',
@@ -285,14 +305,10 @@ function! s:get_outline_info(filetype)
         return outline_info
       catch /^Vim\%((\a\+)\)\=:E117:/
         " no file or undefined, go next
-      catch
-        " error on eval
-        call unite#print_error(v:throwpoint)
-        call unite#print_error(v:exception)
       endtry
     endfor
   endif
-  return {}
+  throw "unite-outline: not supported filetype: " . filetype
 endfunction
 
 "---------------------------------------
