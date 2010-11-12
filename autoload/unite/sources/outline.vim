@@ -2,7 +2,7 @@
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
 " Updated : 2010-11-12
-" Version : 0.0.6
+" Version : 0.0.7
 " License : MIT license {{{
 "
 "     Permission is hereby granted, free of charge, to any person obtaining
@@ -53,11 +53,17 @@ if !exists('g:unite_source_outline_cache_limit')
   let g:unite_source_outline_cache_limit = 100
 endif
 
+if !exists('g:unite_source_outline_after_jump_command')
+  let g:unite_source_outline_after_jump_command = 'normal! ztkj'
+endif
+
 "-----------------------------------------------------------------------------
 " Source
 
 let s:source = {
       \ 'name': 'outline',
+      \ 'action_table': {},
+      \ 'default_action': {},
       \ 'is_volatile': 1,
       \ }
 
@@ -66,9 +72,9 @@ function! s:source.gather_candidates(args, context)
     let start_time = reltime()
   endif
 
-  let force = ((len(a:args) > 0 && a:args[0] == '!') || a:context.is_redraw)
+  let is_force = ((len(a:args) > 0 && a:args[0] == '!') || a:context.is_redraw)
   let path = expand('#:p')
-  if s:cache.has(path) && !force
+  if s:cache.has(path) && !is_force
     return s:cache.read(path)
   endif
 
@@ -86,6 +92,7 @@ function! s:source.gather_candidates(args, context)
   if has_key(outline_info, 'skip_header')
     let idx = outline_info.skip_header(lines, { 'outline_info': outline_info })
     let lines = lines[idx :]
+
   elseif has_key(outline_info, 'skip') && has_key(outline_info.skip, 'header')
     " eval once
     let val_type = type(outline_info.skip.header)
@@ -171,6 +178,7 @@ function! s:source.gather_candidates(args, context)
         endif
         let idx += 1
       endwhile
+
     elseif match_head_prev && line =~# head_prev && idx < n_lines - 3
       " matched: heading-1
       let next_line = lines[idx + 1]
@@ -202,6 +210,7 @@ function! s:source.gather_candidates(args, context)
         endif
       endif
       let idx += 1
+
     elseif match_head_line && line =~# head_line
       " matched: heading
       if has_key(outline_info, 'create_heading')
@@ -214,6 +223,7 @@ function! s:source.gather_candidates(args, context)
       else
         call add(headings, [line, line])
       endif
+
     elseif match_head_next && line =~# head_next && idx > 0
       " matched: heading+1
       let prev_line = lines[idx - 1]
@@ -284,6 +294,24 @@ function! s:get_outline_info(filetype)
   endif
   return {}
 endfunction
+
+"---------------------------------------
+" Action
+
+let s:action_table = {}
+let s:action_table.jump = {
+      \ 'description': 'jump this position',
+      \ 'is_selectable': 0,
+      \ }
+function! s:action_table.jump.func(candidates)
+  call unite#take_action('open', a:candidates)
+  execute g:unite_source_outline_after_jump_command
+endfunction
+
+let s:source.action_table.jump_list = s:action_table
+let s:source.default_action.jump_list = 'jump'
+
+unlet s:action_table
 
 "-----------------------------------------------------------------------------
 " Cache
