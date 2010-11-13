@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-13
+" Updated : 2010-11-14
 " Version : 0.0.8
 " License : MIT license {{{
 "
@@ -32,6 +32,38 @@ endfunction
 
 function! unite#sources#outline#alias(alias, src_filetype)
   let g:unite_source_outline_info[a:alias] = a:src_filetype
+endfunction
+
+function! unite#sources#outline#get_outline_info(filetype, ...)
+  if a:0 && a:filetype == a:1
+    throw "unite-outline: get_outline_info: infinite recursive call for '" . a:1 . "'"
+  endif
+  if has_key(g:unite_source_outline_info, a:filetype)
+    if type(g:unite_source_outline_info[a:filetype]) == type("")
+      " resolve an alias
+      let src_filetype = g:unite_source_outline_info[a:filetype]
+      return unite#sources#outline#get_outline_info(src_filetype, (a:0 ? a:1 : a:filetype))
+    else
+      return g:unite_source_outline_info[a:filetype]
+    endif
+  else
+    let tries = [
+          \ 'outline#',
+          \ 'unite#sources#outline#',
+          \ 'unite#sources#outline#defaults#',
+          \ ]
+    for path in tries
+      let load_func = path . a:filetype . '#outline_info'
+      try
+        execute 'let outline_info = ' . load_func . '()'
+        let g:unite_source_outline_info[a:filetype] = outline_info
+        return outline_info
+      catch /^Vim\%((\a\+)\)\=:E117:/
+        " no file or undefined, go next
+      endtry
+    endfor
+  endif
+  throw "unite-outline: not supported filetype: " . filetype
 endfunction
 
 function! unite#sources#outline#indent(level)
@@ -93,7 +125,7 @@ function! s:source.gather_candidates(args, context)
     endif
 
     let filetype = getbufvar('#', '&filetype')
-    let outline_info = s:get_outline_info(filetype)
+    let outline_info = unite#sources#outline#get_outline_info(filetype)
 
     let lines = getbufline('#', 1, '$')
     let N_lines = len(lines)
@@ -281,38 +313,6 @@ endfunction
 
 function! s:escape_regex(str)
   return escape(a:str, '^$[].*\~')
-endfunction
-
-function! s:get_outline_info(filetype, ...)
-  if a:0 && a:filetype == a:1
-    throw "unite-outline: get_outline_info: infinite recursive call for '" . a:1 . "'"
-  endif
-  if has_key(g:unite_source_outline_info, a:filetype)
-    if type(g:unite_source_outline_info[a:filetype]) == type("")
-      " resolve an alias
-      let src_filetype = g:unite_source_outline_info[a:filetype]
-      return s:get_outline_info(src_filetype, (a:0 ? a:1 : a:filetype))
-    else
-      return g:unite_source_outline_info[a:filetype]
-    endif
-  else
-    let tries = [
-          \ 'outline#',
-          \ 'unite#sources#outline#',
-          \ 'unite#sources#outline#defaults#',
-          \ ]
-    for path in tries
-      let load_func = path . a:filetype . '#outline_info'
-      try
-        execute 'let outline_info = ' . load_func . '()'
-        let g:unite_source_outline_info[a:filetype] = outline_info
-        return outline_info
-      catch /^Vim\%((\a\+)\)\=:E117:/
-        " no file or undefined, go next
-      endtry
-    endfor
-  endif
-  throw "unite-outline: not supported filetype: " . filetype
 endfunction
 
 "---------------------------------------
