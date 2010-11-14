@@ -36,11 +36,12 @@ endfunction
 
 function! unite#sources#outline#get_outline_info(filetype, ...)
   if a:0 && a:filetype == a:1
-    throw "unite-outline: get_outline_info: infinite recursive call for '" . a:1 . "'"
+    throw "RuntimeError: unite-outline: " .
+          \ "get_outline_info: infinite recursive call for '" . a:1 . "'"
   endif
   if has_key(g:unite_source_outline_info, a:filetype)
     if type(g:unite_source_outline_info[a:filetype]) == type("")
-      " resolve an alias
+      " resolve the alias
       let src_filetype = g:unite_source_outline_info[a:filetype]
       return unite#sources#outline#get_outline_info(src_filetype, (a:0 ? a:1 : a:filetype))
     else
@@ -63,15 +64,28 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
       endtry
     endfor
   endif
-  throw "unite-outline: not supported filetype: " . filetype
+  return {}
 endfunction
+
+function! unite#sources#outline#adjust_scroll()
+  execute 'normal! z.'  . winheight(0)/4 . "\<C-e>"
+endfunction
+
+"---------------------------------------
+" Utils
 
 function! unite#sources#outline#indent(level)
   return printf('%*s', (a:level - 1) * g:unite_source_outline_indent_width, '')
 endfunction
 
-function! unite#sources#outline#adjust_scroll()
-  execute 'normal! z.'  . winheight(0)/4 . "\<C-e>"
+function! unite#sources#outline#capitalize(str)
+  return substitute(a:str, '\<\(\u\)\(\u\+\)\>', '\u\1\L\2', 'g')
+endfunction
+
+function! unite#sources#outline#neighbor_match(lines, idx, pattern)
+  return (a:lines[a:idx] =~ a:pattern ||
+        \ (a:idx > 1 && a:lines[a:idx - 1] =~ a:pattern) ||
+        \ (a:idx < len(a:lines) - 1 && a:lines[a:idx + 1] =~ a:pattern))
 endfunction
 
 "-----------------------------------------------------------------------------
@@ -126,6 +140,10 @@ function! s:source.gather_candidates(args, context)
 
     let filetype = getbufvar('#', '&filetype')
     let outline_info = unite#sources#outline#get_outline_info(filetype)
+    if len(outline_info) == 0
+      call unite#print_error("unite-outline: not supported filetype: " . filetype)
+      return []
+    endif
 
     let lines = getbufline('#', 1, '$')
     let N_lines = len(lines)
