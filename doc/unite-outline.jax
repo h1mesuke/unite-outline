@@ -109,7 +109,7 @@ g:unite_source_outline_info		*g:unite_source_outline_info*
 
 	※デフォルトの outline info はオートロード関数によって遅延ロードされる
 	ため、この辞書の初期値は空になっています。outline info については
-	|unite-source-outline-customize| を参照して下さい。
+	|unite-source-outline-info| を参照して下さい。
 
 g:unite_source_outline_indent_width	*g:unite_source_outline_indent_width*
 
@@ -173,7 +173,7 @@ outline info を作成・使用したい場合、その方法は以下の２つ�
 1. vimrc にてグローバル変数に設定する
 
 	vimrc にて g:unite_source_outline_info.{filetype} に outline info を設
-	定する。
+	定します。
 >
 	let g:unite_source_outline_info.{filetype} = {
 	      \ 'heading-1': '^\s*#\s*[-=#]\{10,}\s*$',
@@ -187,8 +187,8 @@ outline info を作成・使用したい場合、その方法は以下の２つ�
 2. オートロード関数を定義する
 
 	$HOME/.vim/autoload/unite/sources/outline/ に {filetype}.vim を作成し、
-	そこに unite#sources#outline#{filetype}#outline_info() 関数を定義。
-	その返値として outline info を返す。
+	そこに unite#sources#outline#{filetype}#outline_info() 関数を定義しま
+	す。その返値として、outline info を返します。
 
 	こちらは遅延ロードになるため必要になるまでロードされません。vimrc を肥
 	大化させることもないので outline info を作り込むのであればこちらの方法
@@ -227,7 +227,7 @@ heading-1	文字列（任意）			*unite-outline-info-heading-1*
 	 ****************************************/
 <
 	こういうタイプの見出しにも対応できるよう、次の行が実質上の空行とみなせ
-	る場合には、もうひとつ次の行も見るにようになっています。
+	る場合は、もうひとつ次の行も見るにようになっています。
 
 
 heading		文字列（任意） 			*unite-outline-info-heading*
