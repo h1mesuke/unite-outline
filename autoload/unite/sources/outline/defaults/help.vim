@@ -1,14 +1,14 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/help.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-14
+" Updated : 2010-11-15
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
 "
 "=============================================================================
 
-" Default outline info for Vim's help
+" Default outline info for Vim Help
 
 function! unite#sources#outline#defaults#help#outline_info()
   return s:outline_info
@@ -30,8 +30,10 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   elseif a:which ==# 'heading'
     let level = 2
     if a:heading_line =~ '\~\s*$'
-      let h = a:context.heading_index
-      if unite#sources#outline#neighbor_match(a:context.lines, h, '\*\S\+\*')
+      let lines = a:context.lines | let h = a:context.heading_index
+      if a:heading_line =~ '^\d\+\.\d\+\s'
+        " keep this level
+      elseif unite#sources#outline#neighbor_match(lines, h, '\*\S\+\*')
         let level += 1
       else
         let level = 0
@@ -39,11 +41,11 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     endif
   endif
   if level > 0
-    let heading = unite#sources#outline#indent(level) . a:heading_line
+    let heading = substitute(a:heading_line, '\(\~\|{{{\d\=\)\s*$', '', '')
     if a:heading_line =~ '^\u\u'
-      let heading = unite#sources#outline#capitalize(heading)
+      let heading = unite#sources#outline#capitalize(heading, 'g')
     endif
-    let heading = substitute(heading, '\(\~\|{{{\d\=\)\s*$', '', '')
+    let heading = unite#sources#outline#indent(level) . heading
     return heading
   else
     return ""
