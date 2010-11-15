@@ -353,8 +353,9 @@ function! s:source.gather_candidates(args, context)
       let idx += 1
     endwhile
 
+    let ts = getbufvar('#', '&tabstop')
     let cands = map(headings, '{
-          \ "word": v:val[0],
+          \ "word": s:expand_leading_tabs(v:val[0], ts),
           \ "source": "outline",
           \ "kind": "jump_list",
           \ "action__path": path,
@@ -377,6 +378,16 @@ function! s:source.gather_candidates(args, context)
     call unite#print_error(v:exception)
     return []
   endtry
+endfunction
+
+function! s:expand_leading_tabs(str, ts)
+  let lead_tabs = matchstr(a:str, '^\t\+')
+  let ntab = strlen(lead_tabs)
+  if ntab > 0
+    return substitute(a:str, '^\t\+', printf('%*s', ntab * a:ts, ""), '')
+  else
+    return a:str
+  endif
 endfunction
 
 function! s:escape_regex(str)
