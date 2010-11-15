@@ -165,9 +165,10 @@ endif
 "-----------------------------------------------------------------------------
 " Aliases
 
-call unite#sources#outline#alias('cfg',   'dosini')
-call unite#sources#outline#alias('xhtml', 'html')
-call unite#sources#outline#alias('zsh',   'sh')
+call unite#sources#outline#alias('cfg',      'dosini')
+call unite#sources#outline#alias('plaintex', 'tex')
+call unite#sources#outline#alias('xhtml',    'html')
+call unite#sources#outline#alias('zsh',      'sh')
 
 "-----------------------------------------------------------------------------
 " Source
