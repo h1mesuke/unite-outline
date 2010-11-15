@@ -49,7 +49,6 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
     endif
   else
     let tries = [
-          \ 'outline#',
           \ 'unite#sources#outline#',
           \ 'unite#sources#outline#defaults#',
           \ ]
@@ -68,7 +67,7 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
 endfunction
 
 function! unite#sources#outline#adjust_scroll()
-  execute 'normal! z.'  . winheight(0)/4 . "\<C-e>"
+  execute 'normal! z.'  . winheight(0) / 4 . "\<C-e>"
 endfunction
 
 "---------------------------------------
@@ -176,6 +175,15 @@ let s:source = {
       \ 'is_volatile': 1,
       \ }
 
+function! s:source.on_init(args, context)
+  let s:buffer = {
+        \ 'path'    : expand('%:p'),
+        \ 'filetype': getbufvar('%', '&filetype'),
+        \ 'tabstop' : getbufvar('%', '&tabstop'),
+        \ 'lines'   : getbufline('%', 1, '$'),
+        \ }
+endfunction
+
 function! s:source.gather_candidates(args, context)
   try
     if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
@@ -183,19 +191,19 @@ function! s:source.gather_candidates(args, context)
     endif
 
     let is_force = ((len(a:args) > 0 && a:args[0] == '!') || a:context.is_redraw)
-    let path = expand('#:p')
+    let path = s:buffer.path
     if s:cache.has(path) && !is_force
       return s:cache.read(path)
     endif
 
-    let filetype = getbufvar('#', '&filetype')
+    let filetype = s:buffer.filetype
     let outline_info = unite#sources#outline#get_outline_info(filetype)
     if len(outline_info) == 0
       call unite#print_error("unite-outline: not supported filetype: " . filetype)
       return []
     endif
 
-    let lines = getbufline('#', 1, '$')
+    let lines = s:buffer.lines
     let N_lines = len(lines)
 
     " skip the header of the file
@@ -353,7 +361,7 @@ function! s:source.gather_candidates(args, context)
       let idx += 1
     endwhile
 
-    let ts = getbufvar('#', '&tabstop')
+    let ts = s:buffer.tabstop
     let cands = map(headings, '{
           \ "word": s:expand_leading_tabs(v:val[0], ts),
           \ "source": "outline",
