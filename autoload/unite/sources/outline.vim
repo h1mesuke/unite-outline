@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-15
+" Updated : 2010-11-16
 " Version : 0.0.8
 " License : MIT license {{{
 "
@@ -67,7 +67,11 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
 endfunction
 
 function! unite#sources#outline#adjust_scroll()
-  execute 'normal! z.'  . winheight(0) / 4 . "\<C-e>"
+  let winh = winheight(0)
+  let lnum = line('.')
+  if lnum > winh / 2
+    execute 'normal! z.'  . winh / 4 . "\<C-e>"
+  endif
 endfunction
 
 "---------------------------------------
