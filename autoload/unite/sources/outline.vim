@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-14
+" Updated : 2010-11-15
 " Version : 0.0.8
 " License : MIT license {{{
 "
@@ -78,14 +78,62 @@ function! unite#sources#outline#indent(level)
   return printf('%*s', (a:level - 1) * g:unite_source_outline_indent_width, '')
 endfunction
 
-function! unite#sources#outline#capitalize(str)
-  return substitute(a:str, '\<\(\u\)\(\u\+\)\>', '\u\1\L\2', 'g')
+function! unite#sources#outline#capitalize(str, ...)
+  let flag = (a:0 ? a:1 : '')
+  return substitute(a:str, '\<\(\u\)\(\u\+\)\>', '\u\1\L\2', flag)
 endfunction
 
-function! unite#sources#outline#neighbor_match(lines, idx, pattern)
-  return (a:lines[a:idx] =~ a:pattern ||
-        \ (a:idx > 1 && a:lines[a:idx - 1] =~ a:pattern) ||
-        \ (a:idx < len(a:lines) - 1 && a:lines[a:idx + 1] =~ a:pattern))
+function! unite#sources#outline#join_to(lines, idx, pattern, ...)
+  let limit = (a:0 ? a:1 : 3)
+  if limit < 0
+    return s:join_to_backward(a:lines, a:idx, a:pattern, limit * -1)
+  endif
+  let ret = ""
+  let idx = a:idx
+  let lim_idx = min([len(a:lines) - 1, a:idx + limit])
+  while idx <= lim_idx
+    let line = a:lines[idx]
+    let ret .= line
+    if line =~ a:pattern
+      break
+    endif
+    let idx += 1
+  endwhile
+  return ret
+endfunction
+
+function! s:join_to_backward(lines, idx, pattern, ...)
+  let limit = (a:0 ? a:1 : 3)
+  let ret = ""
+  let idx = a:idx
+  let lim_idx = max(0, a:idx - limit])
+  while idx > 0
+    let line = a:lines[idx]
+    let ret = line . ret
+    if line =~ a:pattern
+      break
+    endif
+    let idx -= 1
+  endwhile
+  return ret
+endfunction
+
+function! unite#sources#outline#neighbor_match(lines, idx, pattern, ...)
+  let nb = (a:0 ? a:1 : 1)
+  if type(nb) == type([])
+    let prev = nb[0]
+    let next = nb[1]
+  else
+    let prev = nb
+    let next = nb
+  endif
+  let nb_range = range(max([0, a:idx - prev]), min([a:idx + next, len(a:lines) - 1]))
+  for idx in nb_range
+    if a:lines[idx] =~ a:pattern
+      return 1
+    endif
+  endfor
+  return 0
 endfunction
 
 "-----------------------------------------------------------------------------
@@ -111,7 +159,9 @@ if !exists('g:unite_source_outline_after_jump_command')
   let g:unite_source_outline_after_jump_command = 'call unite#sources#outline#adjust_scroll()'
 endif
 
-" aliases
+"-----------------------------------------------------------------------------
+" Aliases
+
 call unite#sources#outline#alias('cfg',   'dosini')
 call unite#sources#outline#alias('xhtml', 'html')
 call unite#sources#outline#alias('zsh',   'sh')
