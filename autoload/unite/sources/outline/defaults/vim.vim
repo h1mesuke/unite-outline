@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/vim.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-10
+" Updated : 2010-11-15
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -23,12 +23,23 @@ let s:outline_info = {
       \}
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
+  let level = 0
   if a:which ==# 'heading-1'
-    return unite#sources#outline#indent(1) . a:heading_line
+    if strlen(a:matched_line) > 40
+      let level = 1
+    else
+      let level = 2
+    endif
   elseif a:which ==# 'heading'
-    return unite#sources#outline#indent(3) . a:heading_line
+    let level = 3
   endif
-  return ""
+  if level > 0
+    let heading = substitute(a:heading_line, '"\s*{{{\d\=\s*$', '', '')
+    let heading = unite#sources#outline#indent(level) . heading
+    return heading
+  else
+    return ""
+  endif
 endfunction
 
 " vim: filetype=vim
