@@ -1,7 +1,7 @@
 *unite-outline.txt*	ファイルの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2010-11-14
+Updated : 2010-11-15
 License : MIT license {{{
     Permission is hereby granted, free of charge, to any person obtaining
     a copy of this software and associated documentation files (the
@@ -133,16 +133,15 @@ g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
 	します。
 
 	初期値は 100
-
-g:unite_source_outline_after_jump_command
 				*g:unite_source_outline_after_jump_command*
+g:unite_source_outline_after_jump_command
 
 	見出しへのジャンプ後に実行するコマンド。ジャンプ後に |:execute| コマン
 	ドによって実行されます。空文字列を設定すると無視されます。
 >
 	let g:unite_source_outline_after_jump_command = "normal! z\<CR>"
 <
-	初期値は 'call unite#sources#outline#adjust_scroll()'
+	初期値は "call unite#sources#outline#adjust_scroll()"
 
 ==============================================================================
 Outline Info					*unite-outline-info*
@@ -263,8 +262,8 @@ create_heading	関数（任意） 		*unite-outline-info-create_heading()*
 	* {heading-line} - 文字列：見出しとなる行
 	* {matched-line} - 文字列：マッチした行
 	* {context} - 辞書：その他の情報、以下の属性を含む
-	  * heading_index - 整数：lines における heading_line の index
-	  * matched_index - 整数：lines における matched_line の index
+	  * heading_index - 整数：lines 中の heading_line の index
+	  * matched_index - 整数：lines 中の matched_line の index
 	  * lines - リスト：ファイルの全行（ヘッダ除く）
 	  * outline_info - 辞書：outline info
 	
@@ -334,10 +333,10 @@ skip_header()	関数（任意）			*unite-outline-info-skip_header()*
 
 	skip_header({lines},{context})
 
-	設定されていると、見出しの抽出に先立って呼ばれ、{lines} における、返値
-	（整数）で指定される添字の行までをスキップします。この関数を定義するこ
-	とによって、skip.header属性では指定が難しいタイプのヘッダのスキップを
-	実装できます。
+	設定されていると、見出しの抽出に先立って呼ばれ、その返値（整数）を添字
+	とする {lines} の行までがヘッダとしてスキップされます。この関数を定義
+	することによって、 skip.header属性では指定が難しいタイプのヘッダのスキ
+	ップを実装できます。
 
 	skip_header() 関数に渡される引数は以下の通りです。
 	
@@ -348,8 +347,8 @@ skip_header()	関数（任意）			*unite-outline-info-skip_header()*
 ------------------------------------------------------------------------------
 関数						*unite-outline-functions*
 
+					*unite#sources#outline#alias()*
 unite#sources#outline#alias({alias}, {src-filetype})
-						*unite#sources#outline#alias()*
 
 	ファイルタイプの別名を設定します。{src-filetype} の outline-info を別
 	のファイルタイプでも利用したい場合に使用します。
@@ -357,14 +356,46 @@ unite#sources#outline#alias({alias}, {src-filetype})
 	call unite#sources#outline#alias('xhtml', 'html')
 	call unite#sources#outline#alias('zsh',   'sh')
 <
-unite#sources#outline#indent({level})		*unite#sources#outline#indent()*
+					*unite#sources#outline#get_outline_info()*
+unite#sources#outline#get_outline_info({filetype})
 
-	見出しレベル {level} に応じたインデントのための空白文字列を返します。
+	{filetype} のための outline info を返します。outline info が見つからな
+	い場合は空の辞書 {} を返します。
+
+unite#sources#outline#indent({level})	*unite#sources#outline#indent()*
+
+	{level} の見出しレベルに応じたインデントのための空白文字列を返します。
 	インデントの幅には |g:unite_source_outline_indent_width| の値が考慮さ
 	れます。
+					*unite#sources#outline#capitalize()*
+unite#sources#outline#capitalize({str} [, {flag}])
+
+	{str} の先頭の文字を大文字に、残りを小文字に変更した文字列を返します。
+	{flag} に "g" を指定すると、すべての単語を同様に処理します。
+
+					*unite#sources#outline#join_to()*
+unite#sources#outline#join_to({lines}, {idx}, {pattern} [, {limit}])
+
+	{lines} の添字が {idx} の行から {pattern} にマッチする行までを連結
+	した文字列を返します。{limit} には最大何行先までマッチを試行・連結する
+	かを指定でき、省略した場合は 3 になります。
+	{limit} に負の値を指定すると、 {lines} の添字が {idx} の行から前の行に
+	対してマッチの試行と連結を行います。
+
+					*unite#sources#outline#neighbor_match()*
+unite#sources#outline#neighbor_match({lines}, {idx}, {pattern} [, {range}])
+
+	{lines} の添字が {idx} の行およびその前後の行が {pattern} にマッチする
+	ならば真、そうでないなら偽を返します。{range} には前後の何行分に対しマ
+	ッチを試行するかを指定でき、省略した場合は 1 になります。 
+	{range} にリストを指定すると、マッチを試行する行数を前と後ろ、個別に設
+	定できます。
 
 ==============================================================================
 TODO						*unite-outline-todo*
+
+* 対応ファイルタイプの充実
+* 英語ヘルプ
 
 ==============================================================================
 既知のバグ					*unite-outline-bugs*
