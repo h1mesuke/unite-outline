@@ -67,11 +67,15 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
 endfunction
 
 function! unite#sources#outline#adjust_scroll()
-  let winh = winheight(0)
-  let lnum = line('.')
-  if lnum > winh / 2
-    execute 'normal! z.'  . winh / 4 . "\<C-e>"
-  endif
+  let best = winheight(0) / 4
+  execute 'normal! z.'
+  while 1
+    execute "normal! \<C-e>"
+    if winline() < best
+      break
+    end
+  endwhile
+  execute "normal! \<C-y>"
 endfunction
 
 "---------------------------------------
@@ -91,34 +95,30 @@ function! unite#sources#outline#join_to(lines, idx, pattern, ...)
   if limit < 0
     return s:join_to_backward(a:lines, a:idx, a:pattern, limit * -1)
   endif
-  let ret = ""
   let idx = a:idx
   let lim_idx = min([len(a:lines) - 1, a:idx + limit])
   while idx <= lim_idx
     let line = a:lines[idx]
-    let ret .= line
     if line =~ a:pattern
       break
     endif
     let idx += 1
   endwhile
-  return ret
+  return join(a:lines[a:idx : idx], "\n")
 endfunction
 
 function! s:join_to_backward(lines, idx, pattern, ...)
   let limit = (a:0 ? a:1 : 3)
-  let ret = ""
   let idx = a:idx
   let lim_idx = max(0, a:idx - limit])
   while idx > 0
     let line = a:lines[idx]
-    let ret = line . ret
     if line =~ a:pattern
       break
     endif
     let idx -= 1
   endwhile
-  return ret
+  return join(a:lines[idx : a:idx], "\n")
 endfunction
 
 function! unite#sources#outline#neighbor_match(lines, idx, pattern, ...)
@@ -288,6 +288,7 @@ function! s:source.gather_candidates(args, context)
 
     " collect headings
     let headings = []
+    let heading_id = 1
     let idx = 0 | let n_lines = len(lines)
     while idx < n_lines
       let line = lines[idx]
@@ -309,9 +310,10 @@ function! s:source.gather_candidates(args, context)
           if has_key(outline_info, 'create_heading')
             let heading = outline_info.create_heading('heading-1', next_line, line, {
                   \ 'heading_index': idx + 1, 'matched_index': idx, 'lines': lines,
-                  \ 'outline_info': outline_info })
+                  \ 'heading_id': heading_id, 'outline_info': outline_info })
             if heading != ""
               call add(headings, [heading, next_line])
+              let heading_id += 1
             endif
           else
             call add(headings, [next_line, next_line])
@@ -323,9 +325,10 @@ function! s:source.gather_candidates(args, context)
             if has_key(outline_info, 'create_heading')
               let heading = outline_info.create_heading('heading-1', next_line, line, {
                     \ 'heading_index': idx + 2, 'matched_index': idx, 'lines': lines,
-                    \ 'outline_info': outline_info })
+                    \ 'heading_id': heading_id, 'outline_info': outline_info })
               if heading != ""
                 call add(headings, [heading, next_line])
+                let heading_id += 1
               endif
             else
               call add(headings, [next_line, next_line])
@@ -339,9 +342,10 @@ function! s:source.gather_candidates(args, context)
         if has_key(outline_info, 'create_heading')
           let heading = outline_info.create_heading('heading', line, line, {
                 \ 'heading_index': idx, 'matched_index': idx, 'lines': lines,
-                \ 'outline_info': outline_info })
+                \ 'heading_id': heading_id, 'outline_info': outline_info })
           if heading != ""
             call add(headings, [heading, line])
+            let heading_id += 1
           endif
         else
           call add(headings, [line, line])
@@ -354,9 +358,10 @@ function! s:source.gather_candidates(args, context)
           if has_key(outline_info, 'create_heading')
             let heading = outline_info.create_heading('heading+1', prev_line, line, {
                   \ 'heading_index': idx - 1, 'matched_index': idx, 'lines': lines,
-                  \ 'outline_info': outline_info })
+                  \ 'heading_id': heading_id, 'outline_info': outline_info })
             if heading != ""
               call add(headings, [heading, prev_line])
+              let heading_id += 1
             endif
           else
             call add(headings, [prev_line, prev_line])
