@@ -2,7 +2,7 @@
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
 " Updated : 2010-11-16
-" Version : 0.0.8
+" Version : 0.0.9
 " License : MIT license {{{
 "
 "     Permission is hereby granted, free of charge, to any person obtaining
@@ -96,7 +96,7 @@ function! unite#sources#outline#join_to(lines, idx, pattern, ...)
     return s:join_to_backward(a:lines, a:idx, a:pattern, limit * -1)
   endif
   let idx = a:idx
-  let lim_idx = min([len(a:lines) - 1, a:idx + limit])
+  let lim_idx = min([a:idx + limit, len(a:lines) - 1])
   while idx <= lim_idx
     let line = a:lines[idx]
     if line =~ a:pattern
@@ -209,12 +209,11 @@ function! s:source.gather_candidates(args, context)
     endif
 
     let lines = s:buffer.lines
-    let N_lines = len(lines)
+    let idx = 0 | let n_lines = len(lines)
 
     " skip the header of the file
     if has_key(outline_info, 'skip_header')
       let idx = outline_info.skip_header(lines, { 'outline_info': outline_info })
-      let lines = lines[idx :]
 
     elseif has_key(outline_info, 'skip') && has_key(outline_info.skip, 'header')
       " eval once
@@ -238,12 +237,11 @@ function! s:source.gather_candidates(args, context)
         endif
       endif
 
-      let idx = 0
-      while idx < N_lines
+      while idx < n_lines
         let line = lines[idx]
         if skip_header_lead && line =~# header_lead
           let idx += 1
-          while idx < N_lines
+          while idx < n_lines
             let line = lines[idx]
             if line !~# header_lead
               break
@@ -252,7 +250,7 @@ function! s:source.gather_candidates(args, context)
           endwhile
         elseif skip_header_block && line =~# header_begin
           let idx += 1
-          while idx < N_lines
+          while idx < n_lines
             let line = lines[idx]
             if line =~# header_end
               break
@@ -264,7 +262,6 @@ function! s:source.gather_candidates(args, context)
           break
         endif
       endwhile
-      let lines = lines[idx :]
     endif
 
     " eval once
@@ -289,7 +286,6 @@ function! s:source.gather_candidates(args, context)
     " collect headings
     let headings = []
     let heading_id = 1
-    let idx = 0 | let n_lines = len(lines)
     while idx < n_lines
       let line = lines[idx]
       if skip_block && line =~# skip_block_begin
@@ -312,11 +308,11 @@ function! s:source.gather_candidates(args, context)
                   \ 'heading_index': idx + 1, 'matched_index': idx, 'lines': lines,
                   \ 'heading_id': heading_id, 'outline_info': outline_info })
             if heading != ""
-              call add(headings, [heading, next_line])
+              call add(headings, [heading, next_line, idx + 1])
               let heading_id += 1
             endif
           else
-            call add(headings, [next_line, next_line])
+            call add(headings, [next_line, next_line, idx + 1])
           endif
         elseif next_line =~ '\S' && idx < n_lines - 4
           " see one more next
@@ -327,13 +323,14 @@ function! s:source.gather_candidates(args, context)
                     \ 'heading_index': idx + 2, 'matched_index': idx, 'lines': lines,
                     \ 'heading_id': heading_id, 'outline_info': outline_info })
               if heading != ""
-                call add(headings, [heading, next_line])
+                call add(headings, [heading, next_line, idx + 2])
                 let heading_id += 1
               endif
             else
-              call add(headings, [next_line, next_line])
+              call add(headings, [next_line, next_line, idx + 2])
             endif
           endif
+          let idx += 1
         endif
         let idx += 1
 
@@ -344,11 +341,11 @@ function! s:source.gather_candidates(args, context)
                 \ 'heading_index': idx, 'matched_index': idx, 'lines': lines,
                 \ 'heading_id': heading_id, 'outline_info': outline_info })
           if heading != ""
-            call add(headings, [heading, line])
+            call add(headings, [heading, line, idx])
             let heading_id += 1
           endif
         else
-          call add(headings, [line, line])
+          call add(headings, [line, line, idx])
         endif
 
       elseif match_head_next && line =~# head_next && idx > 0
@@ -360,11 +357,11 @@ function! s:source.gather_candidates(args, context)
                   \ 'heading_index': idx - 1, 'matched_index': idx, 'lines': lines,
                   \ 'heading_id': heading_id, 'outline_info': outline_info })
             if heading != ""
-              call add(headings, [heading, prev_line])
+              call add(headings, [heading, prev_line, idx - 1])
               let heading_id += 1
             endif
           else
-            call add(headings, [prev_line, prev_line])
+            call add(headings, [prev_line, prev_line, idx - 1])
           endif
         endif
       endif
@@ -378,15 +375,16 @@ function! s:source.gather_candidates(args, context)
           \ "kind": "jump_list",
           \ "action__path": path,
           \ "action__pattern": "^" . s:escape_regex(v:val[1]) . "$",
+          \ "action__signature": s:signature2(lines, v:val[2]),
           \ }')
 
-    if N_lines > g:unite_source_outline_cache_limit
+    if n_lines > g:unite_source_outline_cache_limit
       call s:cache.write(path, cands)
     endif
 
     if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
       let used_time = split(reltimestr(reltime(start_time)))[0]
-      let phl = str2float(used_time) * (100.0 / N_lines)
+      let phl = str2float(used_time) * (100.0 / n_lines)
       echomsg "unite-outline: used=" . used_time . "s, 100l=". string(phl) . "s"
     endif
 
@@ -412,16 +410,54 @@ function! s:escape_regex(str)
   return escape(a:str, '^$[].*\~')
 endfunction
 
+function! s:signature(lnum)
+  let r = 2
+  let from = max([1, a:lnum - r])
+  let to   = min([a:lnum + r, line('$')])
+  return join(getline(from, to))
+endfunction
+
+function! s:signature2(lines, idx)
+  let r = 2
+  let from = max([0, a:idx - r])
+  let to   = min([a:idx + r, len(a:lines) - 1])
+  return join(a:lines[from : to])
+endfunction
+
 "---------------------------------------
 " Action
 
 let s:action_table = {}
 let s:action_table.jump = {
-      \ 'description': 'jump this position',
+      \ 'description': 'jump to this heading',
       \ 'is_selectable': 0,
       \ }
-function! s:action_table.jump.func(candidates)
-  call unite#take_action('open', a:candidates)
+
+function! s:action_table.jump.func(candidate)
+  let cand = a:candidate
+  edit `=cand.action__path`
+  call search(cand.action__pattern, 'w')
+  let lnum0 = line('.')
+  call search(cand.action__pattern, 'w')
+  let lnum = line('.')
+  if lnum != lnum0
+    " same heading lines detected!!
+    let start_lnum = lnum
+    while 1
+      if s:signature(lnum) ==# cand.action__signature
+        " found
+        break
+      endif
+      call search(cand.action__pattern, 'w')
+      let lnum = line('.')
+      if lnum == start_lnum
+        " not found
+        call unite#print_error("unite-outline: target heading not found, please update the cache")
+        return
+      endif
+    endwhile
+  endif
+  normal! zv
   if g:unite_source_outline_after_jump_command != ''
     execute g:unite_source_outline_after_jump_command
   endif
