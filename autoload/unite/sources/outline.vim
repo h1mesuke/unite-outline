@@ -1,8 +1,8 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-16
-" Version : 0.0.9
+" Updated : 2010-11-17
+" Version : 0.1.0
 " License : MIT license {{{
 "
 "     Permission is hereby granted, free of charge, to any person obtaining
@@ -67,15 +67,38 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
 endfunction
 
 function! unite#sources#outline#adjust_scroll()
-  let best = winheight(0) / 4
   execute 'normal! z.'
-  while 1
+  let best = winheight(0) / 4
+  call s:adjust_scroll(best)
+endfunction
+
+function! s:adjust_scroll(best)
+  let winl = winline()
+  let delta = winl - a:best
+  let prev_winl = winl
+  if delta > 0
+    " scroll up
+    while 1
+      execute "normal! \<C-e>"
+      let winl = winline()
+      if winl < a:best || winl == prev_winl
+        break
+      end
+      let prev_winl = winl
+    endwhile
+    execute "normal! \<C-y>"
+  elseif delta < 0
+    " scroll down
+    while 1
+      execute "normal! \<C-y>"
+      let winl = winline()
+      if winl > a:best || winl == prev_winl
+        break
+      end
+      let prev_winl = winl
+    endwhile
     execute "normal! \<C-e>"
-    if winline() < best
-      break
-    end
-  endwhile
-  execute "normal! \<C-y>"
+  endif
 endfunction
 
 "---------------------------------------
@@ -175,11 +198,11 @@ call unite#sources#outline#alias('zsh',      'sh')
 
 let s:source = {
       \ 'name': 'outline',
-      \ 'action_table': {},
-      \ 'default_action': {},
+      \ 'action_table': {}, 'default_action': {},
       \ 'is_volatile': 1,
       \ }
 
+let s:session_id = 0
 function! s:source.on_init(args, context)
   let s:buffer = {
         \ 'path'    : expand('%:p'),
@@ -187,6 +210,8 @@ function! s:source.on_init(args, context)
         \ 'tabstop' : getbufvar('%', '&tabstop'),
         \ 'lines'   : getbufline('%', 1, '$'),
         \ }
+  let s:session_id += 1
+  let w:unite_source_outline_session = s:session_id
 endfunction
 
 function! s:source.gather_candidates(args, context)
@@ -372,7 +397,7 @@ function! s:source.gather_candidates(args, context)
     let cands = map(headings, '{
           \ "word": s:expand_leading_tabs(v:val[0], ts),
           \ "source": "outline",
-          \ "kind": "jump_list",
+          \ "kind": "openable",
           \ "action__path": path,
           \ "action__pattern": "^" . s:escape_regex(v:val[1]) . "$",
           \ "action__signature": s:signature2(lines, v:val[2]),
@@ -425,17 +450,49 @@ function! s:signature2(lines, idx)
 endfunction
 
 "---------------------------------------
-" Action
+" Actions
 
 let s:action_table = {}
-let s:action_table.jump = {
-      \ 'description': 'jump to this heading',
+
+let s:action_table.open = {
+      \ 'description': 'jump to this position',
       \ 'is_selectable': 0,
       \ }
-
-function! s:action_table.jump.func(candidate)
+function! s:action_table.open.func(candidate)
   let cand = a:candidate
-  edit `=cand.action__path`
+  if cand.action__path !=# expand('%:p')
+    edit `=cand.action__path`
+  endif
+  call s:jump(cand)
+endfunction
+
+let s:action_table.preview = {
+      \ 'description': 'preview this position',
+      \ 'is_selectable': 0,
+      \ 'is_quit' : 0,
+      \ }
+function! s:action_table.preview.func(candidate)
+  let cand = a:candidate
+  execute s:context_winnr() . 'wincmd w'
+  let save_pos  = getpos('.')
+  let save_winl = winline()
+  wincmd p
+  pedit `=cand.action__path`
+  wincmd p
+  call s:jump(cand)
+  wincmd p
+  " work around `scroll-to-top' problem on :pedit %
+  execute s:context_winnr() . 'wincmd w'
+  let pos  = getpos('.')
+  if pos != save_pos
+    call setpos('.', save_pos)
+    call s:adjust_scroll(save_winl)
+  endif
+  wincmd p
+endfunction
+
+function! s:jump(candidate)
+  let cand = a:candidate
   call search(cand.action__pattern, 'w')
   let lnum0 = line('.')
   call search(cand.action__pattern, 'w')
@@ -463,9 +520,18 @@ function! s:action_table.jump.func(candidate)
   endif
 endfunction
 
-let s:source.action_table.jump_list = s:action_table
-let s:source.default_action.jump_list = 'jump'
+function! s:context_winnr()
+  let nr = 1
+  while nr <= winnr('$')
+    if getwinvar(nr, 'unite_source_outline_session') == s:session_id
+      return nr
+    endif
+    let nr += 1
+  endwhile
+endfunction
 
+let s:source.action_table.openable = s:action_table
+let s:source.default_action.openable = 'open'
 unlet s:action_table
 
 "-----------------------------------------------------------------------------
