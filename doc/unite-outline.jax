@@ -1,7 +1,7 @@
 *unite-outline.txt*	ファイルの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2010-11-18
+Updated : 2010-11-19
 License : MIT license {{{
     Permission is hereby granted, free of charge, to any person obtaining
     a copy of this software and associated documentation files (the
@@ -133,15 +133,20 @@ g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
 	します。
 
 	初期値は 100
-				*g:unite_source_outline_after_jump_command*
-g:unite_source_outline_after_jump_command
+				*g:unite_source_outline_after_jump_scroll*
+g:unite_source_outline_after_jump_scroll
 
-	見出しへのジャンプ後に実行するコマンド。ジャンプ後に |:execute| コマン
-	ドによって実行されます。空文字列を設定すると無視されます。
->
-	let g:unite_source_outline_after_jump_command = "normal! z\<CR>"
-<
-	初期値は "call unite#sources#outline#adjust_scroll()"
+	見出しへのジャンプ後にカーソルの位置（スクロール）を調整するための数値。
+	最小値は 0.0 でウィンドウ最上を意味し、最大値は 1.0 でウィンドウ最下を
+	意味します。
+
+	数値	意味		同等のコマンド
+	--------------------------------------
+	0.0	ウィンドウ最上	normal! |z<CR>|
+	0.5	ウィンドウ中央	normal! |z.|
+	1.0	ウィンドウ最下	normal! |z-|
+
+	初期値は 0.25
 
 ==============================================================================
 Outline Info					*unite-outline-info*

@@ -1,8 +1,8 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-18
-" Version : 0.1.1
+" Updated : 2010-11-19
+" Version : 0.1.2
 " License : MIT license {{{
 "
 "     Permission is hereby granted, free of charge, to any person obtaining
@@ -63,41 +63,6 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
     endfor
   endif
   return {}
-endfunction
-
-function! unite#sources#outline#adjust_scroll()
-  execute 'normal! z.'
-  let best = winheight(0) / 4
-  call s:adjust_scroll(best)
-endfunction
-
-function! s:adjust_scroll(best)
-  let winl = winline()
-  let delta = winl - a:best
-  let prev_winl = winl
-  if delta > 0
-    " scroll up
-    while 1
-      execute "normal! \<C-e>"
-      let winl = winline()
-      if winl < a:best || winl == prev_winl
-        break
-      end
-      let prev_winl = winl
-    endwhile
-    execute "normal! \<C-y>"
-  elseif delta < 0
-    " scroll down
-    while 1
-      execute "normal! \<C-y>"
-      let winl = winline()
-      if winl > a:best || winl == prev_winl
-        break
-      end
-      let prev_winl = winl
-    endwhile
-    execute "normal! \<C-e>"
-  endif
 endfunction
 
 "---------------------------------------
@@ -180,8 +145,8 @@ if !exists('g:unite_source_outline_cache_limit')
   let g:unite_source_outline_cache_limit = 100
 endif
 
-if !exists('g:unite_source_outline_after_jump_command')
-  let g:unite_source_outline_after_jump_command = 'call unite#sources#outline#adjust_scroll()'
+if !exists('g:unite_source_outline_after_jump_scroll')
+  let g:unite_source_outline_after_jump_scroll = 0.25
 endif
 
 "-----------------------------------------------------------------------------
@@ -516,9 +481,40 @@ function! s:jump(candidate)
     endwhile
   endif
   normal! zv
-  if g:unite_source_outline_after_jump_command != ''
-    execute g:unite_source_outline_after_jump_command
+  let best = max([1, float2nr(winheight(0) * g:unite_source_outline_after_jump_scroll)])
+  call s:adjust_scroll(best)
+endfunction
+
+function! s:adjust_scroll(best)
+  normal! zt
+  let save_pos = getpos('.')
+  let winl = winline()
+  let delta = winl - a:best
+  let prev_winl = winl
+  if delta > 0
+    " scroll up
+    while 1
+      execute "normal! \<C-e>"
+      let winl = winline()
+      if winl < a:best || winl == prev_winl
+        break
+      end
+      let prev_winl = winl
+    endwhile
+    execute "normal! \<C-y>"
+  elseif delta < 0
+    " scroll down
+    while 1
+      execute "normal! \<C-y>"
+      let winl = winline()
+      if winl > a:best || winl == prev_winl
+        break
+      end
+      let prev_winl = winl
+    endwhile
+    execute "normal! \<C-e>"
   endif
+  call setpos('.', save_pos)
 endfunction
 
 function! s:context_winnr()
