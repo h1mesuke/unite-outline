@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-17
+" Updated : 2010-11-18
 " Version : 0.1.0
 " License : MIT license {{{
 "
@@ -460,6 +460,7 @@ let s:action_table.open = {
       \ }
 function! s:action_table.open.func(candidate)
   let cand = a:candidate
+  " work around `scroll-to-top' problem on :edit %
   if cand.action__path !=# expand('%:p')
     edit `=cand.action__path`
   endif
@@ -510,6 +511,7 @@ function! s:jump(candidate)
       if lnum == start_lnum
         " not found
         call unite#print_error("unite-outline: target heading not found, please update the cache")
+        1
         return
       endif
     endwhile
