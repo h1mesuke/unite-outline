@@ -2,7 +2,7 @@
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
 " Updated : 2010-11-18
-" Version : 0.1.0
+" Version : 0.1.1
 " License : MIT license {{{
 "
 "     Permission is hereby granted, free of charge, to any person obtaining
@@ -56,7 +56,6 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
       let load_func = path . a:filetype . '#outline_info'
       try
         execute 'let outline_info = ' . load_func . '()'
-        let g:unite_source_outline_info[a:filetype] = outline_info
         return outline_info
       catch /^Vim\%((\a\+)\)\=:E117:/
         " no file or undefined, go next

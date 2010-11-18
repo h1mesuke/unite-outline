@@ -1,7 +1,7 @@
 *unite-outline.txt*	ファイルの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2010-11-16
+Updated : 2010-11-18
 License : MIT license {{{
     Permission is hereby granted, free of charge, to any person obtaining
     a copy of this software and associated documentation files (the
@@ -155,14 +155,11 @@ unite-outline では、ファイルタイプごとの見出しの抽出パター
 outline info の探索				*unite-outline-info-find*
 
 見出し一覧の表示を実行した際、対象ファイルのファイルタイプにもとづき outline
-info の探索が実行されます。最初の１回に限り、以下の順序で探索が行われます。
+info の探索が実行されます。探索の順序は以下の通りです。
 
 (1) g:unite_source_outline_info.{filetype}
 (2) unite#sources#outline#{filetype}#outline_info()
 (3) unite#sources#outline#defaults#{filetype}#outline_info()
-
-取得された outline info は g:unite_source_outline_info.{filetype} に設定され、
-以後はそこから取得されます。
 
 ------------------------------------------------------------------------------
 outline info の作成				*unite-outline-info-create*
