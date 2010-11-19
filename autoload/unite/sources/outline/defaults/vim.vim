@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/vim.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-15
+" Updated : 2010-11-20
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -34,7 +34,8 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     let level = 3
   endif
   if level > 0
-    let heading = substitute(a:heading_line, '"\s*{{{\d\=\s*$', '', '')
+    let heading = substitute(a:heading_line, '^\s*', '', '')
+    let heading = substitute(heading, '"\=\s*{{{\d\=\s*$', '', '')
     let heading = unite#sources#outline#indent(level) . heading
     return heading
   else
