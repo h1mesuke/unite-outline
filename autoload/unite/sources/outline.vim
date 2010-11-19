@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-19
+" Updated : 2010-11-20
 " Version : 0.1.2
 " License : MIT license {{{
 "
@@ -321,7 +321,7 @@ function! s:source.gather_candidates(args, context)
           endif
           let idx += 1
         endif
-        let idx += 1
+        let idx += 2
 
       elseif match_head_line && line =~# head_line
         " matched: heading
