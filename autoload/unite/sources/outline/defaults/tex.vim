@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/tex.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-16
+" Updated : 2010-11-21
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -15,7 +15,7 @@ function! unite#sources#outline#defaults#tex#outline_info()
 endfunction
 
 let s:outline_info = {
-      \ 'heading'  : '^\\\(title\|part\|chapter\|\(sub\)\{,2}section\){',
+      \ 'heading': '^\\\(title\|part\|chapter\|\(sub\)\{,2}section\){',
       \ }
 
 let s:unit_order = [

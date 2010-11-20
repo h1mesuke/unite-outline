@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/html.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-16
+" Updated : 2010-11-21
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -15,7 +15,7 @@ function! unite#sources#outline#defaults#html#outline_info()
 endfunction
 
 let s:outline_info = {
-      \ 'heading' : '<[hH][1-6][^>]*>',
+      \ 'heading': '<[hH][1-6][^>]*>',
       \ }
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
