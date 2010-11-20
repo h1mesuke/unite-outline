@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/vim.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-20
+" Updated : 2010-11-21
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -25,7 +25,7 @@ let s:outline_info = {
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
   let level = 0
   if a:which ==# 'heading-1'
-    if strlen(a:matched_line) > 40
+    if strlen(substitute(a:matched_line, '\s*', '', 'g')) > 40
       let level = 1
     else
       let level = 2
