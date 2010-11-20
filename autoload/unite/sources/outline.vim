@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-20
+" Updated : 2010-11-21
 " Version : 0.1.2
 " License : MIT license {{{
 "
@@ -146,7 +146,10 @@ if !exists('g:unite_source_outline_cache_limit')
 endif
 
 if !exists('g:unite_source_outline_after_jump_scroll')
-  let g:unite_source_outline_after_jump_scroll = 0.25
+  let g:unite_source_outline_after_jump_scroll = 25
+else
+  let g:unite_source_outline_after_jump_scroll =
+        \ min([max([0, g:unite_source_outline_after_jump_scroll]), 100])
 endif
 
 "-----------------------------------------------------------------------------
@@ -200,7 +203,9 @@ function! s:source.gather_candidates(args, context)
     let lines = s:buffer.lines
     let idx = 0 | let n_lines = len(lines)
 
-    " skip the header of the file
+    "---------------------------------------
+    " Skip the header
+
     if has_key(outline_info, 'skip_header')
       let idx = outline_info.skip_header(lines, { 'outline_info': outline_info })
 
@@ -252,6 +257,9 @@ function! s:source.gather_candidates(args, context)
         endif
       endwhile
     endif
+
+    "---------------------------------------
+    " Collect headings
 
     " eval once
     let skip_block = has_key(outline_info, 'skip') && has_key(outline_info.skip, 'block')
@@ -481,7 +489,7 @@ function! s:jump(candidate)
     endwhile
   endif
   normal! zv
-  let best = max([1, float2nr(winheight(0) * g:unite_source_outline_after_jump_scroll)])
+  let best = max([1, winheight(0) * g:unite_source_outline_after_jump_scroll / 100])
   call s:adjust_scroll(best)
 endfunction
 
