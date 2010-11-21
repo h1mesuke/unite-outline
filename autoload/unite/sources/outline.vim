@@ -34,6 +34,8 @@ function! unite#sources#outline#alias(alias, src_filetype)
   let g:unite_source_outline_info[a:alias] = a:src_filetype
 endfunction
 
+let s:ouline_info_ftime = {}
+
 function! unite#sources#outline#get_outline_info(filetype, ...)
   if a:0 && a:filetype == a:1
     throw "RuntimeError: unite-outline: " .
@@ -53,13 +55,24 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
           \ 'unite#sources#outline#defaults#',
           \ ]
     for path in tries
-      let load_func = path . a:filetype . '#outline_info'
+      let load_funcall = path . a:filetype . '#outline_info()'
       try
-        execute 'let outline_info = ' . load_func . '()'
-        return outline_info
+        execute 'let outline_info = ' . load_funcall
       catch /^Vim\%((\a\+)\)\=:E117:/
-        " no file or undefined, go next
+        continue
       endtry
+      let oinfo_file = 'autoload/' . substitute(path, '#', '/', 'g') . a:filetype . '.vim'
+      let oinfo_file = findfile(oinfo_file, &runtimepath)
+      if oinfo_file != ""
+        let ftime = getftime(oinfo_file)
+        if has_key(s:ouline_info_ftime, a:filetype) && ftime > s:ouline_info_ftime[a:filetype]
+          " reload the outline info because it has been updated
+          source `=oinfo_file`
+          execute 'let outline_info = ' . load_funcall
+        endif
+        let s:ouline_info_ftime[a:filetype] = ftime
+      endif
+      return outline_info
     endfor
   endif
   return {}
