@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-21
+" Updated : 2010-11-22
 " Version : 0.1.2
 " License : MIT license {{{
 "
@@ -34,7 +34,7 @@ function! unite#sources#outline#alias(alias, src_filetype)
   let g:unite_source_outline_info[a:alias] = a:src_filetype
 endfunction
 
-let s:ouline_info_ftime = {}
+let s:outline_info_ftime = {}
 
 function! unite#sources#outline#get_outline_info(filetype, ...)
   if a:0 && a:filetype == a:1
@@ -65,12 +65,12 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
       let oinfo_file = findfile(oinfo_file, &runtimepath)
       if oinfo_file != ""
         let ftime = getftime(oinfo_file)
-        if has_key(s:ouline_info_ftime, a:filetype) && ftime > s:ouline_info_ftime[a:filetype]
-          " reload the outline info because it has been updated
+        if has_key(s:outline_info_ftime, a:filetype) && ftime > s:outline_info_ftime[a:filetype]
+          " reload the outline info because it was updated
           source `=oinfo_file`
           execute 'let outline_info = ' . load_funcall
         endif
-        let s:ouline_info_ftime[a:filetype] = ftime
+        let s:outline_info_ftime[a:filetype] = ftime
       endif
       return outline_info
     endfor
