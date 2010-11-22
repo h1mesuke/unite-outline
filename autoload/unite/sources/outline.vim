@@ -210,7 +210,7 @@ function! s:source.gather_candidates(args, context)
 
     let filetype = s:buffer.filetype
     let outline_info = unite#sources#outline#get_outline_info(filetype)
-    if len(outline_info) == 0
+    if empty(outline_info)
       call unite#print_error("unite-outline: not supported filetype: " . filetype)
       return []
     endif
