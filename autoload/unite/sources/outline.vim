@@ -178,12 +178,14 @@ call unite#sources#outline#alias('zsh',      'sh')
 
 let s:source = {
       \ 'name': 'outline',
-      \ 'action_table': {}, 'default_action': {},
+      \ 'action_table': {},
+      \ 'default_action': {},
+      \ 'hooks': {},
       \ 'is_volatile': 1,
       \ }
 
 let s:session_id = 0
-function! s:source.on_init(args, context)
+function! s:source.hooks.on_init(args, context)
   let s:buffer = {
         \ 'path'    : expand('%:p'),
         \ 'filetype': getbufvar('%', '&filetype'),
