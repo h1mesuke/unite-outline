@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-22
+" Updated : 2010-11-23
 " Version : 0.1.2
 " License : MIT license {{{
 "
@@ -188,7 +188,7 @@ let s:session_id = 0
 function! s:source.hooks.on_init(args, context)
   let s:buffer = {
         \ 'path'    : expand('%:p'),
-        \ 'filetype': getbufvar('%', '&filetype'),
+        \ 'filetype': split(getbufvar('%', '&filetype'), '\.')[0],
         \ 'tabstop' : getbufvar('%', '&tabstop'),
         \ 'lines'   : getbufline('%', 1, '$'),
         \ }
