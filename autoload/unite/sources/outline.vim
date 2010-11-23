@@ -59,6 +59,7 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
       try
         execute 'let outline_info = ' . load_funcall
       catch /^Vim\%((\a\+)\)\=:E117:/
+        " E117: Unknown function:
         continue
       endtry
       let oinfo_file = 'autoload/' . substitute(path, '#', '/', 'g') . a:filetype . '.vim'
@@ -186,9 +187,16 @@ let s:source = {
 
 let s:session_id = 0
 function! s:source.hooks.on_init(args, context)
+  " NOTE: The filetype of the buffer may be a "compound filetype", a set of
+  " filetypes separated by periods.
+  let filetype = getbufvar('%', '&filetype')
+  if filetype != ""
+    " if the filetype is a compound one, use the left most
+    let filetype = split(filetype, '\.')[0]
+  endif
   let s:buffer = {
         \ 'path'    : expand('%:p'),
-        \ 'filetype': split(getbufvar('%', '&filetype'), '\.')[0],
+        \ 'filetype': filetype,
         \ 'tabstop' : getbufvar('%', '&tabstop'),
         \ 'lines'   : getbufline('%', 1, '$'),
         \ }
