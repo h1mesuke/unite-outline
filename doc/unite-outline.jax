@@ -1,7 +1,7 @@
 *unite-outline.txt*	ファイルの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2010-11-21
+Updated : 2010-11-23
 License : MIT license {{{
     Permission is hereby granted, free of charge, to any person obtaining
     a copy of this software and associated documentation files (the
@@ -267,7 +267,7 @@ create_heading	関数（任意） 		*unite-outline-info-create_heading()*
 	  * heading_id - 整数：見出しの id番号（最初が 1）
 	  * heading_index - 整数：lines 中の heading_line の index
 	  * matched_index - 整数：lines 中の matched_line の index
-	  * lines - リスト：ファイルの全行（ヘッダ除く）
+	  * lines - リスト：ファイルの全行
 	  * outline_info - 辞書：outline info
 	
 	create_heading() 関数は文字列を返す必要があります。空文字列を返すと、
