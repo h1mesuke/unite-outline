@@ -1,7 +1,9 @@
 "=============================================================================
-" File    : autoload/unite/sources/outline/defaults/php.vim
-" Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-10
+" File       : autoload/unite/sources/outline/defaults/php.vim
+" Maintainer : h1mesuke <himesuke@gmail.com>
+" Updated    : 2010-11-24
+"
+" Improved by hamaco
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
