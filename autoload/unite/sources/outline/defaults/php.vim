@@ -16,7 +16,7 @@ endfunction
 
 let s:outline_info = {
       \ 'heading-1': unite#sources#outline#shared#pattern('cpp', 'heading-1'),
-      \ 'heading'  : '^\s*\(class\|function\)\>',
+      \ 'heading'  : '^\s*[a-z ]*\(interface\|class\|function\)\>',
       \ 'skip': {
       \   'header': {
       \     'leading': '^\(<?php\|//\)',
