@@ -50,19 +50,18 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
     endif
   else
     let tries = [
-          \ 'unite#sources#outline#',
-          \ 'unite#sources#outline#defaults#',
+          \ 'unite#sources#outline#%s#outline_info()',
+          \ 'unite#sources#outline#defaults#%s#outline_info()',
           \ ]
-    for path in tries
-      let load_funcall = path . a:filetype . '#outline_info()'
+    for fmt in tries
+      let load_funcall = printf(fmt, a:filetype)
       try
         execute 'let outline_info = ' . load_funcall
       catch /^Vim\%((\a\+)\)\=:E117:/
         " E117: Unknown function:
         continue
       endtry
-      let oinfo_file = 'autoload/' . substitute(path, '#', '/', 'g') . a:filetype . '.vim'
-      let oinfo_file = findfile(oinfo_file, &runtimepath)
+      let oinfo_file = s:find_outline_info_file(a:filetype)
       if oinfo_file != ""
         let ftime = getftime(oinfo_file)
         if has_key(s:outline_info_ftime, a:filetype) && ftime > s:outline_info_ftime[a:filetype]
@@ -76,6 +75,20 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
     endfor
   endif
   return {}
+endfunction
+
+function! s:find_outline_info_file(filetype)
+  let tries = [
+        \ 'unite/sources/outline/%s.vim',
+        \ 'unite/sources/outline/defaults/%s.vim',
+        \ ]
+  for fmt in tries
+    let oinfo_file = printf(fmt, a:filetype)
+    if findfile(oinfo_file, &runtimepath) != ""
+      return oinfo_file
+    endif
+  endfor
+  return ""
 endfunction
 
 "---------------------------------------
@@ -168,10 +181,20 @@ endif
 "-----------------------------------------------------------------------------
 " Aliases
 
-call unite#sources#outline#alias('cfg',      'dosini')
-call unite#sources#outline#alias('plaintex', 'tex')
-call unite#sources#outline#alias('xhtml',    'html')
-call unite#sources#outline#alias('zsh',      'sh')
+let s:default_alias_map = [
+      \ ['cfg',      'dosini'],
+      \ ['plaintex', 'tex'   ],
+      \ ['xhtml',    'html'  ],
+      \ ['zsh',      'sh'    ],
+      \]
+for [alias, src_filetype] in s:default_alias_map
+  " NOTE: If the user has his/her own outline info for {alias} filetype, not
+  " define any aliases for the filetype by default.
+  if s:find_outline_info_file(alias) == ""
+    call unite#sources#outline#alias(alias, src_filetype)
+  endif
+endfor
+unlet s:default_alias_map
 
 "-----------------------------------------------------------------------------
 " Source
