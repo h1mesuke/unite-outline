@@ -16,7 +16,7 @@ endfunction
 
 let s:outline_info = {
       \ 'heading-1': unite#sources#outline#shared#pattern('cpp', 'heading-1'),
-      \ 'heading'  : '^\s*\(var\s\+\u\w*\s\+=\s\+{\|function\>\)',
+      \ 'heading'  : '^\s*\(function\|\(var\s\+\a\w*\s*=\|\a[a-zA-Z0-9\.]*\s*\(=\|:\)\)\s*\({$\|function\>\)\)',
       \ 'skip': {
       \   'header': unite#sources#outline#shared#pattern('cpp', 'header'),
       \ },
