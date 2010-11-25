@@ -38,8 +38,7 @@ let s:outline_info_ftime = {}
 
 function! unite#sources#outline#get_outline_info(filetype, ...)
   if a:0 && a:filetype == a:1
-    throw "RuntimeError: unite-outline: " .
-          \ "get_outline_info: infinite recursive call for '" . a:1 . "'"
+    throw "unite-outline: get_outline_info: cyclic alias definitions for '" . a:1 . "'"
   endif
   if has_key(g:unite_source_outline_info, a:filetype)
     if type(g:unite_source_outline_info[a:filetype]) == type("")
