@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-25
+" Updated : 2010-11-26
 " Version : 0.1.3
 " License : MIT license {{{
 "
@@ -179,6 +179,7 @@ call unite#sources#outline#alias('zsh',      'sh')
 
 let s:source = {
       \ 'name': 'outline',
+      \ 'description': 'candidates from heading list',
       \ 'action_table': {},
       \ 'hooks': {},
       \ 'is_volatile': 1,
