@@ -1,7 +1,9 @@
 "=============================================================================
-" File    : autoload/unite/sources/outline/defaults/javascript.vim
-" Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-10
+" File       : autoload/unite/sources/outline/defaults/javascript.vim
+" Maintainer : h1mesuke <himesuke@gmail.com>
+" Updated    : 2010-11-26
+"
+" Improved by hamaco
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
