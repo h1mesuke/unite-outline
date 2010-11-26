@@ -219,7 +219,6 @@ function! s:source.hooks.on_init(args, context)
         \ 'filetype'  : filetype,
         \ 'shiftwidth': getbufvar('%', '&shiftwidth'),
         \ 'tabstop'   : getbufvar('%', '&tabstop'),
-        \ 'lines'     : getbufline('%', 1, '$'),
         \ }
 endfunction
 
@@ -242,7 +241,7 @@ function! s:source.gather_candidates(args, context)
       return []
     endif
 
-    let lines = s:buffer.lines
+    let lines = getbufline('#', 1, '$')
     let idx = 0 | let n_lines = len(lines)
 
     "---------------------------------------
