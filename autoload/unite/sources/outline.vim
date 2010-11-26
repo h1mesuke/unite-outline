@@ -1,8 +1,8 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-23
-" Version : 0.1.2
+" Updated : 2010-11-26
+" Version : 0.1.3
 " License : MIT license {{{
 "
 "     Permission is hereby granted, free of charge, to any person obtaining
@@ -38,8 +38,7 @@ let s:outline_info_ftime = {}
 
 function! unite#sources#outline#get_outline_info(filetype, ...)
   if a:0 && a:filetype == a:1
-    throw "RuntimeError: unite-outline: " .
-          \ "get_outline_info: infinite recursive call for '" . a:1 . "'"
+    throw "unite-outline: get_outline_info: cyclic alias definitions for '" . a:1 . "'"
   endif
   if has_key(g:unite_source_outline_info, a:filetype)
     if type(g:unite_source_outline_info[a:filetype]) == type("")
@@ -51,19 +50,18 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
     endif
   else
     let tries = [
-          \ 'unite#sources#outline#',
-          \ 'unite#sources#outline#defaults#',
+          \ 'unite#sources#outline#%s#outline_info()',
+          \ 'unite#sources#outline#defaults#%s#outline_info()',
           \ ]
-    for path in tries
-      let load_funcall = path . a:filetype . '#outline_info()'
+    for fmt in tries
+      let load_funcall = printf(fmt, a:filetype)
       try
         execute 'let outline_info = ' . load_funcall
       catch /^Vim\%((\a\+)\)\=:E117:/
         " E117: Unknown function:
         continue
       endtry
-      let oinfo_file = 'autoload/' . substitute(path, '#', '/', 'g') . a:filetype . '.vim'
-      let oinfo_file = findfile(oinfo_file, &runtimepath)
+      let oinfo_file = s:find_outline_info_file(a:filetype)
       if oinfo_file != ""
         let ftime = getftime(oinfo_file)
         if has_key(s:outline_info_ftime, a:filetype) && ftime > s:outline_info_ftime[a:filetype]
@@ -77,6 +75,20 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
     endfor
   endif
   return {}
+endfunction
+
+function! s:find_outline_info_file(filetype)
+  let tries = [
+        \ 'unite/sources/outline/%s.vim',
+        \ 'unite/sources/outline/defaults/%s.vim',
+        \ ]
+  for fmt in tries
+    let oinfo_file = printf(fmt, a:filetype)
+    if findfile(oinfo_file, &runtimepath) != ""
+      return oinfo_file
+    endif
+  endfor
+  return ""
 endfunction
 
 "---------------------------------------
@@ -169,18 +181,28 @@ endif
 "-----------------------------------------------------------------------------
 " Aliases
 
-call unite#sources#outline#alias('cfg',      'dosini')
-call unite#sources#outline#alias('plaintex', 'tex')
-call unite#sources#outline#alias('xhtml',    'html')
-call unite#sources#outline#alias('zsh',      'sh')
+let s:default_alias_map = [
+      \ ['cfg',      'dosini'],
+      \ ['plaintex', 'tex'   ],
+      \ ['xhtml',    'html'  ],
+      \ ['zsh',      'sh'    ],
+      \]
+for [alias, src_filetype] in s:default_alias_map
+  " NOTE: If the user has his/her own outline info for {alias} filetype, not
+  " define any aliases for the filetype by default.
+  if s:find_outline_info_file(alias) == ""
+    call unite#sources#outline#alias(alias, src_filetype)
+  endif
+endfor
+unlet s:default_alias_map
 
 "-----------------------------------------------------------------------------
 " Source
 
 let s:source = {
       \ 'name': 'outline',
+      \ 'description': 'candidates from heading list',
       \ 'action_table': {},
-      \ 'default_action': {},
       \ 'hooks': {},
       \ 'is_volatile': 1,
       \ }
@@ -392,10 +414,10 @@ function! s:source.gather_candidates(args, context)
     let cands = map(headings, '{
           \ "word": s:expand_leading_tabs(v:val[0], ts),
           \ "source": "outline",
-          \ "kind": "openable",
+          \ "kind": "jump_list",
           \ "action__path": path,
           \ "action__pattern": "^" . s:escape_regex(v:val[1]) . "$",
-          \ "action__signature": s:signature2(lines, v:val[2]),
+          \ "action__signature": s:calc_signature2(lines, v:val[2]),
           \ }')
 
     if n_lines > g:unite_source_outline_cache_limit
@@ -430,17 +452,17 @@ function! s:escape_regex(str)
   return escape(a:str, '^$[].*\~')
 endfunction
 
-function! s:signature(lnum)
-  let r = 2
-  let from = max([1, a:lnum - r])
-  let to   = min([a:lnum + r, line('$')])
+function! s:source.calc_signature(lnum)
+  let range = 2
+  let from = max([1, a:lnum - range])
+  let to   = min([a:lnum + range, line('$')])
   return join(getline(from, to))
 endfunction
 
-function! s:signature2(lines, idx)
-  let r = 2
-  let from = max([0, a:idx - r])
-  let to   = min([a:idx + r, len(a:lines) - 1])
+function! s:calc_signature2(lines, idx)
+  let range = 2
+  let from = max([0, a:idx - range])
+  let to   = min([a:idx + range, len(a:lines) - 1])
   return join(a:lines[from : to])
 endfunction
 
@@ -451,15 +473,13 @@ let s:action_table = {}
 
 let s:action_table.open = {
       \ 'description': 'jump to this position',
-      \ 'is_selectable': 0,
+      \ 'is_selectable': 1,
       \ }
-function! s:action_table.open.func(candidate)
-  let cand = a:candidate
-  " work around `scroll-to-top' problem on :edit %
-  if cand.action__path !=# expand('%:p')
-    edit `=cand.action__path`
-  endif
-  call s:jump(cand)
+function! s:action_table.open.func(candidates)
+  for cand in a:candidates
+    call unite#take_action('open', cand)
+    call s:adjust_scroll(s:best_scroll())
+  endfor
 endfunction
 
 let s:action_table.preview = {
@@ -473,10 +493,12 @@ function! s:action_table.preview.func(candidate)
   let save_pos  = getpos('.')
   let save_winl = winline()
   wincmd p
-  pedit `=cand.action__path`
+
+  call unite#take_action('preview', cand)
   wincmd p
-  call s:jump(cand)
+  call s:adjust_scroll(s:best_scroll())
   wincmd p
+
   " work around `scroll-to-top' problem on :pedit %
   execute s:context_winnr() . 'wincmd w'
   let pos  = getpos('.')
@@ -487,33 +509,8 @@ function! s:action_table.preview.func(candidate)
   wincmd p
 endfunction
 
-function! s:jump(candidate)
-  let cand = a:candidate
-  call search(cand.action__pattern, 'w')
-  let lnum0 = line('.')
-  call search(cand.action__pattern, 'w')
-  let lnum = line('.')
-  if lnum != lnum0
-    " same heading lines detected!!
-    let start_lnum = lnum
-    while 1
-      if s:signature(lnum) ==# cand.action__signature
-        " found
-        break
-      endif
-      call search(cand.action__pattern, 'w')
-      let lnum = line('.')
-      if lnum == start_lnum
-        " not found
-        call unite#print_error("unite-outline: target heading not found, please update the cache")
-        1
-        return
-      endif
-    endwhile
-  endif
-  normal! zv
-  let best = max([1, winheight(0) * g:unite_source_outline_after_jump_scroll / 100])
-  call s:adjust_scroll(best)
+function! s:best_scroll()
+  return max([1, winheight(0) * g:unite_source_outline_after_jump_scroll / 100])
 endfunction
 
 function! s:adjust_scroll(best)
@@ -558,8 +555,7 @@ function! s:context_winnr()
   endwhile
 endfunction
 
-let s:source.action_table.openable = s:action_table
-let s:source.default_action.openable = 'open'
+let s:source.action_table.jump_list = s:action_table
 unlet s:action_table
 
 "-----------------------------------------------------------------------------
