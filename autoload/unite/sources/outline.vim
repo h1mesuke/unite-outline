@@ -486,8 +486,14 @@ let s:action_table.preview = {
       \ }
 function! s:action_table.preview.func(candidate)
   let cand = a:candidate
-  " work around `scroll-to-top' problem on :pedit %
   let bufnr = bufnr(unite#util#escape_file_searching(cand.action__path))
+  if getbufvar(bufnr, '&buftype') =~# '\<nofile\>'
+    " NOTE: Executing :pedit for a nofile buffer clears the buffer content at all.
+    call unite#print_error("unite-outline: can't preview nofile buffer")
+    return
+  endif
+
+  " work around `scroll-to-top' problem on :pedit %
   let save_cursors = s:save_window_cursors(bufnr)
   let n_wins = winnr('$')
   call unite#take_action('preview', cand)
