@@ -2,7 +2,7 @@
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
 " Updated : 2010-11-26
-" Version : 0.1.3
+" Version : 0.1.4
 " License : MIT license {{{
 "
 "     Permission is hereby granted, free of charge, to any person obtaining
@@ -207,7 +207,6 @@ let s:source = {
       \ 'is_volatile': 1,
       \ }
 
-let s:session_id = 0
 function! s:source.hooks.on_init(args, context)
   " NOTE: The filetype of the buffer may be a "compound filetype", a set of
   " filetypes separated by periods.
@@ -222,8 +221,6 @@ function! s:source.hooks.on_init(args, context)
         \ 'tabstop' : getbufvar('%', '&tabstop'),
         \ 'lines'   : getbufline('%', 1, '$'),
         \ }
-  let s:session_id += 1
-  let w:unite_source_outline_session = s:session_id
 endfunction
 
 function! s:source.gather_candidates(args, context)
@@ -489,24 +486,51 @@ let s:action_table.preview = {
       \ }
 function! s:action_table.preview.func(candidate)
   let cand = a:candidate
-  execute s:context_winnr() . 'wincmd w'
-  let save_pos  = getpos('.')
-  let save_winl = winline()
-  wincmd p
-
+  " work around `scroll-to-top' problem on :pedit %
+  let bufnr = bufnr(unite#util#escape_file_searching(cand.action__path))
+  let save_cursors = s:save_window_cursors(bufnr)
+  let n_wins = winnr('$')
   call unite#take_action('preview', cand)
   wincmd p
+  let preview_winnr = winnr()
   call s:adjust_scroll(s:best_scroll())
   wincmd p
+  call s:restore_window_cursors(save_cursors, preview_winnr, (winnr('$') > n_wins))
+endfunction
 
-  " work around `scroll-to-top' problem on :pedit %
-  execute s:context_winnr() . 'wincmd w'
-  let pos  = getpos('.')
-  if pos != save_pos
-    call setpos('.', save_pos)
-    call s:adjust_scroll(save_winl)
-  endif
-  wincmd p
+function! s:save_window_cursors(bufnr)
+  let save_cursors = {}
+  let save_winnr = winnr()
+  let winnr = 1
+  while winnr <= winnr('$')
+    if winbufnr(winnr) == a:bufnr
+      execute winnr . 'wincmd w'
+      let save_cursors[winnr] = {
+            \ 'cursor': getpos('.'),
+            \ 'winline': winline(),
+            \ }
+    endif
+    let winnr += 1
+  endwhile
+  execute save_winnr . 'wincmd w'
+  return save_cursors
+endfunction
+
+function! s:restore_window_cursors(save_cursors, preview_winnr, is_new)
+  let save_winnr = winnr()
+  for [winnr, saved] in items(a:save_cursors)
+    if winnr == a:preview_winnr
+      continue
+    elseif a:is_new && winnr >= a:preview_winnr
+      let winnr += 1
+    endif
+    execute winnr . 'wincmd w'
+    if getpos('.') != saved.cursor
+      call setpos('.', saved.cursor)
+      call s:adjust_scroll(saved.winline)
+    endif
+  endfor
+  execute save_winnr . 'wincmd w'
 endfunction
 
 function! s:best_scroll()
@@ -543,16 +567,6 @@ function! s:adjust_scroll(best)
     execute "normal! \<C-e>"
   endif
   call setpos('.', save_pos)
-endfunction
-
-function! s:context_winnr()
-  let nr = 1
-  while nr <= winnr('$')
-    if getwinvar(nr, 'unite_source_outline_session') == s:session_id
-      return nr
-    endif
-    let nr += 1
-  endwhile
 endfunction
 
 let s:source.action_table.jump_list = s:action_table
