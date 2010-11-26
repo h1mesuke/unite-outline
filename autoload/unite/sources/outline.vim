@@ -202,8 +202,7 @@ unlet s:default_alias_map
 let s:source = {
       \ 'name': 'outline',
       \ 'description': 'candidates from heading list',
-      \ 'action_table': {},
-      \ 'hooks': {},
+      \ 'action_table': {}, 'hooks': {},
       \ 'is_volatile': 1,
       \ }
 
@@ -216,10 +215,11 @@ function! s:source.hooks.on_init(args, context)
     let filetype = split(filetype, '\.')[0]
   endif
   let s:buffer = {
-        \ 'path'    : expand('%:p'),
-        \ 'filetype': filetype,
-        \ 'tabstop' : getbufvar('%', '&tabstop'),
-        \ 'lines'   : getbufline('%', 1, '$'),
+        \ 'path'      : expand('%:p'),
+        \ 'filetype'  : filetype,
+        \ 'shiftwidth': getbufvar('%', '&shiftwidth'),
+        \ 'tabstop'   : getbufvar('%', '&tabstop'),
+        \ 'lines'     : getbufline('%', 1, '$'),
         \ }
 endfunction
 
@@ -321,6 +321,7 @@ function! s:source.gather_candidates(args, context)
     if match_head_next
       let head_next = outline_info['heading+1']
     endif
+    let has_create_heading = has_key(outline_info, 'create_heading')
 
     " collect headings
     let headings = []
@@ -342,7 +343,7 @@ function! s:source.gather_candidates(args, context)
         " matched: heading-1
         let next_line = lines[idx + 1]
         if next_line =~ '[[:punct:]]\@!\S'
-          if has_key(outline_info, 'create_heading')
+          if has_create_heading
             let heading = outline_info.create_heading('heading-1', next_line, line, {
                   \ 'heading_index': idx + 1, 'matched_index': idx, 'lines': lines,
                   \ 'heading_id': heading_id, 'outline_info': outline_info })
@@ -357,7 +358,7 @@ function! s:source.gather_candidates(args, context)
           " see one more next
           let next_line = lines[idx + 2]
           if next_line =~ '[[:punct:]]\@!\S'
-            if has_key(outline_info, 'create_heading')
+            if has_create_heading
               let heading = outline_info.create_heading('heading-1', next_line, line, {
                     \ 'heading_index': idx + 2, 'matched_index': idx, 'lines': lines,
                     \ 'heading_id': heading_id, 'outline_info': outline_info })
@@ -375,7 +376,7 @@ function! s:source.gather_candidates(args, context)
 
       elseif match_head_line && line =~# head_line
         " matched: heading
-        if has_key(outline_info, 'create_heading')
+        if has_create_heading
           let heading = outline_info.create_heading('heading', line, line, {
                 \ 'heading_index': idx, 'matched_index': idx, 'lines': lines,
                 \ 'heading_id': heading_id, 'outline_info': outline_info })
@@ -391,7 +392,7 @@ function! s:source.gather_candidates(args, context)
         " matched: heading+1
         let prev_line = lines[idx - 1]
         if prev_line =~ '[[:punct:]]\@!\S'
-          if has_key(outline_info, 'create_heading')
+          if has_create_heading
             let heading = outline_info.create_heading('heading+1', prev_line, line, {
                   \ 'heading_index': idx - 1, 'matched_index': idx, 'lines': lines,
                   \ 'heading_id': heading_id, 'outline_info': outline_info })
@@ -407,9 +408,8 @@ function! s:source.gather_candidates(args, context)
       let idx += 1
     endwhile
 
-    let ts = s:buffer.tabstop
     let cands = map(headings, '{
-          \ "word": s:expand_leading_tabs(v:val[0], ts),
+          \ "word": (has_create_heading ? v:val[0] : s:normalize_indent(v:val[0])),
           \ "source": "outline",
           \ "kind": "jump_list",
           \ "action__path": path,
@@ -435,14 +435,23 @@ function! s:source.gather_candidates(args, context)
   endtry
 endfunction
 
-function! s:expand_leading_tabs(str, ts)
-  let lead_tabs = matchstr(a:str, '^\t\+')
+function! s:normalize_indent(str)
+  let str = a:str
+  let sw = s:buffer.shiftwidth
+  let ts = s:buffer.tabstop
+  " expand leading tabs
+  let lead_tabs = matchstr(str, '^\t\+')
   let ntab = strlen(lead_tabs)
   if ntab > 0
-    return substitute(a:str, '^\t\+', printf('%*s', ntab * a:ts, ""), '')
-  else
-    return a:str
+    let str =  substitute(str, '^\t\+', printf('%*s', ntab * ts, ""), '')
   endif
+  " normalize indent
+  let indent = matchstr(str, '^\s\+')
+  let level = strlen(indent) / sw + 1
+  if level > 0
+    let str =  substitute(str, '^\s\+', unite#sources#outline#indent(level), '')
+  endif
+  return str
 endfunction
 
 function! s:escape_regex(str)
