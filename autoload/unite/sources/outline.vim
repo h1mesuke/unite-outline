@@ -483,7 +483,7 @@ let s:action_table.open = {
 function! s:action_table.open.func(candidates)
   for cand in a:candidates
     call unite#take_action('open', cand)
-    call s:adjust_scroll(s:best_scroll())
+    call s:adjust_scroll(s:best_winline())
   endfor
 endfunction
 
@@ -507,7 +507,7 @@ function! s:action_table.preview.func(candidate)
   call unite#take_action('preview', cand)
   wincmd p
   let preview_winnr = winnr()
-  call s:adjust_scroll(s:best_scroll())
+  call s:adjust_scroll(s:best_winline())
   wincmd p
   call s:restore_window_cursors(save_cursors, preview_winnr, (winnr('$') > n_wins))
 endfunction
@@ -547,40 +547,28 @@ function! s:restore_window_cursors(save_cursors, preview_winnr, is_new)
   execute save_winnr . 'wincmd w'
 endfunction
 
-function! s:best_scroll()
+function! s:best_winline()
   return max([1, winheight(0) * g:unite_source_outline_after_jump_scroll / 100])
 endfunction
 
-function! s:adjust_scroll(best)
+function! s:adjust_scroll(best_winline)
   normal! zt
-  let save_pos = getpos('.')
-  let winl = winline()
-  let delta = winl - a:best
-  let prev_winl = winl
-  if delta > 0
-    " scroll up
-    while 1
-      execute "normal! \<C-e>"
-      let winl = winline()
-      if winl < a:best || winl == prev_winl
-        break
-      end
-      let prev_winl = winl
-    endwhile
+  let save_cursor = getpos('.')
+  let winl = 1
+  " scroll the cursor line down
+  while winl <= a:best_winline
+    let prev_winl = winl
     execute "normal! \<C-y>"
-  elseif delta < 0
-    " scroll down
-    while 1
-      execute "normal! \<C-y>"
-      let winl = winline()
-      if winl > a:best || winl == prev_winl
-        break
-      end
-      let prev_winl = winl
-    endwhile
+    let winl = winline()
+    if winl == prev_winl
+      break
+    end
+    let prev_winl = winl
+  endwhile
+  if winl > a:best_winline
     execute "normal! \<C-e>"
   endif
-  call setpos('.', save_pos)
+  call setpos('.', save_cursor)
 endfunction
 
 let s:source.action_table.jump_list = s:action_table
