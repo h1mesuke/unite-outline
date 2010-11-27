@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-26
+" Updated : 2010-11-27
 " Version : 0.1.4
 " License : MIT license {{{
 "
@@ -215,6 +215,7 @@ function! s:source.hooks.on_init(args, context)
     let filetype = split(filetype, '\.')[0]
   endif
   let s:buffer = {
+        \ 'nr'        : bufnr('%'),
         \ 'path'      : expand('%:p'),
         \ 'filetype'  : filetype,
         \ 'shiftwidth': getbufvar('%', '&shiftwidth'),
@@ -241,7 +242,7 @@ function! s:source.gather_candidates(args, context)
       return []
     endif
 
-    let lines = getbufline('#', 1, '$')
+    let lines = getbufline(s:buffer.nr, 1, '$')
     let idx = 0 | let n_lines = len(lines)
 
     "---------------------------------------
