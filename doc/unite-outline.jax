@@ -1,7 +1,7 @@
 *unite-outline.txt*	ファイルの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2010-11-26
+Updated : 2010-11-29
 License : MIT license {{{
 
   Permission is hereby granted, free of charge, to any person obtaining
@@ -28,7 +28,7 @@ License : MIT license {{{
 概要			|unite-outline-introduction|
 インストール		|unite-outline-install|
 使い方			|unite-outline-usage|
-設定			|unite-outline-configure|
+設定			|unite-outline-settings|
   変数			  |unite-outline-variables|
 Outline Info		|unite-outline-info|
   outline info の探索	  |unite-outline-info-find|
@@ -48,7 +48,7 @@ ToDo			|unite-outline-todo|
 ==============================================================================
 概要						*unite-outline-introduction*
 
-*unite-outline* は、ファイルの見出しを抽出し、|unite| のインターフェースを使って
+*unite-outline* は、ファイルの見出しを抽出し、|unite|のインターフェースを使って
 それらを一覧表示、各見出しへのジャンプ機能を提供する source です。見出しを抽出
 するためのパターンおよび見出しレベルの決定ロジックをファイルタイプごとに設定す
 ることができ、ユーザーによる高度なカスタマイズが可能です。
@@ -58,7 +58,7 @@ ToDo			|unite-outline-todo|
 
 配布アーカイブに含まれるファイル群を、そのフォルダごと Vim の 'runtimepath' に
 コピーします。 $HOME/.vim（Windows の場合は $HOME/vimfiles）へのインストールが
-もっとも一般的でしょう。その場合コピー後の配置は
+もっとも一般的でしょう。その場合インストール後の配置は
 
 	$HOME/.vim/autoload/unite/sources/outline.vim
 	$HOME/.vim/autoload/unite/sources/outline
@@ -72,7 +72,7 @@ ToDo			|unite-outline-todo|
 ==============================================================================
 使い方						*unite-outline-usage*
 
-|unite| の使い方については、unite のヘルプを参照して下さい。ここでは、unite
+|unite|の使い方については、unite のヘルプを参照して下さい。ここでは、unite
 の source である unite-outline の使い方を説明します。
 
 ファイルの見出し一覧を表示するには、source として outline を指定し、:Unite を
@@ -84,9 +84,9 @@ ToDo			|unite-outline-todo|
 が行われ、unite のインターフェースを使って見出しの一覧が表示されます。表示され
 た一覧から見出しを選択すると、該当箇所へジャンプできます。
 
-見出し抽出の対象ファイルの行数が変数 |g:unite_source_outline_cache_limit| に設
-定された値より大きい場合、抽出された見出しはキャッシュされます。これにより、２
-回目以降は見出し一覧の表示が高速になります。
+見出し抽出の対象ファイルの行数が変数|g:unite_source_outline_cache_limit|に設定
+された値より大きい場合、抽出された見出しはキャッシュされます。これにより、２回
+目以降は見出し一覧の表示が高速になります。
 
 キャッシュの内容を破棄し、見出しの抽出をやり直したい場合は、outline の引数に
 "!" を指定して :Unite を実行します。
@@ -97,7 +97,7 @@ ToDo			|unite-outline-todo|
 |<Plug>(unite_redraw)|（デフォルトのキーマッピングでは <C-l>）を実行します。
 
 ==============================================================================
-設定						*unite-outline-configure*
+設定						*unite-outline-settings*
 
 ------------------------------------------------------------------------------
 変数						*unite-outline-variables*
@@ -110,7 +110,7 @@ g:unite_source_outline_info		*g:unite_source_outline_info*
 
 	※デフォルトの outline info はオートロード関数によって遅延ロードされる
 	ため、この辞書の初期値は空になっています。outline info については
-	|unite-source-outline-info| を参照して下さい。
+	|unite-source-outline-info|を参照して下さい。
 
 g:unite_source_outline_indent_width	*g:unite_source_outline_indent_width*
 
@@ -369,8 +369,8 @@ unite#sources#outline#get_outline_info({filetype})
 unite#sources#outline#indent({level})	*unite#sources#outline#indent()*
 
 	{level} の見出しレベルに応じたインデントのための空白文字列を返します。
-	インデントの幅には |g:unite_source_outline_indent_width| の値が考慮さ
-	れます。
+	インデントの幅には|g:unite_source_outline_indent_width|の値が考慮され
+	ます。
 					*unite#sources#outline#capitalize()*
 unite#sources#outline#capitalize({str} [, {flag}])
 
