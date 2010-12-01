@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-27
+" Updated : 2010-12-01
 " Version : 0.1.4
 " License : MIT license {{{
 "
@@ -169,13 +169,6 @@ endif
 
 if !exists('g:unite_source_outline_cache_limit')
   let g:unite_source_outline_cache_limit = 100
-endif
-
-if !exists('g:unite_source_outline_after_jump_scroll')
-  let g:unite_source_outline_after_jump_scroll = 25
-else
-  let g:unite_source_outline_after_jump_scroll =
-        \ min([max([0, g:unite_source_outline_after_jump_scroll]), 100])
 endif
 
 "-----------------------------------------------------------------------------
@@ -477,17 +470,6 @@ endfunction
 
 let s:action_table = {}
 
-let s:action_table.open = {
-      \ 'description': 'jump to this position',
-      \ 'is_selectable': 1,
-      \ }
-function! s:action_table.open.func(candidates)
-  for cand in a:candidates
-    call unite#take_action('open', cand)
-    call s:adjust_scroll(s:best_winline())
-  endfor
-endfunction
-
 let s:action_table.preview = {
       \ 'description': 'preview this position',
       \ 'is_selectable': 0,
@@ -551,7 +533,7 @@ function! s:restore_window_cursors(save_cursors, preview_winnr, is_new)
 endfunction
 
 function! s:best_winline()
-  return max([1, winheight(0) * g:unite_source_outline_after_jump_scroll / 100])
+  return max([1, winheight(0) * g:unite_kind_jump_list_after_jump_scroll / 100])
 endfunction
 
 function! s:adjust_scroll(best_winline)
