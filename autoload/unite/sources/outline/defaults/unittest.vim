@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/unittest.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-21
+" Updated : 2010-12-01
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -15,6 +15,7 @@ function! unite#sources#outline#defaults#unittest#outline_info()
 endfunction
 
 let s:outline_info = {
+      \ 'is_volatile': 1,
       \ 'heading-1': '^[-=]\{10,}',
       \ 'heading'  : '^\s*\d\+) \(Failure\|Error\): ',
       \}
