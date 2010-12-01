@@ -1,7 +1,7 @@
 *unite-outline.txt*	ファイルの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2010-11-29
+Updated : 2010-12-01
 License : MIT license {{{
 
   Permission is hereby granted, free of charge, to any person obtaining
@@ -134,20 +134,6 @@ g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
 	します。
 
 	初期値は 100
-				*g:unite_source_outline_after_jump_scroll*
-g:unite_source_outline_after_jump_scroll
-
-	見出しへのジャンプ後にカーソルの位置（スクロール）を調整するための数値。
-	最小値は 0 でウィンドウ最上を意味し、最大値は 100 でウィンドウ最下を
-	意味します。
-
-	数値	意味		同等のコマンド
-	--------------------------------------
-	  0	ウィンドウ最上	normal! |z<CR>|
-	 50	ウィンドウ中央	normal! |z.|
-	100	ウィンドウ最下	normal! |z-|
-
-	初期値は 25
 
 ==============================================================================
 Outline Info					*unite-outline-info*
@@ -347,6 +333,11 @@ skip_header()	関数（任意）			*unite-outline-info-skip_header()*
 	* {lines} - リスト：ファイルの全行
 	* {context} - 辞書：その他の情報、以下の属性を含む
 	  * outline_info - 辞書：outline info
+
+is_volatile	数値（任意）			*unite-outline-info-is_volatile*
+
+	抽出した見出しをキャッシュするかどうかを指定します。
+	1 に設定されていると、見出しはキャッシュされません。
 
 ------------------------------------------------------------------------------
 関数						*unite-outline-functions*
