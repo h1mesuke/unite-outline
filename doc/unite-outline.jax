@@ -284,7 +284,7 @@ skip		辞書（任意）				*unite-outline-info-skip*
 	することで、指定の領域を見出し抽出の対象外にできます。
 
 	header	文字列、リスト、辞書のいずれか（任意）
-
+						*unite-outline-info-skip-header*
 		ファイルの先頭にあるヘッダ部分（作者や著作権の表示がある部分）
 		から見出しが抽出されるのを防ぐために設定します。
 
@@ -314,8 +314,7 @@ skip		辞書（任意）				*unite-outline-info-skip*
 		\   },
 		\ },
 <
-	block	リスト（任意）
-
+	block	リスト（任意）			*unite-outline-info-skip-block*
 		設定されていると、値をパターンのペアと見なし、ファイル中の、
 		skip.block[0] にマッチする行から skip.block[1] にマッチする行
 		までをスキップします。
@@ -348,18 +347,16 @@ is_volatile	数値（任意）			*unite-outline-info-is_volatile*
 ------------------------------------------------------------------------------
 関数						*unite-outline-functions*
 
-					*unite#sources#outline#alias()*
 unite#sources#outline#alias({alias}, {src-filetype})
-
+					*unite#sources#outline#alias()*
 	ファイルタイプの別名を設定します。{src-filetype} の outline-info を別
 	のファイルタイプでも利用したい場合に使用します。
 >
 	call unite#sources#outline#alias('xhtml', 'html')
 	call unite#sources#outline#alias('zsh',   'sh')
 <
-					*unite#sources#outline#get_outline_info()*
 unite#sources#outline#get_outline_info({filetype})
-
+					*unite#sources#outline#get_outline_info()*
 	{filetype} のための outline info を返します。outline info が見つからな
 	い場合は空の辞書 {} を返します。
 
@@ -368,24 +365,21 @@ unite#sources#outline#indent({level})	*unite#sources#outline#indent()*
 	{level} の見出しレベルに応じたインデントのための空白文字列を返します。
 	インデントの幅には|g:unite_source_outline_indent_width|の値が考慮され
 	ます。
-					*unite#sources#outline#capitalize()*
 unite#sources#outline#capitalize({str} [, {flag}])
-
+					*unite#sources#outline#capitalize()*
 	{str} の先頭の文字を大文字に、残りを小文字に変更した文字列を返します。
 	{flag} に "g" を指定すると、すべての単語を同様に処理します。
 
-					*unite#sources#outline#join_to()*
 unite#sources#outline#join_to({lines}, {idx}, {pattern} [, {limit}])
-
+					*unite#sources#outline#join_to()*
 	{lines} の添字が {idx} の行から {pattern} にマッチする行までを連結
 	した文字列を返します。連結される行は "\n" で区切られます。
 	{limit} には最大何行先までマッチを試行・連結するかを指定でき、省略した
 	場合は 3 になります。{limit} に負の値を指定すると、 {lines} の添字が
 	{idx} の行から前の行に対してマッチの試行と連結を行います。
 
-					*unite#sources#outline#neighbor_match()*
 unite#sources#outline#neighbor_match({lines}, {idx}, {pattern} [, {range}])
-
+					*unite#sources#outline#neighbor_match()*
 	{lines} の添字が {idx} の行およびその前後の行が {pattern} にマッチする
 	ならば真、そうでないなら偽を返します。{range} には前後の何行分に対しマ
 	ッチを試行するかを指定でき、省略した場合は 1 になります。 
