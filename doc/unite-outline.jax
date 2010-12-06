@@ -1,7 +1,7 @@
 *unite-outline.txt*	ファイルの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2010-12-04
+Updated : 2010-12-06
 License : MIT license {{{
 
   Permission is hereby granted, free of charge, to any person obtaining
@@ -42,7 +42,7 @@ License : MIT license {{{
 	    skip_header()	    |unite-outline-info-skip_header()|
 	  関数			  |unite-outline-functions|
 	ToDo			|unite-outline-todo|
-	既知のバグ		|unite-outline-bugs|
+	既知の問題		|unite-outline-bugs|
 	更新履歴		|unite-outline-changelog|
 
 ==============================================================================
@@ -416,7 +416,7 @@ outline info 募集！
 	  https://github.com/h1mesuke/unite-outline/pull/new/master
 
 ==============================================================================
-既知のバグ					*unite-outline-bugs*
+既知の問題					*unite-outline-bugs*
 
 ==============================================================================
 更新履歴					*unite-outline-changelog*
