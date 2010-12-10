@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-06
+" Updated : 2010-12-11
 " Version : 0.1.5
 " License : MIT license {{{
 "
@@ -246,42 +246,42 @@ function! s:source.gather_candidates(args, context)
 
     elseif has_key(outline_info, 'skip') && has_key(outline_info.skip, 'header')
       " eval once
-      let val_type = type(outline_info.skip.header)
-      if val_type == type("")
-        let skip_header_lead = 1 | let skip_header_block = 0
-        let header_lead = outline_info.skip.header
-      elseif val_type == type([])
-        let skip_header_lead = 0 | let skip_header_block = 1
-        let header_begin = outline_info.skip.header[0]
-        let header_end   = outline_info.skip.header[1]
-      elseif val_type == type({})
-        let skip_header_lead = has_key(outline_info.skip.header, 'leading')
-        if skip_header_lead
-          let header_lead = outline_info.skip.header.leading
+      let value_type = type(outline_info.skip.header)
+      if value_type == type("")
+        let skip_header_leading = 1 | let skip_header_block = 0
+        let header_leading_pattern = outline_info.skip.header
+      elseif value_type == type([])
+        let skip_header_leading = 0 | let skip_header_block = 1
+        let header_beg_pattern = outline_info.skip.header[0]
+        let header_end_pattern = outline_info.skip.header[1]
+      elseif value_type == type({})
+        let skip_header_leading = has_key(outline_info.skip.header, 'leading')
+        if skip_header_leading
+          let header_leading_pattern = outline_info.skip.header.leading
         endif
         let skip_header_block = has_key(outline_info.skip.header, 'block')
         if skip_header_block
-          let header_begin = outline_info.skip.header.block[0]
-          let header_end   = outline_info.skip.header.block[1]
+          let header_beg_pattern = outline_info.skip.header.block[0]
+          let header_end_pattern = outline_info.skip.header.block[1]
         endif
       endif
 
       while idx < n_lines
         let line = lines[idx]
-        if skip_header_lead && line =~# header_lead
+        if skip_header_leading && line =~# header_leading_pattern
           let idx += 1
           while idx < n_lines
             let line = lines[idx]
-            if line !~# header_lead
+            if line !~# header_leading_pattern
               break
             endif
             let idx += 1
           endwhile
-        elseif skip_header_block && line =~# header_begin
+        elseif skip_header_block && line =~# header_beg_pattern
           let idx += 1
           while idx < n_lines
             let line = lines[idx]
-            if line =~# header_end
+            if line =~# header_end_pattern
               break
             endif
             let idx += 1
@@ -302,17 +302,17 @@ function! s:source.gather_candidates(args, context)
       let skip_block_begin = outline_info.skip.block[0]
       let skip_block_end   = outline_info.skip.block[1]
     endif
-    let match_head_prev = has_key(outline_info, 'heading-1')
-    if match_head_prev
-      let head_prev = outline_info['heading-1']
+    let has_heading_prev_pattern = has_key(outline_info, 'heading-1')
+    if has_heading_prev_pattern
+      let heading_prev_pattern = outline_info['heading-1']
     endif
-    let match_head_line = has_key(outline_info, 'heading')
-    if match_head_line
-      let head_line = outline_info.heading
+    let has_heading_pattern = has_key(outline_info, 'heading')
+    if has_heading_pattern
+      let heading_pattern = outline_info.heading
     endif
-    let match_head_next = has_key(outline_info, 'heading+1')
-    if match_head_next
-      let head_next = outline_info['heading+1']
+    let has_heading_next_pattern = has_key(outline_info, 'heading+1')
+    if has_heading_next_pattern
+      let heading_next_pattern = outline_info['heading+1']
     endif
     let has_create_heading = has_key(outline_info, 'create_heading')
 
@@ -332,7 +332,7 @@ function! s:source.gather_candidates(args, context)
           let idx += 1
         endwhile
 
-      elseif match_head_prev && line =~# head_prev && idx < n_lines - 3
+      elseif has_heading_prev_pattern && line =~# heading_prev_pattern && idx < n_lines - 3
         " matched: heading-1
         let next_line = lines[idx + 1]
         if next_line =~ '[[:punct:]]\@!\S'
@@ -367,7 +367,7 @@ function! s:source.gather_candidates(args, context)
         endif
         let idx += 2
 
-      elseif match_head_line && line =~# head_line
+      elseif has_heading_pattern && line =~# heading_pattern
         " matched: heading
         if has_create_heading
           let heading = outline_info.create_heading('heading', line, line, {
@@ -381,7 +381,7 @@ function! s:source.gather_candidates(args, context)
           call add(headings, [line, line, idx])
         endif
 
-      elseif match_head_next && line =~# head_next && idx > 0
+      elseif has_heading_next_pattern && line =~# heading_next_pattern && idx > 0
         " matched: heading+1
         let prev_line = lines[idx - 1]
         if prev_line =~ '[[:punct:]]\@!\S'
