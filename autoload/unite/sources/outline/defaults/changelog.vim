@@ -1,7 +1,7 @@
 "=============================================================================
 " File       : autoload/unite/sources/outline/defaults/changelog.vim
 " Maintainer : h1mesuke <himesuke@gmail.com>
-" Updated    : 2010-11-23
+" Updated    : 2010-12-11
 "
 " Contributed by sgur
 "
@@ -11,6 +11,7 @@
 "=============================================================================
 
 " Default outline info for ChangeLog
+" Version: 0.0.1
 
 function! unite#sources#outline#defaults#changelog#outline_info()
   return s:outline_info

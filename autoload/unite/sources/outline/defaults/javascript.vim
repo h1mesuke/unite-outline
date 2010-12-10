@@ -1,7 +1,7 @@
 "=============================================================================
 " File       : autoload/unite/sources/outline/defaults/javascript.vim
 " Maintainer : h1mesuke <himesuke@gmail.com>
-" Updated    : 2010-11-26
+" Updated    : 2010-12-11
 "
 " Improved by hamaco
 "
@@ -11,6 +11,7 @@
 "=============================================================================
 
 " Default outline info for JavaScript
+" Version: 0.0.2
 
 function! unite#sources#outline#defaults#javascript#outline_info()
   return s:outline_info

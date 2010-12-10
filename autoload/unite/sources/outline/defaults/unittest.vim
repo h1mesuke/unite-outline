@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/unittest.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-01
+" Updated : 2010-12-11
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,6 +9,7 @@
 "=============================================================================
 
 " Default outline info for UnitTest results
+" Version: 0.0.2
 
 function! unite#sources#outline#defaults#unittest#outline_info()
   return s:outline_info
