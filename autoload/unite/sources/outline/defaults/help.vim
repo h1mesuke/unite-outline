@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for Vim Help
-" Version: 0.0.5
+" Version: 0.0.6
 
 function! unite#sources#outline#defaults#help#outline_info()
   return s:outline_info
@@ -60,10 +60,12 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     call s:initialize()
   endif
   let level = 0
+  let lines = a:context.lines
   if a:which ==# 'heading-1'
+    let m = a:context.matched_index
     if a:matched_line =~ '^='
       let level = 1 | let s:level_x = 2
-    elseif a:matched_line =~ '^-' && strlen(a:matched_line) > 30
+    elseif a:matched_line =~ '^-' && lines[m-1] !~ '\S'
       " 2-1
       let level = 2 | let s:level_x = 3
     endif
@@ -75,7 +77,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
       " X-1
       let level = s:level_x
     else
-      let lines = a:context.lines | let h = a:context.heading_index
+      let h = a:context.heading_index
       if unite#sources#outline#neighbor_match(lines, h, s:helptag)
         " X-2
         let level = s:level_x
