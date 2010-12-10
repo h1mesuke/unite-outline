@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/help.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-11-15
+" Updated : 2010-12-11
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,40 +9,83 @@
 "=============================================================================
 
 " Default outline info for Vim Help
+" Version: 0.0.5
 
 function! unite#sources#outline#defaults#help#outline_info()
   return s:outline_info
 endfunction
 
+" Heading Samples:
+"
+" ==============================================================================
+" Level 1
+"
+" ------------------------------------------------------------------------------
+" Level 2-1
+"
+" 1.1 Level 2-2
+"
+" LEVEL X-1                                       *tag*
+"
+" LEVEL X-2 ~
+"                                                 *tag*
+
+" Level Shifting:
+"
+" +---------+---------+---------+
+" | Level 1 | Level 2 | Level X |
+" +---------+---------+---------+
+" |  exist  |  exist  |    3    |
+" |  exist  |  none   |    2    |
+" |  none   |  none   |    1    |
+" |  none   |  exist  |    3    |
+" +---------+---------+---------+
+
+" patterns
+let s:section_number = '\d\+\.\d\+\s\+\S'
+let s:upper_word = '\u[[:upper:][:digit:]_]\+\>'
+let s:helptag = '\*\S\+\*'
+
 let s:outline_info = {
       \ 'heading-1': '^[-=]\{10,}\s*$',
-      \ 'heading'  : '^\(\d\+\.\d\+\s\|\u\u.*\(\*\S\+\*\|\~\)\)',
+      \ 'heading'  : '^\('.s:section_number.'\|'.s:upper_word.'.*\('.s:helptag.'\|\~\)\)',
       \ }
 
+function! s:initialize()
+  let s:level_x = 1
+endfunction
+
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
+  if a:context.heading_id == 1
+    call s:initialize()
+  endif
   let level = 0
   if a:which ==# 'heading-1'
     if a:matched_line =~ '^='
-      let level = 1
+      let level = 1 | let s:level_x = 2
     elseif a:matched_line =~ '^-' && strlen(a:matched_line) > 30
-      let level = 2
+      " 2-1
+      let level = 2 | let s:level_x = 3
     endif
   elseif a:which ==# 'heading'
-    let level = 2
-    if a:heading_line =~ '\~\s*$'
+    if a:heading_line =~ '^'.s:section_number
+      " 2-2
+      let level = 2 | let s:level_x = 3
+    elseif a:heading_line =~ s:helptag
+      " X-1
+      let level = s:level_x
+    else
       let lines = a:context.lines | let h = a:context.heading_index
-      if a:heading_line =~ '^\d\+\.\d\+\s'
-        " keep this level
-      elseif unite#sources#outline#neighbor_match(lines, h, '\*\S\+\*')
-        let level += 1
-      else
-        let level = 0
+      if unite#sources#outline#neighbor_match(lines, h, s:helptag)
+        " X-2
+        let level = s:level_x
       endif
     endif
   endif
   if level > 0
     let heading = substitute(a:heading_line, '\(\~\|{{{\d\=\)\s*$', '', '')
-    if a:heading_line =~ '^\u\u'
+    let heading = substitute(heading, s:helptag, '', 'g')
+    if a:heading_line =~ s:upper_word
       let heading = unite#sources#outline#capitalize(heading, 'g')
     endif
     let heading = unite#sources#outline#indent(level) . heading
