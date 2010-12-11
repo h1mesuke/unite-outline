@@ -164,7 +164,7 @@ if !exists('g:unite_source_outline_indent_width')
 endif
 
 if !exists('g:unite_source_outline_cache_buffers')
-  let g:unite_source_outline_cache_buffers = 10
+  let g:unite_source_outline_cache_buffers = 20
 endif
 
 "-----------------------------------------------------------------------------
