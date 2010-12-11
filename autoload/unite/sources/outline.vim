@@ -316,9 +316,18 @@ function! s:source.gather_candidates(args, context)
     endif
     let has_create_heading = has_key(outline_info, 'create_heading')
 
+    " shared context dictionary
+    let context = {
+          \ 'heading_index': 0,
+          \ 'matched_index': 0,
+          \ 'lines': lines,
+          \ 'buffer': s:buffer,
+          \ 'heading_id': 1,
+          \ 'outline_info': outline_info
+          \ }
+
     " collect headings
     let headings = []
-    let heading_id = 1
     while idx < n_lines
       let line = lines[idx]
       if skip_block && line =~# skip_block_begin
@@ -337,12 +346,12 @@ function! s:source.gather_candidates(args, context)
         let next_line = lines[idx + 1]
         if next_line =~ '[[:punct:]]\@!\S'
           if has_create_heading
-            let heading = outline_info.create_heading('heading-1', next_line, line, {
-                  \ 'heading_index': idx + 1, 'matched_index': idx, 'lines': lines,
-                  \ 'heading_id': heading_id, 'outline_info': outline_info })
+            let context.heading_index = idx + 1
+            let context.matched_index = idx
+            let heading = outline_info.create_heading('heading-1', next_line, line, context)
             if heading != ""
               call add(headings, [heading, next_line, idx + 1])
-              let heading_id += 1
+              let context.heading_id += 1
             endif
           else
             call add(headings, [next_line, next_line, idx + 1])
@@ -352,12 +361,12 @@ function! s:source.gather_candidates(args, context)
           let next_line = lines[idx + 2]
           if next_line =~ '[[:punct:]]\@!\S'
             if has_create_heading
-              let heading = outline_info.create_heading('heading-1', next_line, line, {
-                    \ 'heading_index': idx + 2, 'matched_index': idx, 'lines': lines,
-                    \ 'heading_id': heading_id, 'outline_info': outline_info })
+              let context.heading_index = idx + 2
+              let context.matched_index = idx
+              let heading = outline_info.create_heading('heading-1', next_line, line, context)
               if heading != ""
                 call add(headings, [heading, next_line, idx + 2])
-                let heading_id += 1
+                let context.heading_id += 1
               endif
             else
               call add(headings, [next_line, next_line, idx + 2])
@@ -370,12 +379,12 @@ function! s:source.gather_candidates(args, context)
       elseif has_heading_pattern && line =~# heading_pattern
         " matched: heading
         if has_create_heading
-          let heading = outline_info.create_heading('heading', line, line, {
-                \ 'heading_index': idx, 'matched_index': idx, 'lines': lines,
-                \ 'heading_id': heading_id, 'outline_info': outline_info })
+          let context.heading_index = idx
+          let context.matched_index = idx
+          let heading = outline_info.create_heading('heading', line, line, context)
           if heading != ""
             call add(headings, [heading, line, idx])
-            let heading_id += 1
+            let context.heading_id += 1
           endif
         else
           call add(headings, [line, line, idx])
@@ -386,12 +395,12 @@ function! s:source.gather_candidates(args, context)
         let prev_line = lines[idx - 1]
         if prev_line =~ '[[:punct:]]\@!\S'
           if has_create_heading
-            let heading = outline_info.create_heading('heading+1', prev_line, line, {
-                  \ 'heading_index': idx - 1, 'matched_index': idx, 'lines': lines,
-                  \ 'heading_id': heading_id, 'outline_info': outline_info })
+            let context.heading_index = idx - 1
+            let context.matched_index = idx
+            let heading = outline_info.create_heading('heading+1', prev_line, line, context)
             if heading != ""
               call add(headings, [heading, prev_line, idx - 1])
-              let heading_id += 1
+              let context.heading_id += 1
             endif
           else
             call add(headings, [prev_line, prev_line, idx - 1])
