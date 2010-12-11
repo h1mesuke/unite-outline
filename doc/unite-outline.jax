@@ -1,7 +1,7 @@
 *unite-outline.txt*	ファイルの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2010-12-10
+Updated : 2010-12-11
 Version : 0.1.5
 License : MIT license {{{
 
@@ -254,15 +254,20 @@ create_heading	関数（任意） 		*unite-outline-info-create_heading()*
 	create_heading() 関数に渡される引数は以下の通りです。
 	
 	* {which} - 文字列：マッチの種類
-	            "heading-1", "heading", "heading+1" のいずれか
+	                    "heading-1", "heading", "heading+1" のいずれか
 	* {heading-line} - 文字列：見出しとなる行
 	* {matched-line} - 文字列：マッチした行
 	* {context} - 辞書：その他の情報、以下の属性を含む
 	  * heading_id - 整数：見出しの id番号（最初が 1）
-	  * heading_index - 整数：lines 中の heading_line の index
-	  * matched_index - 整数：lines 中の matched_line の index
+	  * heading_index - 整数：lines中の heading_line の index
+	  * matched_index - 整数：lines中の matched_line の index
 	  * lines - リスト：ファイルの全行
+	  * buffer - 辞書：バッファ情報（参照可能な属性については
+	                   autoload/unite/source/outline.vim を参照して下さい）
 	  * outline_info - 辞書：outline info
+	
+	{context} に渡される辞書は見出し抽出の間同じものが使い回されますので、
+	既存の属性を書き換えないで下さい。
 	
 	create_heading() 関数は文字列を返す必要があります。空文字列を返すと、
 	見出しではないとみなされ、無視されます。
