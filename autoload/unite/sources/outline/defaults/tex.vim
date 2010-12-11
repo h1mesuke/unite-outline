@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for TeX
-" Version: 0.0.2
+" Version: 0.0.3
 
 function! unite#sources#outline#defaults#tex#outline_info()
   return s:outline_info
@@ -37,7 +37,7 @@ endfor
 unlet unit
 unlet s:level
 
-function! s:initialize()
+function! s:outline_info.initialize(context)
   let s:unit_count = {}
   for unit in s:unit_order
     let s:unit_count[unit] = 0
@@ -47,9 +47,6 @@ function! s:initialize()
 endfunction
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
-  if a:context.heading_id == 1
-    call s:initialize()
-  endif
   let unit = matchstr(a:heading_line, '^\\\zs\w\+\ze{')
   call s:add_unit(unit)
   if unit !=# 'title' && index(s:unit_order, unit) < index(s:unit_order, s:biggest_unit)

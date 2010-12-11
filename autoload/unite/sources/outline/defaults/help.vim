@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for Vim Help
-" Version: 0.0.6
+" Version: 0.0.7
 
 function! unite#sources#outline#defaults#help#outline_info()
   return s:outline_info
@@ -51,14 +51,11 @@ let s:outline_info = {
       \ 'heading'  : '^\('.s:section_number.'\|'.s:upper_word.'.*\('.s:helptag.'\|\~\)\)',
       \ }
 
-function! s:initialize()
+function! s:outline_info.initialize(context)
   let s:level_x = 1
 endfunction
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
-  if a:context.heading_id == 1
-    call s:initialize()
-  endif
   let level = 0
   let lines = a:context.lines
   if a:which ==# 'heading-1'
