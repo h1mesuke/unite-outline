@@ -370,7 +370,7 @@ function! s:source.gather_candidates(args, context)
           endif
           let idx += 1
         endif
-        let idx += 2
+        let idx += 1
 
       elseif has_heading_pattern && line =~# heading_pattern
         " matched: heading
