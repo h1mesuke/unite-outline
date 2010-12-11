@@ -167,10 +167,6 @@ if !exists('g:unite_source_outline_cache_buffers')
   let g:unite_source_outline_cache_buffers = 10
 endif
 
-if !exists('g:unite_source_outline_cache_limit')
-  let g:unite_source_outline_cache_limit = 100
-endif
-
 "-----------------------------------------------------------------------------
 " Aliases
 
@@ -419,8 +415,7 @@ function! s:source.gather_candidates(args, context)
           \ "action__signature": s:calc_signature2(lines, v:val[2]),
           \ }')
 
-    let is_volatile = has_key(outline_info, 'is_volatile') && outline_info.is_volatile
-    if !is_volatile && (n_lines > g:unite_source_outline_cache_limit)
+    if !(has_key(outline_info, 'is_volatile') && outline_info.is_volatile)
       call s:cache.write(path, cands)
     endif
 
