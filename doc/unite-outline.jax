@@ -131,15 +131,7 @@ g:unite_source_outline_cache_buffers	*g:unite_source_outline_cache_buffers*
 	見出しをキャッシュするバッファ数の上限。これを超えた分は参照時刻の古い
 	ものから削除されます。
 
-	初期値は 10
-
-g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
-
-	見出しをキャッシュするバッファの行数しきい値。見出し抽出の対象ファイル
-	の行数がこの変数に設定した値より大きい場合、抽出した見出しをキャッシュ
-	します。
-
-	初期値は 100
+	初期値は 20
 
 ==============================================================================
 Outline Info					*unite-outline-info*
