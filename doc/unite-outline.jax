@@ -160,8 +160,8 @@ outline info の作成				*unite-outline-info-create*
 
 	1. vimrc にてグローバル変数に設定する
 
-	vimrc にて g:unite_source_outline_info.{filetype} に outline info を設
-	定します。
+	vimrc にて g:unite_source_outline_info.{filetype} に直接 outline info
+	を設定します。
 >
 	let g:unite_source_outline_info.{filetype} = {
 	      \ 'heading-1': '^\s*#\s*[-=#]\{10,}\s*$',
@@ -276,6 +276,17 @@ create_heading	関数（任意） 		*unite-outline-info-create_heading()*
 	endfunction
 <	
 
+initialize	関数（任意） 		*unite-outline-info-initialize()*
+
+	initialize({context})
+
+	設定されていると、見出しの抽出に先立って呼ばれ、outline info に初期化
+	の機会を与えます。
+
+	{context} については、|unite-outline-info-create_heading()|を参照して
+	下さい。
+
+
 skip		辞書（任意）				*unite-outline-info-skip*
 
 	見出し抽出の対象としない領域を指定するための辞書です。以下の属性を設定
@@ -326,16 +337,17 @@ skip_header()	関数（任意）			*unite-outline-info-skip_header()*
 
 	skip_header({lines},{context})
 
-	設定されていると、見出しの抽出に先立って呼ばれ、その返値（整数）を添字
-	とする {lines} の行までがヘッダとしてスキップされます。この関数を定義
-	することによって、 skip.header属性では指定が難しいタイプのヘッダのスキ
-	ップを実装できます。
+	設定されていると、見出しの抽出に先立って（initialize の後に）呼ばれ、
+	その返値（整数）を添字とする {lines} の行までがヘッダとしてスキップさ
+	れます。この関数を定義することによって、 skip.header属性では指定が難し
+	いタイプのヘッダのスキップを実装できます。
 
 	skip_header() 関数に渡される引数は以下の通りです。
 	
 	* {lines} - リスト：ファイルの全行
 	* {context} - 辞書：その他の情報、以下の属性を含む
 	  * outline_info - 辞書：outline info
+
 
 is_volatile	数値（任意）			*unite-outline-info-is_volatile*
 
@@ -363,10 +375,12 @@ unite#sources#outline#indent({level})	*unite#sources#outline#indent()*
 	{level} の見出しレベルに応じたインデントのための空白文字列を返します。
 	インデントの幅には|g:unite_source_outline_indent_width|の値が考慮され
 	ます。
+
 unite#sources#outline#capitalize({str} [, {flag}])
 					*unite#sources#outline#capitalize()*
 	{str} の先頭の文字を大文字に、残りを小文字に変更した文字列を返します。
 	{flag} に "g" を指定すると、すべての単語を同様に処理します。
+
 
 unite#sources#outline#join_to({lines}, {idx}, {pattern} [, {limit}])
 					*unite#sources#outline#join_to()*
@@ -375,6 +389,7 @@ unite#sources#outline#join_to({lines}, {idx}, {pattern} [, {limit}])
 	{limit} には最大何行先までマッチを試行・連結するかを指定でき、省略した
 	場合は 3 になります。{limit} に負の値を指定すると、 {lines} の添字が
 	{idx} の行から前の行に対してマッチの試行と連結を行います。
+
 
 unite#sources#outline#neighbor_match({lines}, {idx}, {pattern} [, {range}])
 					*unite#sources#outline#neighbor_match()*
