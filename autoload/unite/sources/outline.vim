@@ -295,8 +295,8 @@ function! s:source.gather_candidates(args, context)
     " eval once
     let skip_block = has_key(outline_info, 'skip') && has_key(outline_info.skip, 'block')
     if skip_block
-      let skip_block_begin = outline_info.skip.block[0]
-      let skip_block_end   = outline_info.skip.block[1]
+      let block_beg_pattern = outline_info.skip.block[0]
+      let block_end_pattern = outline_info.skip.block[1]
     endif
     let has_heading_prev_pattern = has_key(outline_info, 'heading-1')
     if has_heading_prev_pattern
@@ -326,12 +326,12 @@ function! s:source.gather_candidates(args, context)
     let headings = []
     while idx < n_lines
       let line = lines[idx]
-      if skip_block && line =~# skip_block_begin
+      if skip_block && line =~# block_beg_pattern
         " skip a documentation block
         let idx += 1
         while idx < n_lines
           let line = lines[idx]
-          if line =~# skip_block_end
+          if line =~# block_end_pattern
             break
           endif
           let idx += 1
