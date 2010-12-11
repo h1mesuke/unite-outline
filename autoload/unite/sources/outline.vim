@@ -234,6 +234,22 @@ function! s:source.gather_candidates(args, context)
     let lines = getbufline(s:buffer.nr, 1, '$')
     let idx = 0 | let n_lines = len(lines)
 
+    " initialize the shared context dictionary
+    let context = {
+          \ 'heading_index': 0,
+          \ 'matched_index': 0,
+          \ 'lines': lines,
+          \ 'buffer': s:buffer,
+          \ 'heading_id': 0,
+          \ 'outline_info': outline_info
+          \ }
+
+    " initialize the outline info
+    if has_key(outline_info, 'initialize')
+      call outline_info.initialize(context)
+    endif
+    let context.heading_id += 1
+
     "---------------------------------------
     " Skip the header
 
@@ -311,16 +327,6 @@ function! s:source.gather_candidates(args, context)
       let heading_next_pattern = outline_info['heading+1']
     endif
     let has_create_heading = has_key(outline_info, 'create_heading')
-
-    " shared context dictionary
-    let context = {
-          \ 'heading_index': 0,
-          \ 'matched_index': 0,
-          \ 'lines': lines,
-          \ 'buffer': s:buffer,
-          \ 'heading_id': 1,
-          \ 'outline_info': outline_info
-          \ }
 
     " collect headings
     let headings = []
