@@ -164,6 +164,10 @@ if !exists('g:unite_source_outline_indent_width')
   let g:unite_source_outline_indent_width = 2
 endif
 
+if !exists('g:unite_source_outline_max_headings')
+  let g:unite_source_outline_max_headings = 1000
+endif
+
 if !exists('g:unite_source_outline_cache_buffers')
   let g:unite_source_outline_cache_buffers = 20
 endif
@@ -413,6 +417,11 @@ function! s:source.gather_candidates(args, context)
             call add(headings, [prev_line, prev_line, idx - 1])
           endif
         endif
+      endif
+
+      if context.heading_id >= g:unite_source_outline_max_headings
+        call unite#print_error("unite-outline: too many headings, discarded the rest")
+        break
       endif
       let idx += 1
     endwhile
