@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-11
+" Updated : 2010-12-12
 " Version : 0.1.6
 " License : MIT license {{{
 "
@@ -53,19 +53,20 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
           \ 'unite#sources#outline#%s#outline_info()',
           \ 'unite#sources#outline#defaults#%s#outline_info()',
           \ ]
-    for fmt in tries
-      let load_funcall = printf(fmt, a:filetype)
+    for funcall_fmt in tries
+      let load_funcall = printf(funcall_fmt, a:filetype)
       try
         execute 'let outline_info = ' . load_funcall
       catch /^Vim\%((\a\+)\)\=:E117:/
         " E117: Unknown function:
         continue
       endtry
+      " if the outline info has been updated since the last time it was
+      " sourced, re-source and update it
       let oinfo_file = s:find_outline_info_file(a:filetype)
       if oinfo_file != ""
         let ftime = getftime(oinfo_file)
         if has_key(s:outline_info_ftime, a:filetype) && ftime > s:outline_info_ftime[a:filetype]
-          " reload the outline info because it was updated
           source `=oinfo_file`
           execute 'let outline_info = ' . load_funcall
         endif
@@ -82,8 +83,8 @@ function! s:find_outline_info_file(filetype)
         \ 'autoload/unite/sources/outline/%s.vim',
         \ 'autoload/unite/sources/outline/defaults/%s.vim',
         \ ]
-  for fmt in tries
-    let oinfo_file = printf(fmt, a:filetype)
+  for path_fmt in tries
+    let oinfo_file = printf(path_fmt, a:filetype)
     if findfile(oinfo_file, &runtimepath) != ""
       return oinfo_file
     endif
