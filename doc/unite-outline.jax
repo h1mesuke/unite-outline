@@ -1,7 +1,7 @@
 *unite-outline.txt*	ファイルの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2010-12-11
+Updated : 2010-12-12
 Version : 0.1.6
 License : MIT license {{{
 
@@ -110,7 +110,7 @@ License : MIT license {{{
 
 g:unite_source_outline_info			*g:unite_source_outline_info*
 
-	ファイルタイプごとの outline info を格納する辞書。
+	ファイルタイプごとの outline info を格納する辞書
 
 	初期値は {}
 
@@ -120,24 +120,31 @@ g:unite_source_outline_info			*g:unite_source_outline_info*
 
 g:unite_source_outline_indent_width	*g:unite_source_outline_indent_width*
 
-	見出しレベルに応じて設定されるインデントの幅。
+	見出しレベルに応じて設定されるインデントの幅
 	|unite#sources#outline#indent()| はこの値にもとづいてインデントのため
 	の空白文字列を生成します。
 
 	初期値は 2
 
+g:unite_source_outline_max_headings	*g:unite_source_outline_max_headings*
+
+	抽出する見出し数の上限
+	見出しの数がこの値に達すると見出しの抽出を打ち切ります。
+
+	初期値は 1000
+
 g:unite_source_outline_cache_buffers	*g:unite_source_outline_cache_buffers*
 
-	見出しをキャッシュするバッファ数の上限。これを超えた分は参照時刻の古い
-	ものから削除されます。
+	見出しをキャッシュするバッファ数の上限
+	これを超えた分は参照時刻の古いものから削除されます。
 
 	初期値は 20
 
 g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
 
-	見出しをキャッシュするバッファの行数しきい値。見出し抽出の対象ファイル
-	の行数がこの変数に設定した値より大きい場合、抽出した見出しをキャッシュ
-	します。
+	見出しをキャッシュするバッファの行数しきい値
+	見出し抽出の対象ファイルの行数がこの値より大きい場合、抽出した見出しを
+	キャッシュします。
 
 	初期値は 100
 
