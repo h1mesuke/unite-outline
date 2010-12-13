@@ -16,10 +16,10 @@ function! unite#sources#outline#defaults#ruby#outline_info()
 endfunction
 
 let s:outline_info = {
-      \ 'heading-1': unite#sources#outline#shared#pattern('sh', 'heading-1'),
+      \ 'heading-1': unite#sources#outline#util#shared_pattern('sh', 'heading-1'),
       \ 'heading'  : '^\s*\(module\|class\|def\)\>',
       \ 'skip': {
-      \   'header': unite#sources#outline#shared#pattern('sh', 'header'),
+      \   'header': unite#sources#outline#util#shared_pattern('sh', 'header'),
       \   'block' : ['^=begin', '^=end'],
       \ },
       \}

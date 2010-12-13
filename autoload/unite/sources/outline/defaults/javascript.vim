@@ -30,10 +30,10 @@ let s:rvalue = '\(function\s*(\([^)]*\))\|{\)'
 " NOTE: This pattern contains 2 captures; 1:rvalue [, 2:arg_list]
 
 let s:outline_info = {
-      \ 'heading-1': unite#sources#outline#shared#pattern('cpp', 'heading-1'),
+      \ 'heading-1': unite#sources#outline#util#shared_pattern('cpp', 'heading-1'),
       \ 'heading'  : '^\s*\(function\>\|\('.s:assign.'\|'.s:label.'\)\s*'.s:rvalue.'\)',
       \ 'skip': {
-      \   'header': unite#sources#outline#shared#pattern('cpp', 'header'),
+      \   'header': unite#sources#outline#util#shared_pattern('cpp', 'header'),
       \ },
       \}
 

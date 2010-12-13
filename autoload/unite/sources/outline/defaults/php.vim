@@ -18,12 +18,12 @@ function! unite#sources#outline#defaults#php#outline_info()
 endfunction
 
 let s:outline_info = {
-      \ 'heading-1': unite#sources#outline#shared#pattern('cpp', 'heading-1'),
+      \ 'heading-1': unite#sources#outline#util#shared_pattern('cpp', 'heading-1'),
       \ 'heading'  : '^\s*[a-z ]*\(interface\|class\|function\)\>',
       \ 'skip': {
       \   'header': {
       \     'leading': '^\(<?php\|//\)',
-      \     'block'  : unite#sources#outline#shared#pattern('c', 'header'),
+      \     'block'  : unite#sources#outline#util#shared_pattern('c', 'header'),
       \   },
       \ },
       \}

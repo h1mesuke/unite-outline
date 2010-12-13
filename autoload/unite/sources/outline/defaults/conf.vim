@@ -16,9 +16,9 @@ function! unite#sources#outline#defaults#conf#outline_info()
 endfunction
 
 let s:outline_info = {
-      \ 'heading-1': unite#sources#outline#shared#pattern('sh', 'heading-1'),
+      \ 'heading-1': unite#sources#outline#util#shared_pattern('sh', 'heading-1'),
       \ 'skip': {
-      \   'header': unite#sources#outline#shared#pattern('sh', 'header'),
+      \   'header': unite#sources#outline#util#shared_pattern('sh', 'header'),
       \ },
       \}
 

@@ -16,11 +16,11 @@ function! unite#sources#outline#defaults#css#outline_info()
 endfunction
 
 let s:outline_info = {
-      \ 'heading-1': unite#sources#outline#shared#pattern('c', 'heading-1'),
+      \ 'heading-1': unite#sources#outline#util#shared_pattern('c', 'heading-1'),
       \ 'skip': {
       \   'header': {
       \     'leading': '^@charset',
-      \     'block'  : unite#sources#outline#shared#pattern('c', 'header'),
+      \     'block'  : unite#sources#outline#util#shared_pattern('c', 'header'),
       \   },
       \ },
       \}

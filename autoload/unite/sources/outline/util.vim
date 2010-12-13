@@ -10,7 +10,7 @@
 
 " Shared pattenrs
 
-function! unite#sources#outline#shared#pattern(filetype, name)
+function! unite#sources#outline#util#shared_pattern(filetype, name)
   let ft_pattern = s:shared_pattern[a:filetype]
   return ft_pattern[a:name]
 endfunction
