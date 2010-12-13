@@ -55,10 +55,10 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   endif
   let level = s:unit_level[unit]
   let lines = a:context.lines | let h = a:context.heading_index
-  let heading = unite#sources#outline#join_to(lines, h, '}\s*$')
+  let heading = unite#sources#outline#util#join_to(lines, h, '}\s*$')
   let heading = substitute(heading, '\\\\\n', '', 'g')
   let heading = matchstr(heading, '^\\\w\+{\zs.*\ze}\s*$')
-  let heading = unite#sources#outline#indent(level) . s:unit_seqnr_prefix(unit) . heading
+  let heading = unite#sources#outline#util#indent(level) . s:unit_seqnr_prefix(unit) . heading
   return heading
 endfunction
 

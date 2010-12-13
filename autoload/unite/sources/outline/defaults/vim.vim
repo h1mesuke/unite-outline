@@ -39,7 +39,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   endif
   if level > 0
     let heading = substitute(heading, '"\=\s*{{{\d\=\s*$', '', '')
-    let heading = unite#sources#outline#indent(level) . heading
+    let heading = unite#sources#outline#util#indent(level) . heading
     return heading
   else
     return ""

@@ -75,7 +75,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
       let level = s:level_x
     else
       let h = a:context.heading_index
-      if unite#sources#outline#neighbor_match(lines, h, s:helptag)
+      if unite#sources#outline#util#neighbor_match(lines, h, s:helptag)
         " X-2
         let level = s:level_x
       endif
@@ -85,9 +85,9 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     let heading = substitute(a:heading_line, '\(\~\|{{{\d\=\)\s*$', '', '')
     let heading = substitute(heading, s:helptag, '', 'g')
     if a:heading_line =~ s:upper_word
-      let heading = unite#sources#outline#capitalize(heading, 'g')
+      let heading = unite#sources#outline#util#capitalize(heading, 'g')
     endif
-    let heading = unite#sources#outline#indent(level) . heading
+    let heading = unite#sources#outline#util#indent(level) . heading
     return heading
   else
     return ""

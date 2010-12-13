@@ -33,7 +33,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     let level = 3
   endif
   if level > 0
-    let heading = unite#sources#outline#indent(level) . a:heading_line
+    let heading = unite#sources#outline#util#indent(level) . a:heading_line
     return heading
   else
     return ""

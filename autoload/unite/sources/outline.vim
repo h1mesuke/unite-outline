@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-13
+" Updated : 2010-12-14
 " Version : 0.1.7
 " License : MIT license {{{
 "
@@ -96,61 +96,19 @@ endfunction
 " Utils
 
 function! unite#sources#outline#indent(level)
-  return repeat(' ', (a:level - 1) * g:unite_source_outline_indent_width)
+  return unite#sources#outline#util#indent(level)
 endfunction
 
 function! unite#sources#outline#capitalize(str, ...)
-  let flag = (a:0 ? a:1 : '')
-  return substitute(a:str, '\<\(\u\)\(\u\+\)\>', '\u\1\L\2', flag)
+  return unite#sources#outline#util#capitalize(a:str, (a:0 ? a:1 : ''))
 endfunction
 
 function! unite#sources#outline#join_to(lines, idx, pattern, ...)
-  let limit = (a:0 ? a:1 : 3)
-  if limit < 0
-    return s:join_to_backward(a:lines, a:idx, a:pattern, limit * -1)
-  endif
-  let idx = a:idx
-  let lim_idx = min([a:idx + limit, len(a:lines) - 1])
-  while idx <= lim_idx
-    let line = a:lines[idx]
-    if line =~ a:pattern
-      break
-    endif
-    let idx += 1
-  endwhile
-  return join(a:lines[a:idx : idx], "\n")
-endfunction
-
-function! s:join_to_backward(lines, idx, pattern, ...)
-  let limit = (a:0 ? a:1 : 3)
-  let idx = a:idx
-  let lim_idx = max(0, a:idx - limit])
-  while idx > 0
-    let line = a:lines[idx]
-    if line =~ a:pattern
-      break
-    endif
-    let idx -= 1
-  endwhile
-  return join(a:lines[idx : a:idx], "\n")
+  return unite#sources#outline#util#join_to(a:lines, a:idx, a:pattern, (a:0 ? a:1 : 3))
 endfunction
 
 function! unite#sources#outline#neighbor_match(lines, idx, pattern, ...)
-  let nb = (a:0 ? a:1 : 1)
-  if type(nb) == type([])
-    let prev = nb[0]
-    let next = nb[1]
-  else
-    let prev = nb
-    let next = nb
-  endif
-  let nb_range = range(max([0, a:idx - prev]), min([a:idx + next, len(a:lines) - 1]))
-  for idx in nb_range
-    if a:lines[idx] =~ a:pattern
-      return 1
-    endif
-  endfor
-  return 0
+  return unite#sources#outline#neighbor_match(a:lines, a:idx, a:pattern, (a:0 ? a:1 : 1))
 endfunction
 
 "-----------------------------------------------------------------------------

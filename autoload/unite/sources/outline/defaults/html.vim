@@ -22,11 +22,11 @@ let s:outline_info = {
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
   let level = str2nr(matchstr(a:heading_line, '<[hH]\zs[1-6]\ze[^>]*>'))
   let lines = a:context.lines | let h = a:context.heading_index
-  let text = unite#sources#outline#join_to(lines, h, '</[hH]'.level.'[^>]*>')
+  let text = unite#sources#outline#util#join_to(lines, h, '</[hH]'.level.'[^>]*>')
   let text = substitute(text, '\s*\n\s*', ' ', 'g')
   let text = substitute(text, '<[^>]*>', '', 'g')
   let text = substitute(text, '^\s*', '', '')
-  return unite#sources#outline#indent(level) . "h" . level. ". " . text
+  return unite#sources#outline#util#indent(level) . "h" . level. ". " . text
 endfunction
 
 " vim: filetype=vim
