@@ -1,7 +1,7 @@
 *unite-outline.txt*	ファイルの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2010-12-12
+Updated : 2010-12-13
 Version : 0.1.7
 License : MIT license {{{
 
@@ -121,8 +121,8 @@ g:unite_source_outline_info			*g:unite_source_outline_info*
 g:unite_source_outline_indent_width	*g:unite_source_outline_indent_width*
 
 	見出しレベルに応じて設定されるインデントの幅
-	|unite#sources#outline#indent()| はこの値にもとづいてインデントのため
-	の空白文字列を生成します。
+	|unite#sources#outline#util#indent()| はこの値にもとづいてインデントの
+	ための空白文字列を生成します。
 
 	初期値は 2
 
@@ -190,8 +190,8 @@ outline info の作成				*unite-outline-info-create*
 	2. オートロード関数を定義する
 
 	$HOME/.vim/autoload/unite/sources/outline/ に {filetype}.vim を作成し、
-	そこに unite#sources#outline#{filetype}#outline_info() 関数を定義しま
-	す。その返値として、outline info を返します。
+	そこに unite#sources#outline#{filetype}#outline_info()関数を定義します。
+	その返値として、outline info を返します。
 
 	こちらは遅延ロードになるため必要になるまでロードされません。vimrc を肥
 	大化させることもないので outline info を作り込むのであればこちらの方法
@@ -258,7 +258,7 @@ create_heading	関数（任意） 		*unite-outline-info-create_heading()*
 	定義することによって、見出し一覧に設定する文字列の整形、および見出しレ
 	ベル（インデント）の設定を、ユーザーが自由に行うことができます。
 
-	create_heading() 関数に渡される引数は以下の通りです。
+	create_heading()関数に渡される引数は以下の通りです。
 	
 	* {which} - 文字列：マッチの種類
 	                    "heading-1", "heading", "heading+1" のいずれか
@@ -276,16 +276,16 @@ create_heading	関数（任意） 		*unite-outline-info-create_heading()*
 	{context} に渡される辞書は見出し抽出の間同じものが使い回されますので、
 	既存の属性を書き換えないで下さい。
 	
-	create_heading() 関数は文字列を返す必要があります。空文字列を返すと、
+	create_heading()関数は文字列を返す必要があります。空文字列を返すと、
 	見出しではないとみなされ、無視されます。
 	
-	参考として、HTML の create_heading() 関数の定義例を示します。
+	参考として、HTML の create_heading()関数の定義例を示します。
 >
 	function! s:outline_info.create_heading(which, heading_line, matched_line, context)
 	  if a:which ==# 'heading'
 	    let level = str2nr(matchstr(a:heading_line, '<[hH]\zs[1-6]\ze[^>]*>'))
 	    let text = substitute(substitute(a:heading_line, '<[^>]*>', '', 'g'), '^\s*', '', '')
-	    return unite#sources#outline#indent(level) . "h" . level. ". " . text
+	    return unite#sources#outline#util#indent(level) . "h" . level. ". " . text
 	  endif
 	  return ""
 	endfunction
@@ -300,7 +300,6 @@ initialize	関数（任意） 		*unite-outline-info-initialize()*
 
 	{context} については、|unite-outline-info-create_heading()|を参照して
 	下さい。
-
 
 skip		辞書（任意）				*unite-outline-info-skip*
 
@@ -357,7 +356,7 @@ skip_header()	関数（任意）			*unite-outline-info-skip_header()*
 	れます。この関数を定義することによって、 skip.header属性では指定が難し
 	いタイプのヘッダのスキップを実装できます。
 
-	skip_header() 関数に渡される引数は以下の通りです。
+	skip_header()関数に渡される引数は以下の通りです。
 	
 	* {lines} - リスト：ファイルの全行
 	* {context} - 辞書：その他の情報、以下の属性を含む
@@ -385,29 +384,32 @@ unite#sources#outline#get_outline_info({filetype})
 	{filetype} のための outline info を返します。outline info が見つからな
 	い場合は空の辞書 {} を返します。
 
-unite#sources#outline#indent({level})	*unite#sources#outline#indent()*
+UTILITY FUNCTIONS				*unite-outline-utility-functions*
 
+	以下は、outline info を作成するにあたり、create_heading()関数などで使
+	用すると便利なユーティリティ関数です。
+
+unite#sources#outline#util#capitalize({str} [, {flag}])
+					*unite#sources#outline#util#capitalize()*
+	{str} の先頭の文字を大文字に、残りを小文字に変換した文字列を返します。
+	{flag} に "g" を指定すると、すべての単語を同様に処理します。
+
+unite#sources#outline#util#indent({level})
+					*unite#sources#outline#util#indent()*
 	{level} の見出しレベルに応じたインデントのための空白文字列を返します。
 	インデントの幅には|g:unite_source_outline_indent_width|の値が考慮され
 	ます。
 
-unite#sources#outline#capitalize({str} [, {flag}])
-					*unite#sources#outline#capitalize()*
-	{str} の先頭の文字を大文字に、残りを小文字に変更した文字列を返します。
-	{flag} に "g" を指定すると、すべての単語を同様に処理します。
-
-
-unite#sources#outline#join_to({lines}, {idx}, {pattern} [, {limit}])
-					*unite#sources#outline#join_to()*
+unite#sources#outline#util#join_to({lines}, {idx}, {pattern} [, {limit}])
+					*unite#sources#outline#util#join_to()*
 	{lines} の添字が {idx} の行から {pattern} にマッチする行までを連結
 	した文字列を返します。連結される行は "\n" で区切られます。
 	{limit} には最大何行先までマッチを試行・連結するかを指定でき、省略した
-	場合は 3 になります。{limit} に負の値を指定すると、 {lines} の添字が
+	場合は 3 になります。{limit} に負の値を指定すると、{lines} の添字が
 	{idx} の行から前の行に対してマッチの試行と連結を行います。
 
-
-unite#sources#outline#neighbor_match({lines}, {idx}, {pattern} [, {range}])
-					*unite#sources#outline#neighbor_match()*
+unite#sources#outline#util#neighbor_match({lines}, {idx}, {pattern} [, {range}])
+				*unite#sources#outline#util#neighbor_match()*
 	{lines} の添字が {idx} の行およびその前後の行が {pattern} にマッチする
 	ならば真、そうでないなら偽を返します。{range} には前後の何行分に対しマ
 	ッチを試行するかを指定でき、省略した場合は 1 になります。 
