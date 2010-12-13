@@ -1,7 +1,7 @@
 "=============================================================================
 " File       : autoload/unite/sources/outline/defaults/javascript.vim
 " Maintainer : h1mesuke <himesuke@gmail.com>
-" Updated    : 2010-12-11
+" Updated    : 2010-12-13
 "
 " Improved by hamaco, h1mesuke
 "
@@ -77,7 +77,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
               return indent . s:leading_mark.constructor . lvalue . '(' . arg_list . ')'
             else
               " Foo.bar = function(...) -> m bar(...)
-              let indent .= printf('%*s', a:context.buffer.shiftwidth, "")
+              let indent .= repeat(' ', a:context.buffer.shiftwidth)
               return indent . s:leading_mark.method . prop_name . '(' . arg_list . ')'
             endif
           else

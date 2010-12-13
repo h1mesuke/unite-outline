@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/tex.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-11
+" Updated : 2010-12-13
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -129,7 +129,7 @@ function! s:nr2roman(nr)
     let cnt = nr / factor
     let nr  = nr % factor
     if cnt > 0
-      let roman .= substitute(printf('%*s', cnt, ""), ' ', code, 'g')
+      let roman .= repeat(code, cnt)
     endif
   endfor
   return roman

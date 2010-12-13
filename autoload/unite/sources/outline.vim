@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-12
+" Updated : 2010-12-13
 " Version : 0.1.7
 " License : MIT license {{{
 "
@@ -96,7 +96,7 @@ endfunction
 " Utils
 
 function! unite#sources#outline#indent(level)
-  return printf('%*s', (a:level - 1) * g:unite_source_outline_indent_width, '')
+  return repeat(' ', (a:level - 1) * g:unite_source_outline_indent_width)
 endfunction
 
 function! unite#sources#outline#capitalize(str, ...)
@@ -462,7 +462,7 @@ function! s:normalize_indent(str)
   let lead_tabs = matchstr(str, '^\t\+')
   let ntab = strlen(lead_tabs)
   if ntab > 0
-    let str =  substitute(str, '^\t\+', printf('%*s', ntab * ts, ""), '')
+    let str =  substitute(str, '^\t\+', repeat(' ', ntab * ts), '')
   endif
   " normalize indent
   let indent = matchstr(str, '^\s\+')
