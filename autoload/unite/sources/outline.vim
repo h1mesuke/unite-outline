@@ -96,7 +96,7 @@ endfunction
 " Utils
 
 function! unite#sources#outline#indent(level)
-  return unite#sources#outline#util#indent(level)
+  return unite#sources#outline#util#indent(a:level)
 endfunction
 
 function! unite#sources#outline#capitalize(str, ...)
@@ -426,7 +426,7 @@ function! s:normalize_indent(str)
   let indent = matchstr(str, '^\s\+')
   let level = strlen(indent) / sw + 1
   if level > 0
-    let str =  substitute(str, '^\s\+', unite#sources#outline#indent(level), '')
+    let str =  substitute(str, '^\s\+', unite#sources#outline#util#indent(level), '')
   endif
   return str
 endfunction
