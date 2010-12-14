@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for TeX
-" Version: 0.0.3
+" Version: 0.0.4
 
 function! unite#sources#outline#defaults#tex#outline_info()
   return s:outline_info
@@ -79,31 +79,32 @@ endfunction
 
 function! s:unit_seqnr_prefix(unit)
   if a:unit ==# 'title'
-    let prefix = ""
+    let seqnr = []
   elseif a:unit ==# 'part'
-    let prefix = unite#sources#outline#util#nr2roman(s:unit_count.part)
+    let seqnr = [unite#sources#outline#util#nr2roman(s:unit_count.part)]
   elseif a:unit ==# 'chapter'
-    let prefix = s:unit_count.chapter
+    let seqnr = [s:unit_count.chapter]
   elseif a:unit ==# 'section'
     if s:unit_count.chapter > 0
-      let prefix = s:unit_count.chapter . "." . s:unit_count.section
+      let seqnr = [s:unit_count.chapter, s:unit_count.section]
     elseif a:unit ==# 'section'
-      let prefix = s:unit_count.section
+      let seqnr = [s:unit_count.section]
     else
     endif
   elseif a:unit ==# 'subsection'
     if s:unit_count.chapter > 0
-      let prefix = s:unit_count.chapter . "." . s:unit_count.section . "." . s:unit_count.subsection
+      let seqnr = [s:unit_count.chapter, s:unit_count.section, s:unit_count.subsection]
     else
-      let prefix = s:unit_count.section . "." . s:unit_count.subsection
+      let seqnr = [s:unit_count.section, s:unit_count.subsection]
     endif
   elseif a:unit ==# 'subsubsection'
     if s:unit_count.chapter > 0
-      let prefix = s:unit_count.section . "." . s:unit_count.subsection . "." . s:unit_count.subsubsection
+      let seqnr = [s:unit_count.section, s:unit_count.subsection, s:unit_count.subsubsection]
     else
-      let prefix = ""
+      let seqnr = []
     endif
   endif
+  let prefix = join(seqnr, '.')
   if prefix != ""
     let prefix .= " "
   endif
