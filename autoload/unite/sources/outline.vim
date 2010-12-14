@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-14
+" Updated : 2010-12-15
 " Version : 0.1.8
 " License : MIT license {{{
 "
@@ -217,34 +217,27 @@ function! s:source.gather_candidates(args, context)
     endif
     let context.heading_id += 1
 
+    " initialize local variables
+    let [   skip_header,
+          \ skip_header_leading, header_leading_pattern,
+          \ skip_header_block, header_beg_pattern, header_end_pattern,
+          \ has_skip_header_func,
+          \ skip_block,
+          \ block_beg_pattern, block_end_pattern,
+          \ has_heading_prev_pattern, heading_prev_pattern,
+          \ has_heading_pattern, heading_pattern,
+          \ has_heading_next_pattern, heading_next_pattern,
+          \ has_create_heading_func
+          \
+          \ ] = s:init_local_vars(outline_info)
+
     "---------------------------------------
     " Skip the header
 
-    if has_key(outline_info, 'skip_header')
+    if has_skip_header_func
       let idx = outline_info.skip_header(lines, { 'outline_info': outline_info })
 
-    elseif has_key(outline_info, 'skip') && has_key(outline_info.skip, 'header')
-      " eval once
-      let value_type = type(outline_info.skip.header)
-      if value_type == type("")
-        let skip_header_leading = 1 | let skip_header_block = 0
-        let header_leading_pattern = outline_info.skip.header
-      elseif value_type == type([])
-        let skip_header_leading = 0 | let skip_header_block = 1
-        let header_beg_pattern = outline_info.skip.header[0]
-        let header_end_pattern = outline_info.skip.header[1]
-      elseif value_type == type({})
-        let skip_header_leading = has_key(outline_info.skip.header, 'leading')
-        if skip_header_leading
-          let header_leading_pattern = outline_info.skip.header.leading
-        endif
-        let skip_header_block = has_key(outline_info.skip.header, 'block')
-        if skip_header_block
-          let header_beg_pattern = outline_info.skip.header.block[0]
-          let header_end_pattern = outline_info.skip.header.block[1]
-        endif
-      endif
-
+    elseif skip_header
       while idx < n_lines
         let line = lines[idx]
         if skip_header_leading && line =~# header_leading_pattern
@@ -275,27 +268,6 @@ function! s:source.gather_candidates(args, context)
     "---------------------------------------
     " Collect headings
 
-    " eval once
-    let skip_block = has_key(outline_info, 'skip') && has_key(outline_info.skip, 'block')
-    if skip_block
-      let block_beg_pattern = outline_info.skip.block[0]
-      let block_end_pattern = outline_info.skip.block[1]
-    endif
-    let has_heading_prev_pattern = has_key(outline_info, 'heading-1')
-    if has_heading_prev_pattern
-      let heading_prev_pattern = outline_info['heading-1']
-    endif
-    let has_heading_pattern = has_key(outline_info, 'heading')
-    if has_heading_pattern
-      let heading_pattern = outline_info.heading
-    endif
-    let has_heading_next_pattern = has_key(outline_info, 'heading+1')
-    if has_heading_next_pattern
-      let heading_next_pattern = outline_info['heading+1']
-    endif
-    let has_create_heading = has_key(outline_info, 'create_heading')
-
-    " collect headings
     let headings = []
     while idx < n_lines
       let line = lines[idx]
@@ -314,7 +286,7 @@ function! s:source.gather_candidates(args, context)
         " matched: heading-1
         let next_line = lines[idx + 1]
         if next_line =~ '[[:punct:]]\@!\S'
-          if has_create_heading
+          if has_create_heading_func
             let context.heading_index = idx + 1
             let context.matched_index = idx
             let heading = outline_info.create_heading('heading-1', next_line, line, context)
@@ -329,7 +301,7 @@ function! s:source.gather_candidates(args, context)
           " see one more next
           let next_line = lines[idx + 2]
           if next_line =~ '[[:punct:]]\@!\S'
-            if has_create_heading
+            if has_create_heading_func
               let context.heading_index = idx + 2
               let context.matched_index = idx
               let heading = outline_info.create_heading('heading-1', next_line, line, context)
@@ -347,7 +319,7 @@ function! s:source.gather_candidates(args, context)
 
       elseif has_heading_pattern && line =~# heading_pattern
         " matched: heading
-        if has_create_heading
+        if has_create_heading_func
           let context.heading_index = idx
           let context.matched_index = idx
           let heading = outline_info.create_heading('heading', line, line, context)
@@ -363,7 +335,7 @@ function! s:source.gather_candidates(args, context)
         " matched: heading+1
         let prev_line = lines[idx - 1]
         if prev_line =~ '[[:punct:]]\@!\S'
-          if has_create_heading
+          if has_create_heading_func
             let context.heading_index = idx - 1
             let context.matched_index = idx
             let heading = outline_info.create_heading('heading+1', prev_line, line, context)
@@ -385,7 +357,7 @@ function! s:source.gather_candidates(args, context)
     endwhile
 
     let cands = map(headings, '{
-          \ "word": (has_create_heading ? v:val[0] : s:normalize_indent(v:val[0])),
+          \ "word": (has_create_heading_func ? v:val[0] : s:normalize_indent(v:val[0])),
           \ "source": "outline",
           \ "kind": "jump_list",
           \ "action__path": path,
@@ -410,6 +382,65 @@ function! s:source.gather_candidates(args, context)
     call unite#print_error(v:exception)
     return []
   endtry
+endfunction
+
+function! s:init_local_vars(outline_info)
+  let header_leading_pattern = ''
+  let header_beg_pattern = '' | let header_end_pattern = ''
+
+  " values used for skipping header
+  let skip_header = has_key(a:outline_info, 'skip') && has_key(a:outline_info.skip, 'header')
+  if skip_header
+    let value_type = type(a:outline_info.skip.header)
+    if value_type == type("")
+      let skip_header_leading = 1 | let skip_header_block = 0
+      let header_leading_pattern = a:outline_info.skip.header
+    elseif value_type == type([])
+      let skip_header_leading = 0 | let skip_header_block = 1
+      let header_beg_pattern = a:outline_info.skip.header[0]
+      let header_end_pattern = a:outline_info.skip.header[1]
+    elseif value_type == type({})
+      let skip_header_leading = has_key(a:outline_info.skip.header, 'leading')
+      if skip_header_leading
+        let header_leading_pattern = a:outline_info.skip.header.leading
+      endif
+      let skip_header_block = has_key(a:outline_info.skip.header, 'block')
+      if skip_header_block
+        let header_beg_pattern = a:outline_info.skip.header.block[0]
+        let header_end_pattern = a:outline_info.skip.header.block[1]
+      endif
+    endif
+  else
+    let skip_header_leading = 0 | let skip_header_block = 0
+  endif
+  let has_skip_header_func = has_key(a:outline_info, 'skip_header')
+
+  " values used for skipping blocks
+  let skip_block = has_key(a:outline_info, 'skip') && has_key(a:outline_info.skip, 'block')
+  let block_beg_pattern = (skip_block ? a:outline_info.skip.block[0] : '')
+  let block_end_pattern = (skip_block ? a:outline_info.skip.block[1] : '')
+
+  " values used for extracting headings
+  let has_heading_prev_pattern = has_key(a:outline_info, 'heading-1')
+  let heading_prev_pattern = (has_heading_prev_pattern ? a:outline_info['heading-1'] : '')
+  let has_heading_pattern = has_key(a:outline_info, 'heading')
+  let heading_pattern = (has_heading_pattern ? a:outline_info.heading : '')
+  let has_heading_next_pattern = has_key(a:outline_info, 'heading+1')
+  let heading_next_pattern = (has_heading_next_pattern ? a:outline_info['heading+1'] : '')
+  let has_create_heading_func = has_key(a:outline_info, 'create_heading')
+
+  return [
+        \ skip_header,
+        \ skip_header_leading, header_leading_pattern,
+        \ skip_header_block, header_beg_pattern, header_end_pattern,
+        \ has_skip_header_func,
+        \ skip_block,
+        \ block_beg_pattern, block_end_pattern,
+        \ has_heading_prev_pattern, heading_prev_pattern,
+        \ has_heading_pattern, heading_pattern,
+        \ has_heading_next_pattern, heading_next_pattern,
+        \ has_create_heading_func,
+        \ ]
 endfunction
 
 function! s:normalize_indent(str)
