@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-13
+" Updated : 2010-12-14
 " Version : 0.1.8
 " License : MIT license {{{
 "
@@ -82,6 +82,31 @@ function! unite#sources#outline#util#neighbor_match(lines, idx, pattern, ...)
     endif
   endfor
   return 0
+endfunction
+
+" ported from:
+" Sample code from Programing Ruby, page 145
+"
+function! unite#sources#outline#util#nr2roman(nr)
+  if a:nr <= 0 || 4999 < a:nr
+    return string(a:nr)
+  endif
+  let factors = [
+        \ ["M", 1000], ["CM", 900], ["D",  500], ["CD", 400],
+        \ ["C",  100], ["XC",  90], ["L",   50], ["XL",  40],
+        \ ["X",   10], ["IX",   9], ["V",    5], ["IV",   4],
+        \ ["I",    1],
+        \]
+  let nr = a:nr
+  let roman = ""
+  for [code, factor] in factors
+    let cnt = nr / factor
+    let nr  = nr % factor
+    if cnt > 0
+      let roman .= repeat(code, cnt)
+    endif
+  endfor
+  return roman
 endfunction
 
 let s:shared_patterns = {

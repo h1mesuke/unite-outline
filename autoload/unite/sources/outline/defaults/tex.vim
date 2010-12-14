@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/tex.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-13
+" Updated : 2010-12-14
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -81,7 +81,7 @@ function! s:unit_seqnr_prefix(unit)
   if a:unit ==# 'title'
     let prefix = ""
   elseif a:unit ==# 'part'
-    let prefix = s:nr2roman(s:unit_count.part)
+    let prefix = unite#sources#outline#util#nr2roman(s:unit_count.part)
   elseif a:unit ==# 'chapter'
     let prefix = s:unit_count.chapter
   elseif a:unit ==# 'section'
@@ -108,31 +108,6 @@ function! s:unit_seqnr_prefix(unit)
     let prefix .= " "
   endif
   return prefix
-endfunction
-
-" ported from:
-" Sample code from Programing Ruby, page 145
-"
-function! s:nr2roman(nr)
-  if a:nr <= 0 || 4999 < a:nr
-    return string(a:nr)
-  endif
-  let factors = [
-        \ ["M", 1000], ["CM", 900], ["D",  500], ["CD", 400],
-        \ ["C",  100], ["XC",  90], ["L",   50], ["XL",  40],
-        \ ["X",   10], ["IX",   9], ["V",    5], ["IV",   4],
-        \ ["I",    1],
-        \]
-  let nr = a:nr
-  let roman = ""
-  for [code, factor] in factors
-    let cnt = nr / factor
-    let nr  = nr % factor
-    if cnt > 0
-      let roman .= repeat(code, cnt)
-    endif
-  endfor
-  return roman
 endfunction
 
 " vim: filetype=vim
