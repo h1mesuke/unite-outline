@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/help.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-11
+" Updated : 2010-12-14
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -15,30 +15,40 @@ function! unite#sources#outline#defaults#help#outline_info()
   return s:outline_info
 endfunction
 
-" Heading Samples:
+" HEADING SAMPLES:
 "
-" ==============================================================================
-" Level 1
+"== Level 1
 "
-" ------------------------------------------------------------------------------
-" Level 2-1
+"   ==========================================================================
+"   Heading
 "
-" 1.1 Level 2-2
+"== Level 2-1
 "
-" LEVEL X-1                                       *tag*
+"   --------------------------------------------------------------------------
+"   Heading
 "
-" LEVEL X-2 ~
-"                                                 *tag*
+"== Level 2-2
+"
+"   1.1 Heading
+"
+"== Level X-1
+"
+"   HEADING                                         *tag*
+"
+"== Level X-2
+"
+"   HEADING ~
+"                                                   *tag*
 
-" Level Shifting:
+" LEVEL SHIFTING:
 "
 " +---------+---------+---------+
 " | Level 1 | Level 2 | Level X |
 " +---------+---------+---------+
-" |  exist  |  exist  |    3    |
-" |  exist  |  none   |    2    |
+" |    1    |    2    |    3    |
+" |    1    |  none   |    2    |
 " |  none   |  none   |    1    |
-" |  none   |  exist  |    3    |
+" |  none   |    1    |    3    |
 " +---------+---------+---------+
 
 " patterns
