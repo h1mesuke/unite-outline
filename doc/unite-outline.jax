@@ -1,7 +1,7 @@
 *unite-outline.txt*	ファイルの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2010-12-13
+Updated : 2010-12-14
 Version : 0.1.8
 License : MIT license {{{
 
@@ -32,7 +32,7 @@ License : MIT license {{{
 	設定			|unite-outline-settings|
 	  変数			  |unite-outline-variables|
 	Outline Info		|unite-outline-info|
-	  outline info の探索	  |unite-outline-info-find|
+	  outline info の探索	  |unite-outline-info-search|
 	  outline info の作成	  |unite-outline-info-create|
 	  outline info の属性	  |unite-outline-info-attributes|
 	    heading-1		    |unite-outline-info-heading-1|
@@ -42,6 +42,7 @@ License : MIT license {{{
 	    skip		    |unite-outline-info-skip|
 	    skip_header()	    |unite-outline-info-skip_header()|
 	  関数			  |unite-outline-functions|
+	    UTILITY FUNCTIONS	    |unite-outline-utility-functions|
 	ToDo			|unite-outline-todo|
 	既知の問題		|unite-outline-bugs|
 	更新履歴		|unite-outline-changelog|
@@ -158,7 +159,7 @@ Outline Info					*unite-outline-info*
 	成を自在にカスタマイズできます。
 
 ------------------------------------------------------------------------------
-outline info の探索				*unite-outline-info-find*
+outline info の探索				*unite-outline-info-search*
 
 	見出し一覧の表示を実行した際、対象ファイルのファイルタイプにもとづき
 	outline info の探索が実行されます。探索の順序は以下の通りです。
@@ -301,6 +302,7 @@ initialize	関数（任意） 		*unite-outline-info-initialize()*
 	{context} については、|unite-outline-info-create_heading()|を参照して
 	下さい。
 
+
 skip		辞書（任意）				*unite-outline-info-skip*
 
 	見出し抽出の対象としない領域を指定するための辞書です。以下の属性を設定
@@ -415,6 +417,12 @@ unite#sources#outline#util#neighbor_match({lines}, {idx}, {pattern} [, {range}])
 	ッチを試行するかを指定でき、省略した場合は 1 になります。 
 	{range} にリストを指定すると、マッチを試行する行数を前と後ろ、個別に設
 	定できます。
+
+unite#sources#outline#util#nr2roman({nr})
+				*unite#sources#outline#util#nr2roman()*
+	{nr} をローマ数字へと変換します。
+	ローマ数字として表現可能な範囲は 1以上、4999以下の範囲で、{nr} がその
+	範囲外にある場合は、{nr} を単に文字列に変換したものを返します。
 
 ==============================================================================
 TODO						*unite-outline-todo*
