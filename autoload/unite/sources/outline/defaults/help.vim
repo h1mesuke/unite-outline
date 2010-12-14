@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/help.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-14
+" Updated : 2010-12-15
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -48,7 +48,7 @@ endfunction
 " |    1    |    2    |    3    |
 " |    1    |  none   |    2    |
 " |  none   |  none   |    1    |
-" |  none   |    1    |    3    |
+" |  none   |    2    |    3    |
 " +---------+---------+---------+
 
 " patterns
