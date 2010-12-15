@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-15
+" Updated : 2010-12-16
 " Version : 0.1.8
 " License : MIT license {{{
 "
@@ -84,8 +84,9 @@ function! s:find_outline_info_file(filetype)
         \ 'autoload/unite/sources/outline/defaults/%s.vim',
         \ ]
   for path_fmt in tries
-    let oinfo_file = printf(path_fmt, a:filetype)
-    if findfile(oinfo_file, &runtimepath) != ""
+    let path = printf(path_fmt, a:filetype)
+    let oinfo_file = findfile(path, &runtimepath)
+    if oinfo_file != ""
       return oinfo_file
     endif
   endfor
