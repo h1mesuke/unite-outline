@@ -242,24 +242,9 @@ function! s:source.gather_candidates(args, context)
       while idx < n_lines
         let line = lines[idx]
         if skip_header_leading && line =~# header_leading_pattern
-          let idx += 1
-          while idx < n_lines
-            let line = lines[idx]
-            if line !~# header_leading_pattern
-              break
-            endif
-            let idx += 1
-          endwhile
+          let idx = s:skip_while(header_leading_pattern, lines, idx)
         elseif skip_header_block && line =~# header_beg_pattern
-          let idx += 1
-          while idx < n_lines
-            let line = lines[idx]
-            if line =~# header_end_pattern
-              break
-            endif
-            let idx += 1
-          endwhile
-          let idx += 1
+          let idx = s:skip_to(header_end_pattern, lines, idx)
         else
           break
         endif
@@ -274,14 +259,7 @@ function! s:source.gather_candidates(args, context)
       let line = lines[idx]
       if skip_block && line =~# block_beg_pattern
         " skip a documentation block
-        let idx += 1
-        while idx < n_lines
-          let line = lines[idx]
-          if line =~# block_end_pattern
-            break
-          endif
-          let idx += 1
-        endwhile
+        let idx = s:skip_to(block_end_pattern, lines, idx)
 
       elseif has_heading_prev_pattern && line =~# heading_prev_pattern && idx < n_lines - 3
         " matched: heading-1
@@ -442,6 +420,30 @@ function! s:init_local_vars(outline_info)
         \ has_heading_next_pattern, heading_next_pattern,
         \ has_create_heading_func,
         \ ]
+endfunction
+
+function! s:skip_while(pattern, lines, idx)
+  let idx = a:idx + 1 | let n_lines = len(a:lines)
+  while idx < n_lines
+    let line = a:lines[idx]
+    if line !~# a:pattern
+      break
+    endif
+    let idx += 1
+  endwhile
+  return idx
+endfunction
+
+function! s:skip_to(pattern, lines, idx)
+  let idx = a:idx + 1 | let n_lines = len(a:lines)
+  while idx < n_lines
+    let line = a:lines[idx]
+    if line =~# a:pattern
+      break
+    endif
+    let idx += 1
+  endwhile
+  return idx + 1
 endfunction
 
 function! s:normalize_indent(str)
