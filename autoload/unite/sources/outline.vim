@@ -340,8 +340,8 @@ function! s:source.gather_candidates(args, context)
           \ "source": "outline",
           \ "kind": "jump_list",
           \ "action__path": path,
-          \ "action__pattern": "^" . s:escape_regex(v:val[1]) . "$",
-          \ "action__signature": s:calc_signature2(lines, v:val[2]),
+          \ "action__pattern":  "^" . s:escape_regex(v:val[1]) . "$",
+          \ "action__signature": self.calc_signature(v:val[2] + 1, lines),
           \ }')
 
     let is_volatile = has_key(outline_info, 'is_volatile') && outline_info.is_volatile
@@ -408,8 +408,7 @@ function! s:init_local_vars(outline_info)
   let heading_next_pattern = (has_heading_next_pattern ? a:outline_info['heading+1'] : '')
   let has_create_heading_func = has_key(a:outline_info, 'create_heading')
 
-  return [
-        \ skip_header,
+  return [skip_header,
         \ skip_header_leading, header_leading_pattern,
         \ skip_header_block, header_beg_pattern, header_end_pattern,
         \ has_skip_header_func,
@@ -469,18 +468,23 @@ function! s:escape_regex(str)
   return escape(a:str, '^$[].*\~')
 endfunction
 
-function! s:source.calc_signature(lnum)
-  let range = 2
-  let from = max([1, a:lnum - range])
-  let to   = min([a:lnum + range, line('$')])
-  return join(getline(from, to))
-endfunction
-
-function! s:calc_signature2(lines, idx)
-  let range = 2
-  let from = max([0, a:idx - range])
-  let to   = min([a:idx + range, len(a:lines) - 1])
-  return join(a:lines[from : to])
+function! s:source.calc_signature(lnum, ...)
+  let range = 10 | let precision = 2
+  if a:0
+    let lines = a:1 | let idx = a:lnum - 1
+    let from = max([0, idx - range])
+    let to   = min([idx + range, len(lines) - 1])
+    let backward = lines[from : idx]
+    let forward  = lines[idx  : to]
+  else
+    let from = max([1, a:lnum - range])
+    let to   = min([a:lnum + range, line('$')])
+    let backward = getline(from, a:lnum)
+    let forward  = getline(a:lnum, to)
+  endif
+  let backward = filter(backward, 'v:val =~ "\\S"')[-precision-1 : -2]
+  let forward  = filter(forward,  'v:val =~ "\\S"')[1 : precision]
+  return join(map(backward + forward, 'v:val[0:99]'))
 endfunction
 
 "---------------------------------------
