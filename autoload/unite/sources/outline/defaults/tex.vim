@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/tex.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-14
+" Updated : 2010-12-18
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,14 +9,14 @@
 "=============================================================================
 
 " Default outline info for TeX
-" Version: 0.0.4
+" Version: 0.0.5
 
 function! unite#sources#outline#defaults#tex#outline_info()
   return s:outline_info
 endfunction
 
 let s:outline_info = {
-      \ 'heading': '^\\\(title\|part\|chapter\|\(sub\)\{,2}section\){',
+      \ 'heading': '^\\\(title\|part\|chapter\|\(sub\)\{,2}section\|begin{thebibliography}\){',
       \ }
 
 let s:unit_order = [
@@ -47,18 +47,26 @@ function! s:outline_info.initialize(context)
 endfunction
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
-  let unit = matchstr(a:heading_line, '^\\\zs\w\+\ze{')
-  call s:add_unit(unit)
-  if unit !=# 'title' && index(s:unit_order, unit) < index(s:unit_order, s:biggest_unit)
-    call s:shift_unit_levels(unit)
-    let s:biggest_unit = unit
-  endif
-  let level = s:unit_level[unit]
   let lines = a:context.lines | let h = a:context.heading_index
-  let heading = unite#sources#outline#util#join_to(lines, h, '}\s*$')
-  let heading = substitute(heading, '\\\\\n', '', 'g')
-  let heading = matchstr(heading, '^\\\w\+{\zs.*\ze}\s*$')
-  let heading = unite#sources#outline#util#indent(level) . s:unit_seqnr_prefix(unit) . heading
+  if a:heading_line =~ '^\\begin{thebibliography}{'
+    " Bibliography
+    let label = unite#sources#outline#util#neighbor_matchstr(
+          \ lines, h, '\\renewcommand{\\bibname}{\zs.*\ze}\s*$', 3)
+    let heading = (label == "" ? "Bibliography" : label)
+  else
+    " Parts, Chapters, Sections
+    let unit = matchstr(a:heading_line, '^\\\zs\w\+\ze{')
+    call s:add_unit(unit)
+    if unit !=# 'title' && index(s:unit_order, unit) < index(s:unit_order, s:biggest_unit)
+      call s:shift_unit_levels(unit)
+      let s:biggest_unit = unit
+    endif
+    let level = s:unit_level[unit]
+    let heading = unite#sources#outline#util#join_to(lines, h, '}\s*$')
+    let heading = substitute(heading, '\\\\\n', '', 'g')
+    let heading = matchstr(heading, '^\\\w\+{\zs.*\ze}\s*$')
+    let heading = unite#sources#outline#util#indent(level) . s:unit_seqnr_prefix(unit) . heading
+  endif
   return heading
 endfunction
 
