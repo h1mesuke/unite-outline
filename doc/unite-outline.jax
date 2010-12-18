@@ -1,7 +1,7 @@
 *unite-outline.txt*	ファイルの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2010-12-14
+Updated : 2010-12-18
 Version : 0.1.9
 License : MIT license {{{
 
@@ -413,16 +413,21 @@ unite#sources#outline#util#join_to({lines}, {idx}, {pattern} [, {limit}])
 unite#sources#outline#util#neighbor_match({lines}, {idx}, {pattern} [, {range}])
 				*unite#sources#outline#util#neighbor_match()*
 	{lines} の添字が {idx} の行およびその前後の行が {pattern} にマッチする
-	ならば真、そうでないなら偽を返します。{range} には前後の何行分に対しマ
-	ッチを試行するかを指定でき、省略した場合は 1 になります。 
-	{range} にリストを指定すると、マッチを試行する行数を前と後ろ、個別に設
-	定できます。
+	ならば真、そうでないなら偽を返します。
+	{range} には前後の何行分に対しマッチを試行するかを指定でき、省略した場
+	合は 1 になります。{range} にリストを指定すると、マッチを試行する行数
+	を前と後ろ、個別に設定できます。
+
+unite#sources#outline#util#neighbor_matchstr({lines}, {idx}, {pattern} [, {range}])
+				*unite#sources#outline#util#neighbor_matchstr()*
+	|unite#sources#outline#util#neighbor_match()|の派生形。真偽値ではなく、
+	マッチした部分文字列を返します。マッチしない場合は "" を返します。
 
 unite#sources#outline#util#nr2roman({nr})
 				*unite#sources#outline#util#nr2roman()*
 	{nr} をローマ数字へと変換します。
-	ローマ数字として表現可能な範囲は 1以上、4999以下の範囲で、{nr} がその
-	範囲外にある場合は、{nr} を単に文字列に変換したものを返します。
+	ローマ数字として表現可能な範囲は 1以上 4999以下の範囲で、{nr} がその範
+	囲外にある場合は、{nr} を単に文字列に変換したものを返します。
 
 ==============================================================================
 TODO						*unite-outline-todo*
