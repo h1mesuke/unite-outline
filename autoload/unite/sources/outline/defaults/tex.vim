@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/tex.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-18
+" Updated : 2010-12-19
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for TeX
-" Version: 0.0.5
+" Version: 0.0.6
 
 function! unite#sources#outline#defaults#tex#outline_info()
   return s:outline_info
@@ -50,6 +50,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   let lines = a:context.lines | let h = a:context.heading_index
   if a:heading_line =~ '^\\begin{thebibliography}{'
     " Bibliography
+    let level = 2
     let label = unite#sources#outline#util#neighbor_matchstr(
           \ lines, h, '\\renewcommand{\\bibname}{\zs.*\ze}\s*$', 3)
     let heading = (label == "" ? "Bibliography" : label)
@@ -65,9 +66,9 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     let heading = unite#sources#outline#util#join_to(lines, h, '}\s*$')
     let heading = substitute(heading, '\\\\\n', '', 'g')
     let heading = matchstr(heading, '^\\\w\+{\zs.*\ze}\s*$')
-    let heading = unite#sources#outline#util#indent(level) . s:unit_seqnr_prefix(unit) . heading
+    let heading = s:unit_seqnr_prefix(unit) . heading
   endif
-  return heading
+  return unite#sources#outline#util#indent(level) . heading
 endfunction
 
 function! s:shift_unit_levels(unit)
