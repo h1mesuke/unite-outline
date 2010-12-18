@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-14
+" Updated : 2010-12-18
 " Version : 0.1.9
 " License : MIT license {{{
 "
@@ -67,21 +67,36 @@ function! s:join_to_backward(lines, idx, pattern, ...)
 endfunction
 
 function! unite#sources#outline#util#neighbor_match(lines, idx, pattern, ...)
-  let nb = (a:0 ? a:1 : 1)
-  if type(nb) == type([])
-    let prev = nb[0]
-    let next = nb[1]
+  let neighbor = (a:0 ? a:1 : 1)
+  if type(neighbor) == type([])
+    let [prev, next] = neighbor
   else
-    let prev = nb
-    let next = nb
+    let [prev, next] = [neighbor, neighbor]
   endif
-  let nb_range = range(max([0, a:idx - prev]), min([a:idx + next, len(a:lines) - 1]))
-  for idx in nb_range
+  let neighbor_range = range(max([0, a:idx - prev]), min([a:idx + next, len(a:lines) - 1]))
+  for idx in neighbor_range
     if a:lines[idx] =~ a:pattern
       return 1
     endif
   endfor
   return 0
+endfunction
+
+function! unite#sources#outline#util#neighbor_matchstr(lines, idx, pattern, ...)
+  let neighbor = (a:0 ? a:1 : 1)
+  if type(neighbor) == type([])
+    let [prev, next] = neighbor
+  else
+    let [prev, next] = [neighbor, neighbor]
+  endif
+  let neighbor_range = range(max([0, a:idx - prev]), min([a:idx + next, len(a:lines) - 1]))
+  for idx in neighbor_range
+    let matched = matchstr(a:lines[idx], a:pattern)
+    if matched != ""
+      return matched
+    endif
+  endfor
+  return ""
 endfunction
 
 " ported from:
