@@ -1,7 +1,7 @@
 *unite-outline.txt*	ファイルの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2010-12-18
+Updated : 2010-12-19
 Version : 0.1.9
 License : MIT license {{{
 
@@ -292,7 +292,7 @@ create_heading	関数（任意） 		*unite-outline-info-create_heading()*
 	endfunction
 <	
 
-initialize	関数（任意） 		*unite-outline-info-initialize()*
+initialize	関数（任意） 			*unite-outline-info-initialize()*
 
 	initialize({context})
 
@@ -301,6 +301,12 @@ initialize	関数（任意） 		*unite-outline-info-initialize()*
 
 	{context} については、|unite-outline-info-create_heading()|を参照して
 	下さい。
+
+
+is_volatile	数値（任意）			*unite-outline-info-is_volatile*
+
+	抽出した見出しをキャッシュするかどうかを指定します。
+	1 に設定されていると、見出しはキャッシュされません。
 
 
 skip		辞書（任意）				*unite-outline-info-skip*
@@ -351,24 +357,18 @@ skip		辞書（任意）				*unite-outline-info-skip*
 
 skip_header()	関数（任意）			*unite-outline-info-skip_header()*
 
-	skip_header({lines},{context})
+	skip_header({lines}, {context})
 
 	設定されていると、見出しの抽出に先立って（initialize の後に）呼ばれ、
-	その返値（整数）を添字とする {lines} の行までがヘッダとしてスキップさ
-	れます。この関数を定義することによって、 skip.header属性では指定が難し
-	いタイプのヘッダのスキップを実装できます。
+	その返値（整数）を添字とする行の直前までをヘッダとしてスキップします。
+	この関数を定義することによって、skip.header属性では指定が難しいタイプ
+	のヘッダのスキップを実装できます。
 
 	skip_header()関数に渡される引数は以下の通りです。
 	
 	* {lines} - リスト：ファイルの全行
 	* {context} - 辞書：その他の情報、以下の属性を含む
 	  * outline_info - 辞書：outline info
-
-
-is_volatile	数値（任意）			*unite-outline-info-is_volatile*
-
-	抽出した見出しをキャッシュするかどうかを指定します。
-	1 に設定されていると、見出しはキャッシュされません。
 
 ------------------------------------------------------------------------------
 関数						*unite-outline-functions*
