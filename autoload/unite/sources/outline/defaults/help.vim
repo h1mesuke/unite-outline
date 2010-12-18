@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/help.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-15
+" Updated : 2010-12-19
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -97,8 +97,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     if a:heading_line =~ s:upper_word
       let heading = unite#sources#outline#util#capitalize(heading, 'g')
     endif
-    let heading = unite#sources#outline#util#indent(level) . heading
-    return heading
+    return unite#sources#outline#util#indent(level) . heading
   else
     return ""
   endif

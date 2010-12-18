@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/unittest.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-11
+" Updated : 2010-12-19
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -33,8 +33,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     let level = 3
   endif
   if level > 0
-    let heading = unite#sources#outline#util#indent(level) . a:heading_line
-    return heading
+    return unite#sources#outline#util#indent(level) . a:heading_line
   else
     return ""
   endif

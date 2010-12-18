@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/html.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-11
+" Updated : 2010-12-19
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -26,7 +26,8 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   let text = substitute(text, '\s*\n\s*', ' ', 'g')
   let text = substitute(text, '<[^>]*>', '', 'g')
   let text = substitute(text, '^\s*', '', '')
-  return unite#sources#outline#util#indent(level) . "h" . level. ". " . text
+  let heading = "h" . level. ". " . text
+  return unite#sources#outline#util#indent(level) . heading
 endfunction
 
 " vim: filetype=vim
