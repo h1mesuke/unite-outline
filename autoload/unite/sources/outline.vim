@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-20
+" Updated : 2010-12-21
 " Version : 0.1.9
 " License : MIT license {{{
 "
@@ -157,10 +157,11 @@ unlet s:default_alias_map
 " Source
 
 let s:source = {
-      \ 'name': 'outline',
-      \ 'description': 'candidates from heading list',
-      \ 'action_table': {}, 'hooks': {},
-      \ 'is_volatile': 1,
+      \ 'name'        : 'outline',
+      \ 'description' : 'candidates from heading list',
+      \ 'hooks'       : {},
+      \ 'action_table': {},
+      \ 'is_volatile' : 1,
       \ }
 
 function! s:source.hooks.on_init(args, context)
@@ -206,10 +207,10 @@ function! s:source.gather_candidates(args, context)
     let context = {
           \ 'heading_index': 0,
           \ 'matched_index': 0,
-          \ 'lines': lines,
-          \ 'buffer': s:buffer,
-          \ 'heading_id': 0,
-          \ 'outline_info': outline_info
+          \ 'lines'        : lines,
+          \ 'buffer'       : s:buffer,
+          \ 'heading_id'   : 0,
+          \ 'outline_info' : outline_info
           \ }
 
     " initialize the outline info
@@ -336,11 +337,11 @@ function! s:source.gather_candidates(args, context)
     endwhile
 
     let cands = map(headings, '{
-          \ "word": (has_create_heading_func ? v:val[0] : s:normalize_indent(v:val[0])),
-          \ "source": "outline",
-          \ "kind": "jump_list",
-          \ "action__path": path,
-          \ "action__pattern":  "^" . s:escape_regex(v:val[1]) . "$",
+          \ "word"             : (has_create_heading_func ? v:val[0] : s:normalize_indent(v:val[0])),
+          \ "source"           : "outline",
+          \ "kind"             : "jump_list",
+          \ "action__path"     : path,
+          \ "action__pattern"  : "^" . s:escape_pattern(v:val[1]) . "$",
           \ "action__signature": self.calc_signature(v:val[2] + 1, lines),
           \ }')
 
@@ -464,7 +465,7 @@ function! s:normalize_indent(str)
   return str
 endfunction
 
-function! s:escape_regex(str)
+function! s:escape_pattern(str)
   return escape(a:str, '^$[].*\~')
 endfunction
 
@@ -493,9 +494,9 @@ endfunction
 let s:action_table = {}
 
 let s:action_table.preview = {
-      \ 'description': 'preview this position',
+      \ 'description'  : 'preview this position',
       \ 'is_selectable': 0,
-      \ 'is_quit' : 0,
+      \ 'is_quit'      : 0,
       \ }
 function! s:action_table.preview.func(candidate)
   let cand = a:candidate
@@ -527,7 +528,7 @@ function! s:save_window_cursors(bufnr)
     if winbufnr(winnr) == a:bufnr
       execute winnr . 'wincmd w'
       let save_cursors[winnr] = {
-            \ 'cursor': getpos('.'),
+            \ 'cursor' : getpos('.'),
             \ 'winline': winline(),
             \ }
     endif
@@ -599,7 +600,7 @@ endfunction
 function! s:cache.write(path, cands)
   let self.data[a:path] = {
         \ 'candidates': a:cands,
-        \ 'touched': localtime(), 
+        \ 'touched'   : localtime(),
         \ }
   if len(self.data) > g:unite_source_outline_cache_buffers
     let oldest = sort(items(self.data), 's:compare_timestamp')[0]
