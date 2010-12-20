@@ -200,6 +200,9 @@ function! s:source.gather_candidates(args, context)
       return []
     endif
 
+    let save_ignorecase = &ignorecase
+    set noignorecase
+
     let lines = getbufline(s:buffer.nr, 1, '$')
     let idx = 0 | let n_lines = len(lines)
 
@@ -361,6 +364,8 @@ function! s:source.gather_candidates(args, context)
     call unite#print_error(v:throwpoint)
     call unite#print_error(v:exception)
     return []
+  finally
+    let &ignorecase = save_ignorecase
   endtry
 endfunction
 
