@@ -183,6 +183,9 @@ endfunction
 
 function! s:source.gather_candidates(args, context)
   try
+    let save_ignorecase = &ignorecase
+    set noignorecase
+
     if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
       let start_time = reltime()
     endif
@@ -199,9 +202,6 @@ function! s:source.gather_candidates(args, context)
       call unite#print_error("unite-outline: not supported filetype: " . filetype)
       return []
     endif
-
-    let save_ignorecase = &ignorecase
-    set noignorecase
 
     let lines = getbufline(s:buffer.nr, 1, '$')
     let idx = 0 | let n_lines = len(lines)
