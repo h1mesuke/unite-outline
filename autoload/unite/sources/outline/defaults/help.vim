@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/help.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-19
+" Updated : 2010-12-21
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for Vim Help
-" Version: 0.0.7
+" Version: 0.0.8
 
 function! unite#sources#outline#defaults#help#outline_info()
   return s:outline_info
@@ -79,7 +79,10 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   elseif a:which ==# 'heading'
     if a:heading_line =~ '^'.s:section_number
       " 2-2
-      let level = 2 | let s:level_x = 3
+      " NOTE: If the line contains a timestamp, it is a changelog maybe.
+      if a:heading_line !~ '\d\{2}:\d\{2}:\d\{2}'
+        let level = 2 | let s:level_x = 3
+      endif
     elseif a:heading_line =~ s:helptag
       " X-1
       let level = s:level_x
