@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-16
+" Updated : 2010-12-20
 " Version : 0.1.9
 " License : MIT license {{{
 "
@@ -109,7 +109,7 @@ function! unite#sources#outline#join_to(lines, idx, pattern, ...)
 endfunction
 
 function! unite#sources#outline#neighbor_match(lines, idx, pattern, ...)
-  return unite#sources#outline#neighbor_match(a:lines, a:idx, a:pattern, (a:0 ? a:1 : 1))
+  return unite#sources#outline#util#neighbor_match(a:lines, a:idx, a:pattern, (a:0 ? a:1 : 1))
 endfunction
 
 "-----------------------------------------------------------------------------
