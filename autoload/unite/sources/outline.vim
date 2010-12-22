@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-21
+" Updated : 2010-12-22
 " Version : 0.1.9
 " License : MIT license {{{
 "
@@ -139,10 +139,11 @@ endif
 " Aliases
 
 let s:default_alias_map = [
-      \ ['cfg',      'dosini'],
-      \ ['plaintex', 'tex'   ],
-      \ ['xhtml',    'html'  ],
-      \ ['zsh',      'sh'    ],
+      \ ['cfg',      'dosini'  ],
+      \ ['mkd',      'markdown'],
+      \ ['plaintex', 'tex'     ],
+      \ ['xhtml',    'html'    ],
+      \ ['zsh',      'sh'      ],
       \]
 for [alias, src_filetype] in s:default_alias_map
   " NOTE: If the user has his/her own outline info for {alias} filetype, not
