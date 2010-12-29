@@ -268,7 +268,6 @@ create_heading	関数（任意） 		*unite-outline-info-create_heading()*
 	* {matched-line} - 文字列：マッチした行
 						*unite-outline-info-context*
 	* {context} - 辞書：その他の情報、以下の属性を含む
-	  * heading_id - 整数：見出しの id番号（最初の見出しが 1）
 	  * heading_index - 整数：lines中の heading_line の添字
 	  * matched_index - 整数：lines中の matched_line の添字
 	  * lines - リスト：ファイルの全行
