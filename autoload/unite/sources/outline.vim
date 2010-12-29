@@ -188,10 +188,10 @@ function! s:source.hooks.on_init(args, context)
 endfunction
 
 function! s:source.gather_candidates(args, context)
-  try
-    let save_ignorecase = &ignorecase
-    set noignorecase
+  let save_ignorecase = &ignorecase
+  set noignorecase
 
+  try
     if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
       let start_time = reltime()
     endif
@@ -346,9 +346,9 @@ function! s:source.gather_candidates(args, context)
     endwhile
 
     let cands = map(headings, '{
-          \ "word"             : (has_create_heading_func ? v:val[0] : s:normalize_indent(v:val[0])),
-          \ "source"           : "outline",
-          \ "kind"             : "jump_list",
+          \ "word"  : (has_create_heading_func ? v:val[0] : s:normalize_indent(v:val[0])),
+          \ "source": "outline",
+          \ "kind"  : "jump_list",
           \ "action__path"     : path,
           \ "action__pattern"  : "^" . s:escape_pattern(v:val[1]) . "$",
           \ "action__signature": self.calc_signature(v:val[2] + 1, lines),
