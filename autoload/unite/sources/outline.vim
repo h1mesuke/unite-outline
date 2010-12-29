@@ -345,6 +345,11 @@ function! s:source.gather_candidates(args, context)
       let idx += 1
     endwhile
 
+    " finalize the outline info
+    if has_key(outline_info, 'finalize')
+      call outline_info.finalize(context)
+    endif
+
     let cands = map(headings, '{
           \ "word"  : (has_create_heading_func ? v:val[0] : s:normalize_indent(v:val[0])),
           \ "source": "outline",
