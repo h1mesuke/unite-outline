@@ -1,7 +1,7 @@
 *unite-outline.txt*	ファイルの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2010-12-19
+Updated : 2010-12-29
 Version : 0.1.9
 License : MIT license {{{
 
@@ -207,6 +207,7 @@ outline info の属性				*unite-outline-info-attributes*
 	outline info の属性は以下の通りです。unite-outline はそれぞれの属性に
 	設定された値にもとづき、ファイルタイプ固有の見出し抽出を行います。
 
+EXTRACTING HEADINGS ~
 
 heading-1	文字列（任意）			*unite-outline-info-heading-1*
 
@@ -260,26 +261,27 @@ create_heading	関数（任意） 		*unite-outline-info-create_heading()*
 	ベル（インデント）の設定を、ユーザーが自由に行うことができます。
 
 	create_heading()関数に渡される引数は以下の通りです。
-	
+
 	* {which} - 文字列：マッチの種類
 	                    "heading-1", "heading", "heading+1" のいずれか
 	* {heading-line} - 文字列：見出しとなる行
 	* {matched-line} - 文字列：マッチした行
+						*unite-outline-info-context*
 	* {context} - 辞書：その他の情報、以下の属性を含む
-	  * heading_id - 整数：見出しの id番号（最初が 1）
-	  * heading_index - 整数：lines中の heading_line の index
-	  * matched_index - 整数：lines中の matched_line の index
+	  * heading_id - 整数：見出しの id番号（最初の見出しが 1）
+	  * heading_index - 整数：lines中の heading_line の添字
+	  * matched_index - 整数：lines中の matched_line の添字
 	  * lines - リスト：ファイルの全行
 	  * buffer - 辞書：バッファ情報（参照可能な属性については
 	                   autoload/unite/source/outline.vim を参照して下さい）
 	  * outline_info - 辞書：outline info
-	
+
 	{context} に渡される辞書は見出し抽出の間同じものが使い回されますので、
 	既存の属性を書き換えないで下さい。
-	
+
 	create_heading()関数は文字列を返す必要があります。空文字列を返すと、
 	見出しではないとみなされ、無視されます。
-	
+
 	参考として、HTML の create_heading()関数の定義例を示します。
 >
 	function! s:outline_info.create_heading(which, heading_line, matched_line, context)
@@ -291,23 +293,6 @@ create_heading	関数（任意） 		*unite-outline-info-create_heading()*
 	  return ""
 	endfunction
 <	
-
-initialize	関数（任意） 			*unite-outline-info-initialize()*
-
-	initialize({context})
-
-	設定されていると、見出しの抽出に先立って呼ばれ、outline info に初期化
-	の機会を与えます。
-
-	{context} については、|unite-outline-info-create_heading()|を参照して
-	下さい。
-
-
-is_volatile	数値（任意）			*unite-outline-info-is_volatile*
-
-	抽出した見出しをキャッシュするかどうかを指定します。
-	1 に設定されていると、見出しはキャッシュされません。
-
 
 skip		辞書（任意）				*unite-outline-info-skip*
 
@@ -365,10 +350,37 @@ skip_header()	関数（任意）			*unite-outline-info-skip_header()*
 	のヘッダのスキップを実装できます。
 
 	skip_header()関数に渡される引数は以下の通りです。
-	
+
 	* {lines} - リスト：ファイルの全行
-	* {context} - 辞書：その他の情報、以下の属性を含む
-	  * outline_info - 辞書：outline info
+	* {context} - 辞書：詳細は|unite-outline-info-context|を参照
+
+CACHING HEADINGS ~
+
+is_volatile	数値（任意）			*unite-outline-info-is_volatile*
+
+	抽出した見出しをキャッシュするかどうかを指定します。
+	1 に設定されていると、見出しはキャッシュされません。
+
+HOOKS ~
+
+initialize	関数（任意） 			*unite-outline-info-initialize()*
+
+	initialize({context})
+
+	設定されていると、見出しの抽出に先立って呼ばれ、outline info に初期化
+	の機会を与えます。
+
+	{context} については、|unite-outline-info-context|を参照
+
+
+finalize	関数（任意） 			*unite-outline-info-finalize()*
+
+	finalize({context})
+
+	設定されていると、見出しの抽出が完了した後に呼ばれ、outline info に後
+	始末の機会を与えます。
+
+	{context} については、|unite-outline-info-context|を参照
 
 ------------------------------------------------------------------------------
 関数						*unite-outline-functions*
