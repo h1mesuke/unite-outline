@@ -218,7 +218,6 @@ function! s:source.gather_candidates(args, context)
           \ 'matched_index': 0,
           \ 'lines'        : lines,
           \ 'buffer'       : s:buffer,
-          \ 'heading_id'   : 0,
           \ 'outline_info' : outline_info
           \ }
 
@@ -226,7 +225,6 @@ function! s:source.gather_candidates(args, context)
     if has_key(outline_info, 'initialize')
       call outline_info.initialize(context)
     endif
-    let context.heading_id += 1
 
     " initialize local variables
     let [   skip_header,
@@ -281,7 +279,6 @@ function! s:source.gather_candidates(args, context)
             let heading = outline_info.create_heading('heading-1', next_line, line, context)
             if heading != ""
               call add(headings, [heading, next_line, idx + 1])
-              let context.heading_id += 1
             endif
           else
             call add(headings, [next_line, next_line, idx + 1])
@@ -296,7 +293,6 @@ function! s:source.gather_candidates(args, context)
               let heading = outline_info.create_heading('heading-1', next_line, line, context)
               if heading != ""
                 call add(headings, [heading, next_line, idx + 2])
-                let context.heading_id += 1
               endif
             else
               call add(headings, [next_line, next_line, idx + 2])
@@ -314,7 +310,6 @@ function! s:source.gather_candidates(args, context)
           let heading = outline_info.create_heading('heading', line, line, context)
           if heading != ""
             call add(headings, [heading, line, idx])
-            let context.heading_id += 1
           endif
         else
           call add(headings, [line, line, idx])
@@ -330,7 +325,6 @@ function! s:source.gather_candidates(args, context)
             let heading = outline_info.create_heading('heading+1', prev_line, line, context)
             if heading != ""
               call add(headings, [heading, prev_line, idx - 1])
-              let context.heading_id += 1
             endif
           else
             call add(headings, [prev_line, prev_line, idx - 1])
@@ -338,7 +332,7 @@ function! s:source.gather_candidates(args, context)
         endif
       endif
 
-      if context.heading_id >= g:unite_source_outline_max_headings
+      if len(headings) > g:unite_source_outline_max_headings
         call unite#print_error("unite-outline: too many headings, discarded the rest")
         break
       endif
