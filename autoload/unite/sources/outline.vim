@@ -101,20 +101,20 @@ endfunction
 "---------------------------------------
 " Utils
 
-function! unite#sources#outline#indent(level)
-  return unite#sources#outline#util#indent(a:level)
+function! unite#sources#outline#indent(...)
+  return call('unite#sources#outline#util#indent', a:000)
 endfunction
 
-function! unite#sources#outline#capitalize(str, ...)
-  return unite#sources#outline#util#capitalize(a:str, (a:0 ? a:1 : ''))
+function! unite#sources#outline#capitalize(...)
+  return call('unite#sources#outline#util#capitalize', a:000)
 endfunction
 
-function! unite#sources#outline#join_to(lines, idx, pattern, ...)
-  return unite#sources#outline#util#join_to(a:lines, a:idx, a:pattern, (a:0 ? a:1 : 3))
+function! unite#sources#outline#join_to(...)
+  return call('unite#sources#outline#util#join_to', a:000)
 endfunction
 
-function! unite#sources#outline#neighbor_match(lines, idx, pattern, ...)
-  return unite#sources#outline#util#neighbor_match(a:lines, a:idx, a:pattern, (a:0 ? a:1 : 1))
+function! unite#sources#outline#neighbor_match(...)
+  return call('unite#sources#outline#util#neighbor_match', a:000)
 endfunction
 
 "-----------------------------------------------------------------------------
