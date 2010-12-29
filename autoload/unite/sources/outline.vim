@@ -246,7 +246,7 @@ function! s:source.gather_candidates(args, context)
     " Skip the header
 
     if has_skip_header_func
-      let idx = outline_info.skip_header(lines, { 'outline_info': outline_info })
+      let idx = outline_info.skip_header(lines, context)
 
     elseif skip_header
       while idx < n_lines
