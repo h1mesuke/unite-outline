@@ -248,7 +248,7 @@ function! s:source.gather_candidates(args, context)
           \ "source": "outline",
           \ "kind"  : "jump_list",
           \ "action__path"     : path,
-          \ "action__pattern"  : "^" . s:escape_pattern(v:val[1]) . "$",
+          \ "action__pattern"  : "^" . s:escape_regexp(v:val[1]) . "$",
           \ "action__signature": self.calc_signature(v:val[2] + 1, lines),
           \ }')
 
@@ -478,7 +478,7 @@ function! s:normalize_indent(str)
   return str
 endfunction
 
-function! s:escape_pattern(str)
+function! s:escape_regexp(str)
   return escape(a:str, '^$[].*\~')
 endfunction
 
