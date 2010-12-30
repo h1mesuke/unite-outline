@@ -214,6 +214,8 @@ function! s:source.gather_candidates(args, context)
       return []
     endif
 
+    call s:normalize_outline_info(outline_info)
+
     let lines = getbufline(s:buffer.nr, 1, '$')
     let idx = 0 | let n_lines = len(lines)
 
@@ -232,18 +234,39 @@ function! s:source.gather_candidates(args, context)
     endif
 
     " initialize local variables
-    let [   skip_header,
-          \ skip_header_leading, header_leading_pattern,
-          \ skip_header_block, header_beg_pattern, header_end_pattern,
-          \ has_skip_header_func,
-          \ skip_block,
-          \ block_beg_pattern, block_end_pattern,
-          \ has_heading_prev_pattern, heading_prev_pattern,
-          \ has_heading_pattern, heading_pattern,
-          \ has_heading_next_pattern, heading_next_pattern,
-          \ has_create_heading_func
-          \
-          \ ] = s:init_local_vars(outline_info)
+    let skip_header = has_key(outline_info, 'skip') && has_key(outline_info.skip, 'header')
+    if skip_header
+      let skip_header_leading = has_key(outline_info.skip.header, 'leading')
+      if skip_header_leading
+        let header_leading_pattern = outline_info.skip.header.leading
+      endif
+      let skip_header_block = has_key(outline_info.skip.header, 'block')
+      if skip_header_block
+        let header_beg_pattern = outline_info.skip.header.block.begin
+        let header_end_pattern = outline_info.skip.header.block.end
+      endif
+    endif
+    let has_skip_header_func = has_key(outline_info, 'skip_header')
+
+    let skip_block = has_key(outline_info, 'skip') && has_key(outline_info.skip, 'block')
+    if skip_block
+      let block_beg_pattern = outline_info.skip.block.begin
+      let block_end_pattern = outline_info.skip.block.end
+    endif
+
+    let has_heading_prev_pattern = has_key(outline_info, 'heading-1')
+    if has_heading_prev_pattern
+      let heading_prev_pattern = outline_info['heading-1']
+    endif
+    let has_heading_pattern = has_key(outline_info, 'heading')
+    if has_heading_pattern
+      let heading_pattern = outline_info.heading
+    endif
+    let has_heading_next_pattern = has_key(outline_info, 'heading+1')
+    if has_heading_next_pattern
+      let heading_next_pattern = outline_info['heading+1']
+    endif
+    let has_create_heading_func = has_key(outline_info, 'create_heading')
 
     "---------------------------------------
     " Skip the header
@@ -379,62 +402,32 @@ function! s:source.gather_candidates(args, context)
   endtry
 endfunction
 
-function! s:init_local_vars(outline_info)
-  let header_leading_pattern = ''
-  let header_beg_pattern = '' | let header_end_pattern = ''
-
-  " values used for skipping header
-  let skip_header = has_key(a:outline_info, 'skip') && has_key(a:outline_info.skip, 'header')
-  if skip_header
+function! s:normalize_outline_info(outline_info)
+  if has_key(a:outline_info, 'skip') && has_key(a:outline_info.skip, 'header')
     let value_type = type(a:outline_info.skip.header)
     if value_type == type("")
-      let skip_header_leading = 1 | let skip_header_block = 0
-      let header_leading_pattern = a:outline_info.skip.header
+      let a:outline_info.skip.header = { 'leading': a:outline_info.skip.header }
     elseif value_type == type([])
-      let skip_header_leading = 0 | let skip_header_block = 1
-      let header_beg_pattern = a:outline_info.skip.header[0]
-      let header_end_pattern = a:outline_info.skip.header[1]
+      let a:outline_info.skip.header =
+            \ { 'block': s:normalize_block_patterns(a:outline_info.skip.header) }
     elseif value_type == type({})
-      let skip_header_leading = has_key(a:outline_info.skip.header, 'leading')
-      if skip_header_leading
-        let header_leading_pattern = a:outline_info.skip.header.leading
-      endif
-      let skip_header_block = has_key(a:outline_info.skip.header, 'block')
-      if skip_header_block
-        let header_beg_pattern = a:outline_info.skip.header.block[0]
-        let header_end_pattern = a:outline_info.skip.header.block[1]
+      if has_key(a:outline_info.skip.header, 'block') &&
+            \ type(a:outline_info.skip.header.block) == type([])
+        let a:outline_info.skip.header.block =
+              \ s:normalize_block_patterns(a:outline_info.skip.header.block)
       endif
     endif
-  else
-    let skip_header_leading = 0 | let skip_header_block = 0
   endif
-  let has_skip_header_func = has_key(a:outline_info, 'skip_header')
+  if has_key(a:outline_info, 'skip') && has_key(a:outline_info.skip, 'block')
+    let value_type = type(a:outline_info.skip.block)
+    if value_type == type([])
+      let a:outline_info.skip.block = s:normalize_block_patterns(a:outline_info.skip.block)
+    endif
+  endif
+endfunction
 
-  " values used for skipping blocks
-  let skip_block = has_key(a:outline_info, 'skip') && has_key(a:outline_info.skip, 'block')
-  let block_beg_pattern = (skip_block ? a:outline_info.skip.block[0] : '')
-  let block_end_pattern = (skip_block ? a:outline_info.skip.block[1] : '')
-
-  " values used for extracting headings
-  let has_heading_prev_pattern = has_key(a:outline_info, 'heading-1')
-  let heading_prev_pattern = (has_heading_prev_pattern ? a:outline_info['heading-1'] : '')
-  let has_heading_pattern = has_key(a:outline_info, 'heading')
-  let heading_pattern = (has_heading_pattern ? a:outline_info.heading : '')
-  let has_heading_next_pattern = has_key(a:outline_info, 'heading+1')
-  let heading_next_pattern = (has_heading_next_pattern ? a:outline_info['heading+1'] : '')
-  let has_create_heading_func = has_key(a:outline_info, 'create_heading')
-
-  return [skip_header,
-        \ skip_header_leading, header_leading_pattern,
-        \ skip_header_block, header_beg_pattern, header_end_pattern,
-        \ has_skip_header_func,
-        \ skip_block,
-        \ block_beg_pattern, block_end_pattern,
-        \ has_heading_prev_pattern, heading_prev_pattern,
-        \ has_heading_pattern, heading_pattern,
-        \ has_heading_next_pattern, heading_next_pattern,
-        \ has_create_heading_func,
-        \ ]
+function! s:normalize_block_patterns(patterns)
+  return { 'begin': a:patterns[0], 'end': a:patterns[1] }
 endfunction
 
 function! s:skip_while(pattern, lines, idx)
