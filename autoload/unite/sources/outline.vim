@@ -233,145 +233,16 @@ function! s:source.gather_candidates(args, context)
       call outline_info.initialize(context)
     endif
 
-    " initialize local variables
-    let skip_header = has_key(outline_info, 'skip') && has_key(outline_info.skip, 'header')
-    if skip_header
-      let skip_header_leading = has_key(outline_info.skip.header, 'leading')
-      if skip_header_leading
-        let header_leading_pattern = outline_info.skip.header.leading
-      endif
-      let skip_header_block = has_key(outline_info.skip.header, 'block')
-      if skip_header_block
-        let header_beg_pattern = outline_info.skip.header.block.begin
-        let header_end_pattern = outline_info.skip.header.block.end
-      endif
-    endif
-    let has_skip_header_func = has_key(outline_info, 'skip_header')
-
-    let skip_block = has_key(outline_info, 'skip') && has_key(outline_info.skip, 'block')
-    if skip_block
-      let block_beg_pattern = outline_info.skip.block.begin
-      let block_end_pattern = outline_info.skip.block.end
-    endif
-
-    let has_heading_prev_pattern = has_key(outline_info, 'heading-1')
-    if has_heading_prev_pattern
-      let heading_prev_pattern = outline_info['heading-1']
-    endif
-    let has_heading_pattern = has_key(outline_info, 'heading')
-    if has_heading_pattern
-      let heading_pattern = outline_info.heading
-    endif
-    let has_heading_next_pattern = has_key(outline_info, 'heading+1')
-    if has_heading_next_pattern
-      let heading_next_pattern = outline_info['heading+1']
-    endif
-    let has_create_heading_func = has_key(outline_info, 'create_heading')
-
-    "---------------------------------------
-    " Skip the header
-
-    if has_skip_header_func
-      let idx = outline_info.skip_header(lines, context)
-
-    elseif skip_header
-      while idx < n_lines
-        let line = lines[idx]
-        if skip_header_leading && line =~# header_leading_pattern
-          let idx = s:skip_while(header_leading_pattern, lines, idx)
-        elseif skip_header_block && line =~# header_beg_pattern
-          let idx = s:skip_to(header_end_pattern, lines, idx)
-        else
-          break
-        endif
-      endwhile
-    endif
-
-    "---------------------------------------
-    " Collect headings
-
-    let headings = []
-    while idx < n_lines
-      let line = lines[idx]
-      if skip_block && line =~# block_beg_pattern
-        " skip a documentation block
-        let idx = s:skip_to(block_end_pattern, lines, idx)
-
-      elseif has_heading_prev_pattern && line =~# heading_prev_pattern && idx < n_lines - 3
-        " matched: heading-1
-        let next_line = lines[idx + 1]
-        if next_line =~ '[[:punct:]]\@!\S'
-          if has_create_heading_func
-            let context.heading_index = idx + 1
-            let context.matched_index = idx
-            let heading = outline_info.create_heading('heading-1', next_line, line, context)
-            if heading != ""
-              call add(headings, [heading, next_line, idx + 1])
-            endif
-          else
-            call add(headings, [next_line, next_line, idx + 1])
-          endif
-        elseif next_line =~ '\S' && idx < n_lines - 4
-          " see one more next
-          let next_line = lines[idx + 2]
-          if next_line =~ '[[:punct:]]\@!\S'
-            if has_create_heading_func
-              let context.heading_index = idx + 2
-              let context.matched_index = idx
-              let heading = outline_info.create_heading('heading-1', next_line, line, context)
-              if heading != ""
-                call add(headings, [heading, next_line, idx + 2])
-              endif
-            else
-              call add(headings, [next_line, next_line, idx + 2])
-            endif
-          endif
-          let idx += 1
-        endif
-        let idx += 1
-
-      elseif has_heading_pattern && line =~# heading_pattern
-        " matched: heading
-        if has_create_heading_func
-          let context.heading_index = idx
-          let context.matched_index = idx
-          let heading = outline_info.create_heading('heading', line, line, context)
-          if heading != ""
-            call add(headings, [heading, line, idx])
-          endif
-        else
-          call add(headings, [line, line, idx])
-        endif
-
-      elseif has_heading_next_pattern && line =~# heading_next_pattern && idx > 0
-        " matched: heading+1
-        let prev_line = lines[idx - 1]
-        if prev_line =~ '[[:punct:]]\@!\S'
-          if has_create_heading_func
-            let context.heading_index = idx - 1
-            let context.matched_index = idx
-            let heading = outline_info.create_heading('heading+1', prev_line, line, context)
-            if heading != ""
-              call add(headings, [heading, prev_line, idx - 1])
-            endif
-          else
-            call add(headings, [prev_line, prev_line, idx - 1])
-          endif
-        endif
-      endif
-
-      if len(headings) > g:unite_source_outline_max_headings
-        call unite#print_error("unite-outline: too many headings, discarded the rest")
-        break
-      endif
-      let idx += 1
-    endwhile
+    " extract headings
+    let idx = s:skip_header(lines, 0, outline_info, context)
+    let headings = s:extract_headings(lines, idx, outline_info, context)
 
     " finalize the outline info
     if has_key(outline_info, 'finalize')
       call outline_info.finalize(context)
     endif
 
+    let has_create_heading_func = has_key(outline_info, 'create_heading')
     let cands = map(headings, '{
           \ "word"  : (has_create_heading_func ? v:val[0] : s:normalize_indent(v:val[0])),
           \ "source": "outline",
@@ -428,6 +299,140 @@ endfunction
 
 function! s:normalize_block_patterns(patterns)
   return { 'begin': a:patterns[0], 'end': a:patterns[1] }
+endfunction
+
+function! s:skip_header(lines, idx, outline_info, context)
+  if has_key(a:outline_info, 'skip_header')
+    let idx = a:outline_info.skip_header(a:lines, a:context)
+
+  elseif has_key(a:outline_info, 'skip') && has_key(a:outline_info.skip, 'header')
+    let skip_header_leading = has_key(a:outline_info.skip.header, 'leading')
+    if skip_header_leading
+      let header_leading_pattern = a:outline_info.skip.header.leading
+    endif
+    let skip_header_block = has_key(a:outline_info.skip.header, 'block')
+    if skip_header_block
+      let header_beg_pattern = a:outline_info.skip.header.block.begin
+      let header_end_pattern = a:outline_info.skip.header.block.end
+    endif
+
+    let idx = a:idx | let n_lines = len(a:lines)
+    while idx < n_lines
+      let line = a:lines[idx]
+      if skip_header_leading && line =~# header_leading_pattern
+        let idx = s:skip_while(header_leading_pattern, a:lines, idx)
+      elseif skip_header_block && line =~# header_beg_pattern
+        let idx = s:skip_to(header_end_pattern, a:lines, idx)
+      else
+        break
+      endif
+    endwhile
+  endif
+
+  return idx
+endfunction
+
+function! s:extract_headings(lines, idx, outline_info, context)
+  let skip_block = has_key(a:outline_info, 'skip') && has_key(a:outline_info.skip, 'block')
+  if skip_block
+    let block_beg_pattern = a:outline_info.skip.block.begin
+    let block_end_pattern = a:outline_info.skip.block.end
+  endif
+
+  let has_heading_prev_pattern = has_key(a:outline_info, 'heading-1')
+  if has_heading_prev_pattern
+    let heading_prev_pattern = a:outline_info['heading-1']
+  endif
+  let has_heading_pattern = has_key(a:outline_info, 'heading')
+  if has_heading_pattern
+    let heading_pattern = a:outline_info.heading
+  endif
+  let has_heading_next_pattern = has_key(a:outline_info, 'heading+1')
+  if has_heading_next_pattern
+    let heading_next_pattern = a:outline_info['heading+1']
+  endif
+  let has_create_heading_func = has_key(a:outline_info, 'create_heading')
+
+  let headings = []
+
+  let idx = a:idx | let n_lines = len(a:lines)
+  while idx < n_lines
+    let line = a:lines[idx]
+    if skip_block && line =~# block_beg_pattern
+      " skip a documentation block
+      let idx = s:skip_to(block_end_pattern, a:lines, idx)
+
+    elseif has_heading_prev_pattern && line =~# heading_prev_pattern && idx < n_lines - 3
+      " matched: heading-1
+      let next_line = a:lines[idx + 1]
+      if next_line =~ '[[:punct:]]\@!\S'
+        if has_create_heading_func
+          let a:context.heading_index = idx + 1
+          let a:context.matched_index = idx
+          let heading = a:outline_info.create_heading('heading-1', next_line, line, a:context)
+          if heading != ""
+            call add(headings, [heading, next_line, idx + 1])
+          endif
+        else
+          call add(headings, [next_line, next_line, idx + 1])
+        endif
+      elseif next_line =~ '\S' && idx < n_lines - 4
+        " see one more next
+        let next_line = a:lines[idx + 2]
+        if next_line =~ '[[:punct:]]\@!\S'
+          if has_create_heading_func
+            let a:context.heading_index = idx + 2
+            let a:context.matched_index = idx
+            let heading = a:outline_info.create_heading('heading-1', next_line, line, a:context)
+            if heading != ""
+              call add(headings, [heading, next_line, idx + 2])
+            endif
+          else
+            call add(headings, [next_line, next_line, idx + 2])
+          endif
+        endif
+        let idx += 1
+      endif
+      let idx += 1
+
+    elseif has_heading_pattern && line =~# heading_pattern
+      " matched: heading
+      if has_create_heading_func
+        let a:context.heading_index = idx
+        let a:context.matched_index = idx
+        let heading = a:outline_info.create_heading('heading', line, line, a:context)
+        if heading != ""
+          call add(headings, [heading, line, idx])
+        endif
+      else
+        call add(headings, [line, line, idx])
+      endif
+
+    elseif has_heading_next_pattern && line =~# heading_next_pattern && idx > 0
+      " matched: heading+1
+      let prev_line = a:lines[idx - 1]
+      if prev_line =~ '[[:punct:]]\@!\S'
+        if has_create_heading_func
+          let a:context.heading_index = idx - 1
+          let a:context.matched_index = idx
+          let heading = a:outline_info.create_heading('heading+1', prev_line, line, a:context)
+          if heading != ""
+            call add(headings, [heading, prev_line, idx - 1])
+          endif
+        else
+          call add(headings, [prev_line, prev_line, idx - 1])
+        endif
+      endif
+    endif
+
+    if len(headings) > g:unite_source_outline_max_headings
+      call unite#print_error("unite-outline: too many headings, discarded the rest")
+      break
+    endif
+    let idx += 1
+  endwhile
+
+  return headings
 endfunction
 
 function! s:skip_while(pattern, lines, idx)
