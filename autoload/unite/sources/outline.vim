@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-29
+" Updated : 2010-12-30
 " Version : 0.1.9
 " License : MIT license {{{
 "
@@ -36,30 +36,17 @@ endfunction
 
 let s:outline_info_ftime = {}
 
-function! unite#sources#outline#get_outline_info(filetype, ...)
-  if a:0
-    let start_filetype = a:1
-    if a:filetype == start_filetype
-      throw "unite-outline: cyclic alias definitions for '" . start_filetype . "'"
-    endif
-  else
-    let start_filetype = a:filetype
-  endif
-  if has_key(g:unite_source_outline_info, a:filetype)
-    if type(g:unite_source_outline_info[a:filetype]) == type("")
-      " resolve the alias
-      let src_filetype = g:unite_source_outline_info[a:filetype]
-      return unite#sources#outline#get_outline_info(src_filetype, start_filetype)
-    else
-      return g:unite_source_outline_info[a:filetype]
-    endif
+function! unite#sources#outline#get_outline_info(filetype)
+  let filetype = s:resolve_filetype(a:filetype)
+  if has_key(g:unite_source_outline_info, filetype)
+    return g:unite_source_outline_info[filetype]
   else
     let tries = [
           \ 'unite#sources#outline#%s#outline_info()',
           \ 'unite#sources#outline#defaults#%s#outline_info()',
           \ ]
     for funcall_fmt in tries
-      let load_funcall = printf(funcall_fmt, a:filetype)
+      let load_funcall = printf(funcall_fmt, filetype)
       try
         execute 'let outline_info = ' . load_funcall
       catch /^Vim\%((\a\+)\)\=:E117:/
@@ -68,19 +55,37 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
       endtry
       " if the outline info has been updated since the last time it was
       " sourced, re-source and update it
-      let oinfo_file = s:find_outline_info_file(a:filetype)
+      let oinfo_file = s:find_outline_info_file(filetype)
       if oinfo_file != ""
         let ftime = getftime(oinfo_file)
-        if has_key(s:outline_info_ftime, a:filetype) && ftime > s:outline_info_ftime[a:filetype]
+        if has_key(s:outline_info_ftime, filetype) && ftime > s:outline_info_ftime[filetype]
           source `=oinfo_file`
           execute 'let outline_info = ' . load_funcall
         endif
-        let s:outline_info_ftime[a:filetype] = ftime
+        let s:outline_info_ftime[filetype] = ftime
       endif
       return outline_info
     endfor
   endif
   return {}
+endfunction
+
+function! s:resolve_filetype(filetype, ...)
+  if a:0
+    let start_filetype = a:1
+    if a:filetype == start_filetype
+      throw "unite-outline: cyclic alias definitions for '" . start_filetype . "'"
+    endif
+  else
+    let start_filetype = a:filetype
+  endif
+  if has_key(g:unite_source_outline_info, a:filetype) &&
+        \ type(g:unite_source_outline_info[a:filetype]) == type("")
+    " 1 more hop
+    let filetype = g:unite_source_outline_info[a:filetype]
+    return s:resolve_filetype(filetype, start_filetype)
+  endif
+  return a:filetype
 endfunction
 
 function! s:find_outline_info_file(filetype)
