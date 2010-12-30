@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-30
+" Updated : 2010-12-31
 " Version : 0.2.0
 " License : MIT license {{{
 "
@@ -208,9 +208,10 @@ function! s:source.gather_candidates(args, context)
     endif
 
     let is_force = ((len(a:args) > 0 && a:args[0] == '!') || a:context.is_redraw)
+    let cache = unite#sources#outline#_cache#instance()
     let path = s:buffer.path
-    if s:cache.has(path) && !is_force
-      return s:cache.read(path)
+    if cache.has(path) && !is_force
+      return cache.read(path)
     endif
 
     let filetype = s:buffer.filetype
@@ -259,7 +260,7 @@ function! s:source.gather_candidates(args, context)
 
     let is_volatile = has_key(outline_info, 'is_volatile') && outline_info.is_volatile
     if !is_volatile && (num_lines > g:unite_source_outline_cache_limit)
-      call s:cache.write(path, cands)
+      call cache.write(path, cands)
     endif
 
     if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
@@ -613,37 +614,5 @@ endfunction
 
 let s:source.action_table.jump_list = s:action_table
 unlet s:action_table
-
-"-----------------------------------------------------------------------------
-" Cache
-
-let s:cache = { 'data': {} }
-
-function! s:cache.has(path)
-  return has_key(self.data, a:path)
-endfunction
-
-function! s:cache.read(path)
-  let item = self.data[a:path]
-  let item.touched = localtime()
-  return item.candidates
-endfunction
-
-function! s:cache.write(path, cands)
-  let self.data[a:path] = {
-        \ 'candidates': a:cands,
-        \ 'touched'   : localtime(),
-        \ }
-  if len(self.data) > g:unite_source_outline_cache_buffers
-    let oldest = sort(items(self.data), 's:compare_timestamp')[0]
-    unlet self.data[oldest[0]]
-  endif
-endfunction
-
-function! s:compare_timestamp(item1, item2)
-  let t1 = a:item1[1].touched
-  let t2 = a:item2[1].touched
-  return t1 == t2 ? 0 : t1 > t2 ? 1 : -1
-endfunction
 
 " vim: filetype=vim
