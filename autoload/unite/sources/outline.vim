@@ -242,9 +242,8 @@ function! s:source.gather_candidates(args, context)
       call outline_info.finalize(context)
     endif
 
-    let has_create_heading_func = has_key(outline_info, 'create_heading')
     let cands = map(headings, '{
-          \ "word"  : (has_create_heading_func ? v:val[0] : s:normalize_indent(v:val[0])),
+          \ "word"  : s:normalize_heading(v:val[0], outline_info),
           \ "source": "outline",
           \ "kind"  : "jump_list",
           \ "action__path"     : path,
@@ -457,6 +456,14 @@ function! s:skip_to(pattern, lines, idx)
     let idx += 1
   endwhile
   return idx + 1
+endfunction
+
+function! s:normalize_heading(heading, outline_info)
+  let heading = a:heading
+  if has_key(a:outline_info, 'create_heading')
+    let heading = s:normalize_indent(heading)
+  endif
+  return heading
 endfunction
 
 function! s:normalize_indent(str)
