@@ -33,17 +33,17 @@ endfunction
 " singleton
 let s:cache = { 'data': {} }
 
-function! s:cache.has(path)
+function! s:cache.has_data(path)
   return has_key(self.data, a:path)
 endfunction
 
-function! s:cache.read(path)
+function! s:cache.get_data(path)
   let item = self.data[a:path]
   let item.touched = localtime()
   return item.candidates
 endfunction
 
-function! s:cache.write(path, cands)
+function! s:cache.set_data(path, cands)
   let self.data[a:path] = {
         \ 'candidates': a:cands,
         \ 'touched'   : localtime(),

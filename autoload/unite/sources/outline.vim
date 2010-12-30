@@ -210,8 +210,8 @@ function! s:source.gather_candidates(args, context)
     let is_force = ((len(a:args) > 0 && a:args[0] == '!') || a:context.is_redraw)
     let cache = unite#sources#outline#_cache#instance()
     let path = s:buffer.path
-    if cache.has(path) && !is_force
-      return cache.read(path)
+    if cache.has_data(path) && !is_force
+      return cache.get_data(path)
     endif
 
     let filetype = s:buffer.filetype
@@ -260,7 +260,7 @@ function! s:source.gather_candidates(args, context)
 
     let is_volatile = has_key(outline_info, 'is_volatile') && outline_info.is_volatile
     if !is_volatile && (num_lines > g:unite_source_outline_cache_limit)
-      call cache.write(path, cands)
+      call cache.set_data(path, cands)
     endif
 
     if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
