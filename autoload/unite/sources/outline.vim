@@ -217,7 +217,7 @@ function! s:source.gather_candidates(args, context)
     let filetype = s:buffer.filetype
     let outline_info = unite#sources#outline#get_outline_info(filetype)
     if empty(outline_info)
-      call unite#print_error("unite-outline: not supported filetype: " . filetype)
+      call unite#util#print_error("unite-outline: not supported filetype: " . filetype)
       return []
     endif
     call s:normalize_outline_info(outline_info)
@@ -271,8 +271,8 @@ function! s:source.gather_candidates(args, context)
 
     return cands
   catch
-    call unite#print_error(v:throwpoint)
-    call unite#print_error(v:exception)
+    call unite#util#print_error(v:throwpoint)
+    call unite#util#print_error(v:exception)
     return []
   finally
     let &ignorecase = save_ignorecase
@@ -437,7 +437,7 @@ function! s:extract_headings()
     endif
 
     if len(headings) > g:unite_source_outline_max_headings
-      call unite#print_error("unite-outline: too many headings, discarded the rest")
+      call unite#util#print_error("unite-outline: too many headings, discarded the rest")
       break
     endif
     let s:line_idx += 1
@@ -538,7 +538,7 @@ function! s:action_table.preview.func(candidate)
   " all, so prohibit it.
   let bufnr = bufnr(unite#util#escape_file_searching(cand.action__path))
   if getbufvar(bufnr, '&buftype') =~# '\<nofile\>'
-    call unite#print_error("unite-outline: can't preview nofile buffer")
+    call unite#util#print_error("unite-outline: can't preview nofile buffer")
     return
   endif
 
