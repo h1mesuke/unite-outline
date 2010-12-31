@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-31
+" Updated : 2011-01-01
 " Version : 0.2.0
 " License : MIT license {{{
 "
@@ -152,6 +152,7 @@ let s:default_alias_map = [
       \ ['cfg',      'dosini'  ],
       \ ['mkd',      'markdown'],
       \ ['plaintex', 'tex'     ],
+      \ ['snippet',  'conf'    ],
       \ ['xhtml',    'html'    ],
       \ ['zsh',      'sh'      ],
       \]
