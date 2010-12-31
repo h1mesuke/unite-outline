@@ -203,7 +203,7 @@ function! s:source.gather_candidates(args, context)
   set noignorecase
 
   try
-    if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
+    if has("reltime") && exists('g:unite_source_outline_profile') && g:unite_source_outline_profile
       let start_time = reltime()
     endif
 
@@ -263,10 +263,10 @@ function! s:source.gather_candidates(args, context)
       call cache.set_data(path, cands)
     endif
 
-    if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
+    if has("reltime") && exists('g:unite_source_outline_profile') && g:unite_source_outline_profile
       let used_time = split(reltimestr(reltime(start_time)))[0]
-      let phl = str2float(used_time) * (100.0 / num_lines)
-      echomsg "unite-outline: used=" . used_time . "s, 100l=". string(phl) . "s"
+      let per_100_lines = str2float(used_time) * (str2float("100") / num_lines)
+      echomsg "unite-outline: used=" . used_time . "s, 100l=". string(per_100_lines) . "s"
     endif
 
     return cands
