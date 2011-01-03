@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-03
+" Updated : 2011-01-04
 " Version : 0.2.0
 " License : MIT license {{{
 "
@@ -527,8 +527,30 @@ function! s:source.calc_signature(lnum, ...)
   endif
   let backward = filter(backward, 'v:val =~ "\\S"')[-precision-1 : -2]
   let forward  = filter(forward,  'v:val =~ "\\S"')[1 : precision]
-  return join(map(backward + forward, 'v:val[0:99]'))
+  return join(map(backward + forward, 's:digest_line(v:val)'), '')
 endfunction
+
+" quick and dirty digest
+function! s:digest_line(line)
+  let line = substitute(a:line, '\s*', '', 'g')
+  if s:strchars(line) <= 20
+    let digest = line
+  else
+    let line = matchstr(line, '^\(\%(.\{5}\)\{,20}\)')
+    let digest = substitute(line, '\(.\).\{4}', '\1', 'g')
+  endif
+  return digest
+endfunction
+
+if v:version >= 703
+  function! s:strchars(str)
+    return strchars(a:str)
+  endfunction
+else
+  function! s:strchars(str)
+    return strlen(substitute(a:str, '.', 'c', 'g'))
+  endfunction
+endif
 
 "---------------------------------------
 " Actions
