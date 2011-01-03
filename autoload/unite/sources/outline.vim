@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-01
+" Updated : 2011-01-03
 " Version : 0.2.0
 " License : MIT license {{{
 "
@@ -145,6 +145,10 @@ if !exists('g:unite_source_outline_cache_limit')
   let g:unite_source_outline_cache_limit = 100
 endif
 
+if !exists('g:unite_source_outline_profile')
+  let g:unite_source_outline_profile = 0
+endif
+
 "-----------------------------------------------------------------------------
 " Aliases
 
@@ -204,8 +208,8 @@ function! s:source.gather_candidates(args, context)
   set noignorecase
 
   try
-    if has("reltime") && exists('g:unite_source_outline_profile') && g:unite_source_outline_profile
-      let start_time = reltime()
+    if g:unite_source_outline_profile && has("reltime")
+      let start_time = s:get_time()
     endif
 
     let is_force = ((len(a:args) > 0 && a:args[0] == '!') || a:context.is_redraw)
@@ -264,10 +268,10 @@ function! s:source.gather_candidates(args, context)
       call cache.set_data(path, cands)
     endif
 
-    if has("reltime") && exists('g:unite_source_outline_profile') && g:unite_source_outline_profile
-      let used_time = split(reltimestr(reltime(start_time)))[0]
-      let per_100_lines = str2float(used_time) * (str2float("100") / num_lines)
-      echomsg "unite-outline: used=" . used_time . "s, 100l=". string(per_100_lines) . "s"
+    if g:unite_source_outline_profile && has("reltime")
+      let used_time = s:get_time() - start_time
+      let used_time_100l = used_time * (str2float("100") / num_lines)
+      echomsg "unite-outline: used=" . string(used_time) . "s, 100l=". string(used_time_100l) . "s"
     endif
 
     return cands
@@ -278,6 +282,10 @@ function! s:source.gather_candidates(args, context)
   finally
     let &ignorecase = save_ignorecase
   endtry
+endfunction
+
+function! s:get_time()
+  return str2float(reltimestr(reltime()))
 endfunction
 
 function! s:normalize_outline_info(outline_info)
