@@ -137,12 +137,37 @@ if !exists('g:unite_source_outline_max_headings')
   let g:unite_source_outline_max_headings = 1000
 endif
 
+if !exists('g:unite_source_outline_cache_dir')
+  let here = expand('<sfile>:p:h')
+  let g:unite_source_outline_cache_dir = here . '/outline/.cache'
+else
+  let g:unite_source_outline_cache_dir = unite#util#substitute_path_separator(
+        \ substitute(g:unite_source_outline_cache_dir, '/$', '', ''))
+endif
+if !exists('*mkdir')
+  let g:unite_source_outline_cache_dir = ''
+endif
+if g:unite_source_outline_cache_dir != '' && !isdirectory(g:unite_source_outline_cache_dir)
+  try
+    call mkdir(g:unite_source_outline_cache_dir, 'p')
+  catch
+    call unite#util#print_error("unite-outline: could not create the cache directory")
+    let g:unite_source_outline_cache_dir = ''
+  endtry
+endif
+lockvar g:unite_source_outline_cache_dir
+
 if !exists('g:unite_source_outline_cache_buffers')
   let g:unite_source_outline_cache_buffers = 20
+  let s:cache_serialize_buffers = g:unite_source_outline_cache_buffers
 endif
 
 if !exists('g:unite_source_outline_cache_limit')
   let g:unite_source_outline_cache_limit = 100
+endif
+
+if !exists('g:unite_source_outline_cache_serialize_limit')
+  let g:unite_source_outline_cache_serialize_limit = 1000
 endif
 
 if !exists('g:unite_source_outline_profile')
