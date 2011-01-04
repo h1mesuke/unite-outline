@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-18
+" Updated : 2011-01-04
 " Version : 0.2.0
 " License : MIT license {{{
 "
@@ -145,6 +145,12 @@ let s:shared_patterns = {
 function! unite#sources#outline#util#shared_pattern(filetype, which)
   let ft_patterns = s:shared_patterns[a:filetype]
   return ft_patterns[a:which]
+endfunction
+
+function! unite#sources#outline#util#print_debug(msg)
+  if exists('g:unite_source_outline_debug') && g:unite_source_outline_debug
+    echomsg "unite-outline: " . a:msg
+  endif
 endfunction
 
 " vim: filetype=vim
