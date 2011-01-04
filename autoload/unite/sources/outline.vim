@@ -169,10 +169,6 @@ if !exists('g:unite_source_outline_cache_serialize_limit')
   let g:unite_source_outline_cache_serialize_limit = 1000
 endif
 
-if !exists('g:unite_source_outline_profile')
-  let g:unite_source_outline_profile = 0
-endif
-
 "-----------------------------------------------------------------------------
 " Aliases
 
@@ -232,7 +228,7 @@ function! s:source.gather_candidates(args, context)
   set noignorecase
 
   try
-    if g:unite_source_outline_profile && has("reltime")
+    if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
       let start_time = s:get_time()
     endif
 
@@ -293,7 +289,7 @@ function! s:source.gather_candidates(args, context)
       call cache.set_data(path, cands, should_serialize)
     endif
 
-    if g:unite_source_outline_profile && has("reltime")
+    if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
       let used_time = s:get_time() - start_time
       let used_time_100l = used_time * (str2float("100") / num_lines)
       echomsg "unite-outline: used=" . string(used_time) . "s, 100l=". string(used_time_100l) . "s"
