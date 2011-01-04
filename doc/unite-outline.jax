@@ -1,7 +1,7 @@
 *unite-outline.txt*	ファイルの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2010-12-29
+Updated : 2011-01-04
 Version : 0.2.0
 License : MIT license {{{
 
@@ -134,6 +134,15 @@ g:unite_source_outline_max_headings	*g:unite_source_outline_max_headings*
 
 	初期値は 1000
 
+g:unite_source_outline_cache_dir	*g:unite_source_outline_cache_dir*
+
+	見出しのキャッシュが保存されるディレクトリ
+	空文字列を設定するとキャッシュはファイルに保存されません。
+	見出しのキャッシュがファイルに保存される条件については
+	|g:unite_source_outline_cache_serialize|を参照して下さい。
+
+	初期値は "{install-dir}/autoload/unite/sources/outline/.cache"
+
 g:unite_source_outline_cache_buffers	*g:unite_source_outline_cache_buffers*
 
 	見出しをキャッシュするバッファ数の上限
@@ -148,6 +157,16 @@ g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
 	キャッシュします。
 
 	初期値は 100
+
+g:unite_source_outline_cache_serialize limit
+				*g:unite_source_outline_cache_serialize_limit*
+	見出しをキャッシュするバッファの行数しきい値
+	見出し抽出の対象ファイルの行数がこの値より大きい場合、抽出した見出しを
+	キャッシュするとともに、ファイルに保存します。
+	キャッシュがファイルに保存されると、Vim の再起動後もそのファイルから見
+	出しを読み込むため、見出し一覧の表示が初回から高速になります。
+
+	初期値は 1000
 
 ==============================================================================
 Outline Info					*unite-outline-info*
@@ -443,16 +462,29 @@ unite#sources#outline#util#nr2roman({nr})
 ==============================================================================
 TODO						*unite-outline-todo*
 
-	* 対応ファイルタイプの充実
+	* outline info 2.0
+
+		outline info の create_heading()関数の返値を辞書とするような仕
+		様を考案中。見出しレベルや見出しの種類（コメントであるなど）を
+		辞書の属性として設定するようなものになる予定。後方互換のため、
+		これまで通り文字列を返すのも可とする。
+
+	* C, C++, Java, D などの outline info
+
+		作者がスクリプト言語ばっかりやってる影響で対応が遅れています。
+		なんとかしなければ。
+
 	* 英語ヘルプ
 
-	対応ファイルタイプの充実はぼちぼちやっていこうと考えていますが、
+	* 対応ファイルタイプの充実
 
-	あるファイルタイプにおける妥当な見出し抽出を実現するには、そのファイル
-	タイプに対する知見がどうしても必要なため、自分が普段使っていない言語に
-	ついては対応が後手にまわっています。
+		対応ファイルタイプの充実はぼちぼちやっていこうと考えていますが、
 
-	そこで↓
+		あるファイルタイプにおける妥当な見出し抽出を実現するには、その
+		ファイルタイプに対する知見がどうしても必要なため、作者が普段使
+		っていない言語については対応が後手にまわっています。
+
+		そこで↓
 
 ------------------------------------------------------------------------------
 outline info 募集！
@@ -476,5 +508,11 @@ outline info 募集！
 更新履歴					*unite-outline-changelog*
 
 https://github.com/h1mesuke/unite-outline/commits/master
+
+0.2.1	2011-01-04
+	- キャッシュの一部永続化を実装
+	- キャッシュの永続化を制御するための以下の変数を追加
+	  - |g:unite_source_outline_cache_dir|
+	  - |g:unite_source_outline_cache_serialize_limit|
 
 vim:tw=78:ts=8:ft=help:norl:noet:ai
