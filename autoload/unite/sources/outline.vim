@@ -159,7 +159,6 @@ lockvar g:unite_source_outline_cache_dir
 
 if !exists('g:unite_source_outline_cache_buffers')
   let g:unite_source_outline_cache_buffers = 20
-  let s:cache_serialize_buffers = g:unite_source_outline_cache_buffers
 endif
 
 if !exists('g:unite_source_outline_cache_limit')
@@ -290,7 +289,8 @@ function! s:source.gather_candidates(args, context)
 
     let is_volatile = has_key(outline_info, 'is_volatile') && outline_info.is_volatile
     if !is_volatile && (num_lines > g:unite_source_outline_cache_limit)
-      call cache.set_data(path, cands)
+      let should_serialize = (num_lines > g:unite_source_outline_cache_serialize_limit)
+      call cache.set_data(path, cands, should_serialize)
     endif
 
     if g:unite_source_outline_profile && has("reltime")
