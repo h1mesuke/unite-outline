@@ -59,8 +59,10 @@ function! s:load_cache_file(path)
   try
     let cache_file = s:cache_file_path(a:path)
     let dumped_data = readfile(cache_file)[0]
+    call unite#sources#outline#util#print_debug("[LOADED] cache file: " . cache_file)
     " update the timestamp of the file
     call writefile([dumped_data], cache_file)
+    call unite#sources#outline#util#print_debug("[TOUCHED] cache file: " . cache_file)
     return eval(dumped_data)
   catch
     call unite#util#print_error(
@@ -96,6 +98,7 @@ function! s:save_cache_file(path, data)
     if !isdirectory(dir) | call mkdir(dir, 'p') | endif
     let dumped_data = string(a:data)
     call writefile([dumped_data], cache_file)
+    call unite#sources#outline#util#print_debug("[SAVED] cache file: " . cache_file)
   catch
     call unite#util#print_error(
           \ "unite-outline: could not save the cache to: " . cache_file)
@@ -127,6 +130,7 @@ endif
 function! s:delete_cache_file(path)
   try
     call delete(a:path)
+    call unite#sources#outline#util#print_debug("[DELETED] cache {FILE}: " . a:path)
   catch
     call unite#util#print_error(
           \ "unite-outline: could not delete the cache file: " . a:path)
@@ -141,13 +145,14 @@ function! s:delete_empty_dirs(path)
       break
     endif
     call s:delete_dir(dir)
-    let dir = fnamemodify(a:path, ':p:h'))
+    let dir = fnamemodify(dir, ':p:h')
   endwhile
 endfunction
 
 function! s:delete_dir(path)
   try
     call system(s:rmdir_command . ' "' . a:path . '"')
+    call unite#sources#outline#util#print_debug("[DELETED] empty {DIR}: " . a:path)
   catch
     call unite#util#print_error(
           \ "unite-outline: could not delete the directory: " . a:path)
