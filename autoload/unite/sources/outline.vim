@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-04
+" Updated : 2011-01-05
 " Version : 0.2.1
 " License : MIT license {{{
 "
@@ -158,7 +158,7 @@ endif
 lockvar g:unite_source_outline_cache_dir
 
 if !exists('g:unite_source_outline_cache_buffers')
-  let g:unite_source_outline_cache_buffers = 20
+  let g:unite_source_outline_cache_buffers = 50
 endif
 
 if !exists('g:unite_source_outline_cache_limit')
