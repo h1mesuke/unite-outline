@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-04
+" Updated : 2011-01-05
 " Version : 0.2.1
 " License : MIT license {{{
 "
@@ -34,11 +34,28 @@ endfunction
 let s:cache = { 'data': {} }
 
 function! s:cache.has_data(path)
-  return has_key(self.data, a:path) || s:exists_cache_file(a:path)
+  return (has_key(self.data, a:path) || s:exists_cache_file(a:path))
 endfunction
 
 function! s:exists_cache_file(path)
-  return (g:unite_source_outline_cache_dir != '' && filereadable(s:cache_file_path(a:path)))
+  return (s:check_cache_dir() && filereadable(s:cache_file_path(a:path)))
+endfunction
+
+function! s:check_cache_dir()
+  if g:unite_source_outline_cache_dir == '' || !exists('*mkdir')
+    return 0
+  endif
+  let g:unite_source_outline_cache_dir = unite#util#substitute_path_separator(
+        \ substitute(g:unite_source_outline_cache_dir, '/$', '', ''))
+  if !isdirectory(g:unite_source_outline_cache_dir)
+    try
+      call mkdir(g:unite_source_outline_cache_dir, 'p')
+    catch
+      call unite#util#print_error("unite-outline: could not create the cache directory")
+      return 0
+    endtry
+  endif
+  return 1
 endfunction
 
 function! s:cache_file_path(path)
@@ -86,7 +103,7 @@ function! s:cache.set_data(path, cands, should_serialize)
       unlet self.data[path]
     endfor
   endif
-  if a:should_serialize && g:unite_source_outline_cache_dir != ''
+  if a:should_serialize && s:check_cache_dir()
     call s:save_cache_file(a:path, self.data[a:path])
   endif
 endfunction
@@ -121,12 +138,6 @@ function! s:cleanup_old_cache_files()
   endif
 endfunction
 
-if unite#util#is_win() && !executable('rm')
-  let s:rmdir_command = 'rmdir /Q /S $srcs'
-else
-  let s:rmdir_command = 'rm -r $srcs'
-endif
-
 function! s:delete_cache_file(path)
   try
     call delete(a:path)
@@ -148,6 +159,12 @@ function! s:delete_empty_dirs(path)
     let dir = fnamemodify(dir, ':p:h')
   endwhile
 endfunction
+
+if unite#util#is_win() && !executable('rm')
+  let s:rmdir_command = 'rmdir /Q /S $srcs'
+else
+  let s:rmdir_command = 'rm -r $srcs'
+endif
 
 function! s:delete_dir(path)
   try
