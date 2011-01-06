@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-05
+" Updated : 2011-01-07
 " Version : 0.2.1
 " License : MIT license {{{
 "
@@ -250,8 +250,6 @@ function! s:source.gather_candidates(args, context)
     endif
 
     " extract headings
-    let s:line_idx = 0
-    call s:skip_header()
     let headings = s:extract_headings()
 
     " finalize the outline info
@@ -259,13 +257,14 @@ function! s:source.gather_candidates(args, context)
       call outline_info.finalize(s:context)
     endif
 
+    " headings -> candidates
     let cands = map(headings, '{
-          \ "word"  : s:normalize_heading(v:val[0]),
+          \ "word"  : v:val.heading,
           \ "source": "outline",
           \ "kind"  : "jump_list",
           \ "action__path"     : path,
-          \ "action__pattern"  : "^" . s:escape_regexp(v:val[1]) . "$",
-          \ "action__signature": self.calc_signature(v:val[2] + 1, s:buffer.lines),
+          \ "action__pattern"  : "^" . v:val.heading_line . "$",
+          \ "action__signature": self.calc_signature(v:val.heading_index + 1, s:buffer.lines),
           \ }')
 
     let is_volatile = has_key(outline_info, 'is_volatile') && outline_info.is_volatile
@@ -358,6 +357,9 @@ endfunction
 
 function! s:extract_headings()
   let outline_info = s:context.outline_info
+  let s:line_idx = 0
+
+  call s:skip_header()
 
   let skip_block = has_key(outline_info, 'skip') && has_key(outline_info.skip, 'block')
   if skip_block
@@ -396,11 +398,11 @@ function! s:extract_headings()
           let s:context.heading_index = s:line_idx + 1
           let s:context.matched_index = s:line_idx
           let heading = outline_info.create_heading('heading-1', next_line, line, s:context)
-          if heading != ""
-            call add(headings, [heading, next_line, s:line_idx + 1])
-          endif
         else
-          call add(headings, [next_line, next_line, s:line_idx + 1])
+          let heading = next_line
+        endif
+        if !empty(heading)
+          call add(headings, s:normalize_heading(heading, next_line, s:line_idx + 1))
         endif
       elseif next_line =~ '\S' && s:line_idx < num_lines - 4
         " see one more next
@@ -410,11 +412,11 @@ function! s:extract_headings()
             let s:context.heading_index = s:line_idx + 2
             let s:context.matched_index = s:line_idx
             let heading = outline_info.create_heading('heading-1', next_line, line, s:context)
-            if heading != ""
-              call add(headings, [heading, next_line, s:line_idx + 2])
-            endif
           else
-            call add(headings, [next_line, next_line, s:line_idx + 2])
+            let heading = next_line
+          endif
+          if !empty(heading)
+            call add(headings, s:normalize_heading(heading, next_line, s:line_idx + 2))
           endif
         endif
         let s:line_idx += 1
@@ -427,11 +429,11 @@ function! s:extract_headings()
         let s:context.heading_index = s:line_idx
         let s:context.matched_index = s:line_idx
         let heading = outline_info.create_heading('heading', line, line, s:context)
-        if heading != ""
-          call add(headings, [heading, line, s:line_idx])
-        endif
       else
-        call add(headings, [line, line, s:line_idx])
+        let heading = line
+      endif
+      if !empty(heading)
+        call add(headings, s:normalize_heading(heading, line, s:line_idx))
       endif
 
     elseif has_heading_next_pattern && line =~# heading_next_pattern && s:line_idx > 0
@@ -442,11 +444,11 @@ function! s:extract_headings()
           let s:context.heading_index = s:line_idx - 1
           let s:context.matched_index = s:line_idx
           let heading = outline_info.create_heading('heading+1', prev_line, line, s:context)
-          if heading != ""
-            call add(headings, [heading, prev_line, s:line_idx - 1])
-          endif
         else
-          call add(headings, [prev_line, prev_line, s:line_idx - 1])
+          let heading = prev_line
+        endif
+        if !empty(heading)
+          call add(headings, s:normalize_heading(heading, prev_line, s:line_idx - 1))
         endif
       endif
     endif
@@ -485,12 +487,22 @@ function! s:skip_to(pattern)
   endwhile
 endfunction
 
-function! s:normalize_heading(heading)
-  let outline_info = s:context.outline_info
-  let heading = a:heading
-  if has_key(outline_info, 'create_heading')
-    let heading = s:normalize_indent(heading)
+function! s:normalize_heading(heading, heading_line, heading_index)
+  if type(a:heading) == type("")
+    " normalize to a Dictionary
+    let heading = {
+          \ 'heading': s:normalize_indent(a:heading),
+          \ 'level'  : unite#sources#outline#util#get_indent_level(a:heading_line, s:context),
+          \ }
+  else
+    let heading = a:heading
   endif
+  call extend(heading, {
+        \ 'heading'      : a:heading_line,
+        \ 'level'        : 1,
+        \ 'type'         : 'generic',
+        \ 'heading_line' : a:heading_line,
+        \ 'heading_index': a:heading_index }, 'keep')
   return heading
 endfunction
 
