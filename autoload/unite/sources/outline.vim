@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-07
+" Updated : 2011-01-08
 " Version : 0.2.1
 " License : MIT license {{{
 "
@@ -257,14 +257,16 @@ function! s:source.gather_candidates(args, context)
       call outline_info.finalize(s:context)
     endif
 
+    let levels = s:shift_levels(headings)
+
     " headings -> candidates
     let cands = map(headings, '{
-          \ "word"  : v:val.heading,
+          \ "word"  : unite#sources#outline#util#indent(v:val["heading"], levels[v:key]),
           \ "source": "outline",
           \ "kind"  : "jump_list",
           \ "action__path"     : path,
-          \ "action__pattern"  : "^" . v:val.heading_line . "$",
-          \ "action__signature": self.calc_signature(v:val.heading_index + 1, s:buffer.lines),
+          \ "action__pattern"  : "^" . s:escape_regexp(v:val["line"]) . "$",
+          \ "action__signature": self.calc_signature(v:val["line_idx"] + 1, s:buffer.lines),
           \ }')
 
     let is_volatile = has_key(outline_info, 'is_volatile') && outline_info.is_volatile
@@ -315,6 +317,7 @@ function! s:normalize_outline_info(outline_info)
       let a:outline_info.skip.block = s:normalize_block_patterns(a:outline_info.skip.block)
     endif
   endif
+  call extend(a:outline_info, { 'level_shift': 'smooth' }, 'keep')
 endfunction
 
 function! s:normalize_block_patterns(patterns)
@@ -487,42 +490,80 @@ function! s:skip_to(pattern)
   endwhile
 endfunction
 
-function! s:normalize_heading(heading, heading_line, heading_index)
+function! s:normalize_heading(heading, line, line_idx)
   if type(a:heading) == type("")
     " normalize to a Dictionary
     let heading = {
-          \ 'heading': s:normalize_indent(a:heading),
-          \ 'level'  : unite#sources#outline#util#get_indent_level(a:heading_line, s:context),
+          \ 'heading': a:heading,
+          \ 'level'  : unite#sources#outline#util#get_indent_level(a:heading, s:context),
           \ }
   else
     let heading = a:heading
   endif
   call extend(heading, {
-        \ 'heading'      : a:heading_line,
-        \ 'level'        : 1,
-        \ 'type'         : 'generic',
-        \ 'heading_line' : a:heading_line,
-        \ 'heading_index': a:heading_index }, 'keep')
+        \ 'heading' : a:line,
+        \ 'level'   : 1,
+        \ 'type'    : 'generic',
+        \ 'line'    : a:line,
+        \ 'line_idx': a:line_idx }, 'keep')
+  " normalize whitespaces
+  let hd = heading.heading
+  let hd = substitute(substitute(hd, '^\s*', '', ''), '\s*$', '', '')
+  let hd = substitute(hd, '\s\+', ' ', 'g')
+  let heading.heading = hd 
   return heading
 endfunction
 
-function! s:normalize_indent(str)
-  let str = a:str
-  let sw = s:buffer.shiftwidth
-  let ts = s:buffer.tabstop
-  " expand leading tabs
-  let lead_tabs = matchstr(str, '^\t\+')
-  let ntab = strlen(lead_tabs)
-  if ntab > 0
-    let str =  substitute(str, '^\t\+', repeat(' ', ntab * ts), '')
+function! s:shift_levels(headings)
+  let shift_method = s:context.outline_info.level_shift
+  let levels = map(copy(a:headings), 'v:val["level"]')
+  if shift_method ==# 'shift'
+    let shift = min(levels) - 1
+    call map(levels, 'v:val - shift')
+  elseif shift_method ==# 'smooth'
+    let levels = s:smooth_levels(levels)
+  elseif shift_method ==# 'none'
   endif
-  " normalize indent
-  let indent = matchstr(str, '^\s\+')
-  let level = strlen(indent) / sw + 1
-  if level > 0
-    let str =  substitute(str, '^\s\+', unite#sources#outline#util#indent(level), '')
-  endif
-  return str
+  return levels
+endfunction
+
+function! s:smooth_levels(levels)
+  return s:_smooth_levels(a:levels, 1)
+endfunction
+
+function! s:_smooth_levels(levels, base_level)
+  let splitted = s:split_list(a:levels, a:base_level)
+  for sub_levels in splitted
+    let shift = min(sub_levels) - a:base_level - 1
+    call map(sub_levels, 'v:val - shift')
+  endfor
+  call map(splitted, 'empty(v:val) ? v:val : s:_smooth_levels(v:val, a:base_level + 1)')
+  return s:join_list(splitted, a:base_level)
+endfunction
+
+function! s:split_list(list, sep)
+  let result = []
+  let sub_list = []
+  for value in a:list
+    if value == a:sep
+      call add(result, sub_list)
+      let sub_list = []
+    else
+      call add(sub_list, value)
+    endif
+  endfor
+  call add(result, sub_list)
+  return result
+endfunction
+
+function! s:join_list(lists, sep)
+  let result = []
+  for sub_list in a:lists
+    let result += sub_list
+    let result += [a:sep]
+  endfor
+  call remove(result, -1)
+  return result
 endfunction
 
 function! s:escape_regexp(str)
