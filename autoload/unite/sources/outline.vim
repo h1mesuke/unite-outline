@@ -326,6 +326,7 @@ endfunction
 
 function! s:skip_header()
   let outline_info = s:context.outline_info
+  let lines = s:buffer.lines | let num_lines = len(lines)
 
   if has_key(outline_info, 'skip_header')
     let s:line_idx = outline_info.skip_header(lines, s:context)
@@ -340,8 +341,6 @@ function! s:skip_header()
       let header_beg_pattern = outline_info.skip.header.block.begin
       let header_end_pattern = outline_info.skip.header.block.end
     endif
-
-    let lines = s:buffer.lines | let num_lines = len(lines)
 
     while s:line_idx < num_lines
       let line = lines[s:line_idx]
@@ -470,11 +469,11 @@ function! s:skip_while(pattern)
   let lines = s:buffer.lines | let num_lines = len(lines)
   let s:line_idx += 1
   while s:line_idx < num_lines
-    let s:line_idx += 1
     let line = lines[s:line_idx]
     if line !~# a:pattern
       break
     endif
+    let s:line_idx += 1
   endwhile
 endfunction
 
@@ -482,11 +481,11 @@ function! s:skip_to(pattern)
   let lines = s:buffer.lines | let num_lines = len(lines)
   let s:line_idx += 1
   while s:line_idx < num_lines
-    let s:line_idx += 1
     let line = lines[s:line_idx]
     if line =~# a:pattern
       break
     endif
+    let s:line_idx += 1
   endwhile
 endfunction
 
