@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-08
+" Updated : 2011-01-09
 " Version : 0.2.1
 " License : MIT license {{{
 "
@@ -527,7 +527,7 @@ function! s:shift_levels(headings)
 endfunction
 
 function! s:smooth_levels(levels)
-  return s:_smooth_levels(a:levels, 1)
+  return s:_smooth_levels(a:levels, 0)
 endfunction
 
 function! s:_smooth_levels(levels, base_level)
