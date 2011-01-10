@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/scheme.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-10
+" Updated : 2011-01-11
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for Scheme
-" Version: 0.0.2
+" Version: 0.0.2 (draft)
 
 function! unite#sources#outline#defaults#scheme#outline_info()
   return s:outline_info
@@ -18,7 +18,7 @@ endfunction
 let s:outline_info = {
       \ 'heading-1': '^\s*;\+\s*[-=]\{10,}\s*$',
       \ 'heading'  : '^\s*(define\>',
-      \ 'skip'     : { 'header': '^;' },
+      \ 'skip': { 'header': '^;' },
       \}
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
