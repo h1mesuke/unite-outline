@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-09
+" Updated : 2011-01-10
 " Version : 0.3.0
 " License : MIT license {{{
 "
@@ -85,7 +85,8 @@ function! s:load_cache_file(path)
     " update the timestamp of the file
     call writefile([dumped_data], cache_file)
     call unite#sources#outline#util#print_debug("[TOUCHED] cache file: " . cache_file)
-    return eval(dumped_data)
+    sandbox let data = eval(dumped_data)
+    return data
   catch
     call unite#util#print_error(
           \ "unite-outline: could not load the cache file: " . cache_file)
