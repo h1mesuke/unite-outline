@@ -34,6 +34,11 @@ function! unite#sources#outline#alias(alias, src_filetype)
   let g:unite_source_outline_info[a:alias] = a:src_filetype
 endfunction
 
+function! unite#sources#outline#clear_cache()
+  let cache = unite#sources#outline#_cache#instance()
+  call cache.clear()
+endfunction
+
 let s:outline_info_ftime = {}
 
 function! unite#sources#outline#get_outline_info(filetype)

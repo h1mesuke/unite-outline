@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-05
+" Updated : 2011-01-09
 " Version : 0.2.1
 " License : MIT license {{{
 "
@@ -41,21 +41,26 @@ function! s:exists_cache_file(path)
   return (s:check_cache_dir() && filereadable(s:cache_file_path(a:path)))
 endfunction
 
-function! s:check_cache_dir()
+function! s:check_cache_dir(...)
+  let create_flag = (a:0 ? a:1 : 1)
   if g:unite_source_outline_cache_dir == '' || !exists('*mkdir')
     return 0
   endif
   let g:unite_source_outline_cache_dir = unite#util#substitute_path_separator(
         \ substitute(g:unite_source_outline_cache_dir, '/$', '', ''))
-  if !isdirectory(g:unite_source_outline_cache_dir)
+
+  if isdirectory(g:unite_source_outline_cache_dir)
+    return 1
+  elseif create_flag
     try
       call mkdir(g:unite_source_outline_cache_dir, 'p')
     catch
       call unite#util#print_error("unite-outline: could not create the cache directory")
-      return 0
     endtry
+    return isdirectory(g:unite_source_outline_cache_dir)
+  else
+    return 0
   endif
-  return 1
 endfunction
 
 function! s:cache_file_path(path)
@@ -169,11 +174,20 @@ endif
 function! s:delete_dir(path)
   try
     call system(s:rmdir_command . ' "' . a:path . '"')
-    call unite#sources#outline#util#print_debug("[DELETED] empty {DIR}: " . a:path)
+    call unite#sources#outline#util#print_debug("[DELETED] cache {DIR}: " . a:path)
   catch
     call unite#util#print_error(
-          \ "unite-outline: could not delete the directory: " . a:path)
+          \ "unite-outline: could not delete the cache directory: " . a:path)
   endtry
+endfunction
+
+function! s:cache.clear()
+  if s:check_cache_dir(0)
+    call s:delete_dir(g:unite_source_outline_cache_dir)
+    echomsg "unite-outline: deleted the cache"
+  else
+    call unite#util#print_error("unite-outline: the cache directory doesn't exist")
+  endif
 endfunction
 
 function! s:compare_timestamp(pair1, pair2)
