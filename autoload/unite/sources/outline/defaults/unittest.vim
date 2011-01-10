@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/unittest.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-19
+" Updated : 2011-01-10
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,10 @@
 "=============================================================================
 
 " Default outline info for UnitTest results
-" Version: 0.0.2
+" Version: 0.0.3
+
+" h1mesuke/vim-unittest - GitHub
+" https://github.com/h1mesuke/vim-unittest
 
 function! unite#sources#outline#defaults#unittest#outline_info()
   return s:outline_info
@@ -22,20 +25,26 @@ let s:outline_info = {
       \}
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
-  let level = 0
+  let heading = {
+        \ 'word' : a:heading_line,
+        \ 'level': 0,
+        \ 'type' : 'generic',
+        \ }
+
   if a:which ==# 'heading-1'
-    if a:matched_line =~ '^='
-      let level = 1
+    if a:matched_line =~ '^=' || a:heading_line =~ '^\d\+ tests,'
+      let heading.level = 1
     elseif a:matched_line =~ '^-'
-      let level = 2
+      let heading.level = 2
     endif
   elseif a:which ==# 'heading'
-    let level = 3
+    let heading.level = 3
   endif
-  if level > 0
-    return unite#sources#outline#util#indent(level) . a:heading_line
+
+  if heading.level > 0
+    return heading
   else
-    return ""
+    return {}
   endif
 endfunction
 

@@ -1,7 +1,7 @@
 "=============================================================================
 " File       : autoload/unite/sources/outline/defaults/javascript.vim
 " Maintainer : h1mesuke <himesuke@gmail.com>
-" Updated    : 2010-12-13
+" Updated    : 2011-01-09
 "
 " Improved by hamaco, h1mesuke
 "
@@ -11,7 +11,7 @@
 "=============================================================================
 
 " Default outline info for JavaScript
-" Version: 0.0.3
+" Version: 0.0.5
 
 function! unite#sources#outline#defaults#javascript#outline_info()
   return s:outline_info
@@ -45,74 +45,91 @@ let s:leading_mark = {
       \ }
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
+  let heading = {
+        \ 'word' : a:heading_line,
+        \ 'level': unite#sources#outline#util#get_indent_level(a:heading_line, a:context),
+        \ 'type' : 'generic',
+        \ }
+
   if a:which ==# 'heading-1'
-    return a:heading_line
+    let heading.type = 'comment'
 
   elseif a:which ==# 'heading'
 
     let matched_list = matchlist(a:heading_line,
-          \ '^\(\s*\)function\s\+\('.s:ident.'\)\s*(\(.*\))')
+          \ '^\s*function\s\+\('.s:ident.'\)\s*(\(.*\))')
     if len(matched_list) > 0
       " function Foo(...) -> c Foo(...)
       " function foo(...) -> f foo(...)
-      let [indent, func_name, arg_list] = matched_list[1:3]
+      let [func_name, arg_list] = matched_list[1:2]
       let kind = (func_name =~ '^\u' ? s:leading_mark.constructor : s:leading_mark.function)
-      return indent . kind . func_name . '(' . arg_list . ')'
+      let heading.word = kind . func_name . '(' . arg_list . ')'
     endif
 
     let matched_list = matchlist(a:heading_line,
-          \ '^\(\s*\)\%('.s:assign.'\|'.s:label.'\)\s*'.s:rvalue)
+          \ '^\s*\%('.s:assign.'\|'.s:label.'\)\s*'.s:rvalue)
     if len(matched_list) > 0
-      let [indent, lvalue, label, rvalue, arg_list] = matched_list[1:5]
+      let [lvalue, label, rvalue, arg_list] = matched_list[1:4]
       if lvalue =~ '\S'
         "---------------------------------------
-        " Assign =
+        " Assign
+        "
         if lvalue =~ '\.'
-          " property
+          " Property
           let prop_chain = split(lvalue, '\.')
           let prop_name = prop_chain[-1]
           if rvalue =~ '^f'
             if prop_name =~ '^\u'
               " Foo.Bar = function(...) -> c Foo.Bar(...)
-              return indent . s:leading_mark.constructor . lvalue . '(' . arg_list . ')'
+              let heading.word = s:leading_mark.constructor . lvalue . '(' . arg_list . ')'
             else
               " Foo.bar = function(...) -> m bar(...)
-              let indent .= repeat(' ', a:context.buffer.shiftwidth)
-              return indent . s:leading_mark.method . prop_name . '(' . arg_list . ')'
+              let heading.level += 1
+              let heading.word = s:leading_mark.method . prop_name . '(' . arg_list . ')'
             endif
           else
             if match(prop_chain, '^\u') >= 0
               " Foo.Bar = { -> o Foo.Bar
               " Foo.bar = { -> o Foo.bar
-              return indent . s:leading_mark.object . lvalue
+              let heading.word = s:leading_mark.object . lvalue
             else
               " foo.bar = { -> TOO SMALL GRANULARITY
+              let heading.level = 0
             endif
           endif
         elseif lvalue =~ '^\u'
-          " variale
+          " Variale
           if rvalue =~ '^f'
             " var Foo = function(...) -> c Foo(...)
-            return indent . s:leading_mark.constructor . lvalue . '(' . arg_list . ')'
+            let heading.word = s:leading_mark.constructor . lvalue . '(' . arg_list . ')'
           else
             " var Foo = { -> o Foo
-            return indent . s:leading_mark.object . lvalue
+            let heading.word = s:leading_mark.object . lvalue
           endif
+        else
+          " var foo = ... -> TOO SMALL GRANULARITY
+          let heading.level = 0
         endif
       else
         "---------------------------------------
         " Label
+        "
         if rvalue =~ '^f'
           " foo: function(...) -> m foo(...)
-          return indent . s:leading_mark.method . label . '(' . arg_list . ')'
+          let heading.word = s:leading_mark.method . label . '(' . arg_list . ')'
         else
           " foo: { -> TOO SMALL GRANULARITY
+          let heading.level = 0
         endif
       endif
     endif
   endif
 
-  return ""
+  if heading.level > 0
+    return heading
+  else
+    return {}
+  endif
 endfunction
 
 " vim: filetype=vim

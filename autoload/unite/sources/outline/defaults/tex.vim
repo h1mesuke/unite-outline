@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/tex.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-19
+" Updated : 2011-01-10
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for TeX
-" Version: 0.0.6
+" Version: 0.0.7
 
 function! unite#sources#outline#defaults#tex#outline_info()
   return s:outline_info
@@ -19,71 +19,59 @@ let s:outline_info = {
       \ 'heading': '^\\\(title\|part\|chapter\|\(sub\)\{,2}section\|begin{thebibliography}\){',
       \ }
 
-let s:unit_order = [
-      \ 'title',
-      \ 'part',
-      \ 'chapter',
-      \ 'section',
-      \ 'subsection',
-      \ 'subsubsection',
-      \ ]
-
-let s:initial_unit_level = {}
-let s:level = 1
-for unit in s:unit_order
-  let s:initial_unit_level[unit] = s:level
-  let s:level += 1
-endfor
-unlet unit
-unlet s:level
+let s:unit_level_map = {
+      \ 'title'        : 1,
+      \ 'part'         : 2,
+      \ 'chapter'      : 3,
+      \ 'section'      : 4,
+      \ 'subsection'   : 5,
+      \ 'subsubsection': 6,
+      \ }
 
 function! s:outline_info.initialize(context)
-  let s:unit_count = {}
-  for unit in s:unit_order
-    let s:unit_count[unit] = 0
-  endfor
-  let s:unit_level = copy(s:initial_unit_level)
-  let s:biggest_unit = 'subsubsection'
+  let s:unit_count = map(copy(s:unit_level_map), '0')
+  let s:bib_level = 6
 endfunction
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
+  let heading = {
+        \ 'word' : a:heading_line,
+        \ 'level': 0,
+        \ 'type' : 'generic',
+        \ }
+
   let lines = a:context.lines | let h = a:context.heading_index
+
   if a:heading_line =~ '^\\begin{thebibliography}{'
     " Bibliography
-    let level = 2
-    let label = unite#sources#outline#util#neighbor_matchstr(
+    let heading.level = s:bib_level
+    let bib_label = unite#sources#outline#util#neighbor_matchstr(
           \ lines, h, '\\renewcommand{\\bibname}{\zs.*\ze}\s*$', 3)
-    let heading = (label == "" ? "Bibliography" : label)
+    let heading.word = (bib_label == "" ? "Bibliography" : bib_label)
   else
-    " Parts, Chapters, Sections
+    " Parts, Chapters, Sections, etc
     let unit = matchstr(a:heading_line, '^\\\zs\w\+\ze{')
-    call s:add_unit(unit)
-    if unit !=# 'title' && index(s:unit_order, unit) < index(s:unit_order, s:biggest_unit)
-      call s:shift_unit_levels(unit)
-      let s:biggest_unit = unit
+    let s:unit_count[unit] += 1
+    let heading.level = s:unit_level_map[unit]
+    if 1 < heading.level && heading.level < s:bib_level
+      let s:bib_level = heading.level
     endif
-    let level = s:unit_level[unit]
-    let heading = unite#sources#outline#util#join_to(lines, h, '}\s*$')
-    let heading = substitute(heading, '\\\\\n', '', 'g')
-    let heading = matchstr(heading, '^\\\w\+{\zs.*\ze}\s*$')
-    let heading = s:unit_seqnr_prefix(unit) . heading
+    let heading.word = s:normalize_heading_word(
+          \ unite#sources#outline#util#join_to(lines, h, '}\s*$'), unit)
   endif
-  return unite#sources#outline#util#indent(level) . heading
+
+  if heading.level > 0
+    return heading
+  else
+    return {}
+  endif
 endfunction
 
-function! s:shift_unit_levels(unit)
-  let level = 2
-  for unit in s:unit_order[index(s:unit_order, a:unit) : ]
-    let s:unit_level[unit] = level
-    let level += 1
-  endfor
-endfunction
-
-function! s:add_unit(unit)
-  let s:unit_count[a:unit] += 1
-  for unit in s:unit_order[index(s:unit_order, a:unit) + 1 : ]
-    let s:unit_count[unit] = 0
-  endfor
+function! s:normalize_heading_word(heading_word, unit)
+  let heading_word = substitute(a:heading_word, '\\\\\n', '', 'g')
+  let heading_word = matchstr(heading_word, '^\\\w\+{\zs.*\ze}\s*$')
+  let heading_word = s:unit_seqnr_prefix(a:unit) . heading_word
+  return heading_word
 endfunction
 
 function! s:unit_seqnr_prefix(unit)
@@ -114,9 +102,7 @@ function! s:unit_seqnr_prefix(unit)
     endif
   endif
   let prefix = join(seqnr, '.')
-  if prefix != ""
-    let prefix .= " "
-  endif
+  let prefix .= (prefix != "" ? " " : "")
   return prefix
 endfunction
 

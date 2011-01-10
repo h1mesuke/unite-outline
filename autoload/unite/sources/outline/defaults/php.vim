@@ -1,7 +1,7 @@
 "=============================================================================
 " File       : autoload/unite/sources/outline/defaults/php.vim
 " Maintainer : h1mesuke <himesuke@gmail.com>
-" Updated    : 2010-12-11
+" Updated    : 2011-01-09
 "
 " Improved by hamaco
 "
@@ -11,7 +11,7 @@
 "=============================================================================
 
 " Default outline info for PHP
-" Version: 0.0.2
+" Version: 0.0.3
 
 function! unite#sources#outline#defaults#php#outline_info()
   return s:outline_info
@@ -27,5 +27,21 @@ let s:outline_info = {
       \   },
       \ },
       \}
+
+function! s:outline_info.create_heading(which, heading_line, matched_line, context)
+  let heading = {
+        \ 'word' : a:heading_line,
+        \ 'level': unite#sources#outline#util#get_indent_level(a:heading_line, a:context),
+        \ 'type' : 'generic',
+        \ }
+
+  if a:which == 'heading-1'
+    let heading.type = 'comment'
+  else
+    let heading.word = substitute(a:heading_line, '\s*{.*$', '', '')
+  endif
+
+  return heading
+endfunction
 
 " vim: filetype=vim

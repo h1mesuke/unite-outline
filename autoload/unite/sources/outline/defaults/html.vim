@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/html.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-19
+" Updated : 2011-01-09
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for HTML
-" Version: 0.0.3
+" Version: 0.0.5
 
 function! unite#sources#outline#defaults#html#outline_info()
   return s:outline_info
@@ -21,13 +21,20 @@ let s:outline_info = {
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
   let level = str2nr(matchstr(a:heading_line, '<[hH]\zs[1-6]\ze[^>]*>'))
+  let heading = {
+        \ 'word' : "h" . level. ". " . s:get_text_content(level, a:context)
+        \ 'level': level,
+        \ 'type' : 'generic',
+        \ }
+  return heading
+endfunction
+
+function! s:get_text_content(level, context)
   let lines = a:context.lines | let h = a:context.heading_index
-  let text = unite#sources#outline#util#join_to(lines, h, '</[hH]'.level.'[^>]*>')
-  let text = substitute(text, '\s*\n\s*', ' ', 'g')
+  let text = unite#sources#outline#util#join_to(lines, h, '</[hH]'.a:level.'[^>]*>')
+  let text = substitute(text, '\n', '', 'g')
   let text = substitute(text, '<[^>]*>', '', 'g')
-  let text = substitute(text, '^\s*', '', '')
-  let heading = "h" . level. ". " . text
-  return unite#sources#outline#util#indent(level) . heading
+  return text
 endfunction
 
 " vim: filetype=vim

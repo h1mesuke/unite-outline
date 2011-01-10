@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/ruby.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-15
+" Updated : 2011-01-09
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for Ruby
-" Version: 0.0.2
+" Version: 0.0.3
 
 function! unite#sources#outline#defaults#ruby#outline_info()
   return s:outline_info
@@ -25,11 +25,19 @@ let s:outline_info = {
       \}
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
-  if a:which == 'heading' && a:heading_line =~ '^\s*\(BEGIN\|END\)\>'
-    return substitute(a:heading_line, '\s*{.*$', '', '')
-  else
-    return a:heading_line
+  let heading = {
+        \ 'word' : a:heading_line,
+        \ 'level': unite#sources#outline#util#get_indent_level(a:heading_line, a:context),
+        \ 'type' : 'generic',
+        \ }
+
+  if a:which == 'heading-1'
+    let heading.type = 'comment'
+  elseif a:which == 'heading' && a:heading_line =~ '^\s*\(BEGIN\|END\)\>'
+    let heading.word = substitute(heading.word '\s*{.*$', '', '')
   endif
+
+  return heading
 endfunction
 
 " vim: filetype=vim
