@@ -463,11 +463,17 @@ unite#sources#outline#util#capitalize({str} [, {flag}])
 	{str} の先頭の文字を大文字に、残りを小文字に変換した文字列を返します。
 	{flag} に "g" を指定すると、すべての単語を同様に処理します。
 
-unite#sources#outline#util#indent({level})
+unite#sources#outline#util#get_indent_level({str}, {context})
+				*unite#sources#outline#util#get_indent_level()*
+	{str} のインデントレベルを返します。
+	{context} には create_heading()関数などが引数として受け取る辞書
+	|unite-outline-info-context|を渡します。
+
+unite#sources#outline#util#indent({str}, {level})
 					*unite#sources#outline#util#indent()*
-	{level} の見出しレベルに応じたインデントのための空白文字列を返します。
-	インデントの幅には|g:unite_source_outline_indent_width|の値が考慮され
-	ます。
+	{level} の見出しレベルに応じたインデントのための空白文字列を {str} の
+	先頭に付加して返します。インデントの幅には
+	|g:unite_source_outline_indent_width|の値が考慮されます。
 
 unite#sources#outline#util#join_to({lines}, {idx}, {pattern} [, {limit}])
 					*unite#sources#outline#util#join_to()*
@@ -542,11 +548,17 @@ https://github.com/h1mesuke/unite-outline/commits/master
 0.3.0	2011-01-10
 	- outline info の仕様を拡張
 	  - create_heading()関数から辞書を返せるようにした
+	  - 添付のデフォルト outline info を新仕様にあわせ刷新
+
+	-|unite#sources#outline#clear_cache()|を追加
+	-|unite#sources#outline#util#get_indent_level()|を追加
+	-|unite#sources#outline#util#indent()|の仕様を変更
+	  - 後方互換性は維持
 
 0.2.1	2011-01-04
 	- キャッシュの一部永続化を実装
 	- キャッシュの永続化を制御するための以下の変数を追加
-	  - |g:unite_source_outline_cache_dir|
-	  - |g:unite_source_outline_cache_serialize_limit|
+	  -|g:unite_source_outline_cache_dir|
+	  -|g:unite_source_outline_cache_serialize_limit|
 
 vim:tw=78:ts=8:ft=help:norl:noet:ai
