@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-09
+" Updated : 2011-01-10
 " Version : 0.2.1
 " License : MIT license {{{
 "
@@ -261,7 +261,7 @@ function! s:source.gather_candidates(args, context)
 
     " headings -> candidates
     let cands = map(headings, '{
-          \ "word"  : unite#sources#outline#util#indent(v:val["heading"], levels[v:key]),
+          \ "word"  : unite#sources#outline#util#indent(v:val["word"], levels[v:key]),
           \ "source": "outline",
           \ "kind"  : "jump_list",
           \ "action__path"     : path,
@@ -493,24 +493,26 @@ function! s:normalize_heading(heading, line, line_idx)
   if type(a:heading) == type("")
     " normalize to a Dictionary
     let heading = {
-          \ 'heading': a:heading,
-          \ 'level'  : unite#sources#outline#util#get_indent_level(a:heading, s:context),
+          \ 'word' : a:heading,
+          \ 'level': unite#sources#outline#util#get_indent_level(a:heading, s:context),
           \ }
   else
     let heading = a:heading
   endif
   call extend(heading, {
-        \ 'heading' : a:line,
-        \ 'level'   : 1,
-        \ 'type'    : 'generic',
-        \ 'line'    : a:line,
-        \ 'line_idx': a:line_idx }, 'keep')
-  " normalize whitespaces
-  let hd = heading.heading
-  let hd = substitute(substitute(hd, '^\s*', '', ''), '\s*$', '', '')
-  let hd = substitute(hd, '\s\+', ' ', 'g')
-  let heading.heading = hd 
+        \ 'word' : a:line,
+        \ 'level': 1,
+        \ 'type' : 'generic' }, 'keep')
+  let heading.word = s:normalize_heading_word(heading.word)
+  let heading.line = a:line
+  let heading.line_idx = a:line_idx
   return heading
+endfunction
+
+function! s:normalize_heading_word(str)
+  let str = substitute(substitute(a:str, '^\s*', '', ''), '\s*$', '', '')
+  let str = substitute(str, '\s\+', ' ', 'g')
+  return str
 endfunction
 
 function! s:shift_levels(headings)
