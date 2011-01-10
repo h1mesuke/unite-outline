@@ -1,7 +1,7 @@
 *unite-outline.txt*	ファイルの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-01-05
+Updated : 2011-01-10
 Version : 0.2.1
 License : MIT license {{{
 
@@ -275,42 +275,75 @@ create_heading	関数（任意） 		*unite-outline-info-create_heading()*
 	create_heading({which}, {heading-line}, {matched-line}, {context})
 
 	設定されていると、heading-1, heading, heading+1 によるマッチが成功する
-	たびに呼ばれ、その返値（文字列）が見出し一覧に表示されます。この関数を
+	たびに呼ばれ、その返値（辞書）をもとに見出しが作成されます。この関数を
 	定義することによって、見出し一覧に設定する文字列の整形、および見出しレ
-	ベル（インデント）の設定を、ユーザーが自由に行うことができます。
+	ベル（インデント）の設定が行えます。
 
 	create_heading()関数に渡される引数は以下の通りです。
 
-	* {which} - 文字列：マッチの種類
-	                    "heading-1", "heading", "heading+1" のいずれか
-	* {heading-line} - 文字列：見出しとなる行
-	* {matched-line} - 文字列：マッチした行
-						*unite-outline-info-context*
-	* {context} - 辞書：その他の情報、以下の属性を含む
-	  * heading_index - 整数：lines中の heading_line の添字
-	  * matched_index - 整数：lines中の matched_line の添字
-	  * lines - リスト：ファイルの全行
-	  * buffer - 辞書：バッファ情報（参照可能な属性については
-	                   autoload/unite/source/outline.vim を参照して下さい）
-	  * outline_info - 辞書：outline info
+	* {which}		文字列
+				マッチの種類
+				"heading-1", "heading", "heading+1" のいずれか
+
+	* {heading-line}	文字列
+				見出しとなる行
+
+	* {matched-line}	文字列
+				マッチした行
+
+	* {context}		辞書		*unite-outline-info-context*
+				その他の情報、以下の属性を含む
+
+	  * heading_index	整数
+	  			lines中の heading_line の添字
+
+	  * matched_index	整数
+	  			lines中の matched_line の添字
+
+	  * lines		リスト
+	  			ファイルの全行
+
+	  * buffer		辞書
+				バッファ情報
+				参照可能な属性については
+				autoload/unite/source/outline.vim を参照して下
+				さい。
+
+	  * outline_info	辞書
+	  			outline info
 
 	{context} に渡される辞書は見出し抽出の間同じものが使い回されますので、
 	既存の属性を書き換えないで下さい。
 
-	create_heading()関数は文字列を返す必要があります。空文字列を返すと、
-	見出しではないとみなされ、無視されます。
+	返値となる辞書には以下の属性を設定します。
 
-	参考として、HTML の create_heading()関数の定義例を示します。
+	* word		文字列（必須）
+			見出し一覧に表示される文字列
+
+	* level		整数  （任意）
+			見出しレベル
+			設定しておくと、見出し一覧に表示される際、レベルに応じ
+			たインデントが行われます。
+			省略した場合は 1 になります。
+
+	* type		文字列（任意）
+			見出し種別
+			省略した場合は "generic" になります。
+
+	空の辞書を返すと、見出しではないとみなされ、無視されます。
+
+	参考として、HTML用の create_heading()関数の定義例を示します。
 >
 	function! s:outline_info.create_heading(which, heading_line, matched_line, context)
-	  if a:which ==# 'heading'
-	    let level = str2nr(matchstr(a:heading_line, '<[hH]\zs[1-6]\ze[^>]*>'))
-	    let text = substitute(substitute(a:heading_line, '<[^>]*>', '', 'g'), '^\s*', '', '')
-	    return unite#sources#outline#util#indent(level) . "h" . level. ". " . text
-	  endif
-	  return ""
+	  let level = str2nr(matchstr(a:heading_line, '<[hH]\zs[1-6]\ze[^>]*>'))
+	  let heading = {
+	        \ 'word' : "h" . level. ". " . s:get_text_content(level, a:context)
+	        \ 'level': level,
+	        \ 'type' : 'generic',
+	        \ }
+	  return heading
 	endfunction
-<	
+<
 
 skip		辞書（任意）				*unite-outline-info-skip*
 
@@ -411,12 +444,16 @@ unite#sources#outline#alias({alias}, {src-filetype})
 	call unite#sources#outline#alias('xhtml', 'html')
 	call unite#sources#outline#alias('zsh',   'sh')
 <
+unite#sources#outline#clear_cache()	 *unite#sources#outline#clear_cache()*
+
+	ファイルに保存した見出しのキャッシュを削除します。
+
 unite#sources#outline#get_outline_info({filetype})
 					*unite#sources#outline#get_outline_info()*
 	{filetype} のための outline info を返します。outline info が見つからな
 	い場合は空の辞書 {} を返します。
 
-UTILITY FUNCTIONS				*unite-outline-utility-functions*
+UTILITY FUNCTIONS			*unite-outline-utility-functions*
 
 	以下は、outline info を作成するにあたり、create_heading()関数などで使
 	用すると便利なユーティリティ関数です。
@@ -454,20 +491,13 @@ unite#sources#outline#util#neighbor_matchstr({lines}, {idx}, {pattern} [, {range
 	マッチした部分文字列を返します。マッチしない場合は "" を返します。
 
 unite#sources#outline#util#nr2roman({nr})
-				*unite#sources#outline#util#nr2roman()*
+					*unite#sources#outline#util#nr2roman()*
 	{nr} をローマ数字へと変換します。
 	ローマ数字として表現可能な範囲は 1以上 4999以下の範囲で、{nr} がその範
 	囲外にある場合は、{nr} を単に文字列に変換したものを返します。
 
 ==============================================================================
 TODO						*unite-outline-todo*
-
-	* outline info 2.0
-
-		outline info の create_heading()関数の返値を辞書とするような仕
-		様を考案中。見出しレベルや見出しの種類（コメントであるなど）を
-		辞書の属性として設定するようなものになる予定。後方互換のため、
-		これまで通り文字列を返すのも可とする。
 
 	* C, C++, Java, D などの outline info
 
@@ -508,6 +538,10 @@ outline info 募集！
 更新履歴					*unite-outline-changelog*
 
 https://github.com/h1mesuke/unite-outline/commits/master
+
+0.3.0	2011-01-10
+	- outline info の仕様を拡張
+	  - create_heading()関数から辞書を返せるようにした
 
 0.2.1	2011-01-04
 	- キャッシュの一部永続化を実装
