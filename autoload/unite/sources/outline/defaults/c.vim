@@ -9,15 +9,19 @@
 "=============================================================================
 
 " Default outline info for C
-" Version: 0.0.1 (draft)
+" Version: 0.0.2 (draft)
 
 function! unite#sources#outline#defaults#c#outline_info()
   return s:outline_info
 endfunction
 
+" patterns
+let s:define_macro = '\s*#\s*define\s\+\h\w*('
+let s:func_def = '\(\h\w*\(\s\+\|\s*\*\s*\)\)*\h\w*\s*('
+
 let s:outline_info = {
       \ 'heading-1': unite#sources#outline#util#shared_pattern('c', 'heading-1'),
-      \ 'heading'  : '^\(\s*#\s*define\s\+\|\h\w*\s*\(\*\s*\)\=\)\=\h\w*\s*(',
+      \ 'heading'  : '^\(' . s:define_macro . '\|' . s:func_def . '\)',
       \ 'skip': {
       \   'header': unite#sources#outline#util#shared_pattern('c', 'header'),
       \ },
@@ -47,7 +51,10 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     let heading.level = 3
     if a:heading_line =~ '^\s*#\s*define\>'
       let heading.type = 'directive'
-      let heading.word = substitute(heading.word, '#\s*define', '#define', '')
+      let heading.word = s:normalize_define_macro_heading_word(heading.word)
+    elseif a:heading_line =~ ';\s*$'
+      " it's a declaration, not a definition
+      let heading.level = 0
     else
       let heading.type = 'function'
       let heading.word = substitute(heading.word, '\s*{.*$', '', '')
@@ -59,6 +66,12 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   else
     return {}
   endif
+endfunction
+
+function! s:normalize_define_macro_heading_word(heading_word)
+  let heading_word = substitute(a:heading_word, '#\s*define', '#define', '')
+  let heading_word = substitute(heading_word, ')\zs.*$', '', '')
+  return heading_word
 endfunction
 
 " vim: filetype=vim
