@@ -1,7 +1,7 @@
 "=============================================================================
 " File       : autoload/unite/sources/outline/defaults/javascript.vim
 " Maintainer : h1mesuke <himesuke@gmail.com>
-" Updated    : 2011-01-09
+" Updated    : 2011-01-12
 "
 " Improved by hamaco, h1mesuke
 "
@@ -17,13 +17,13 @@ function! unite#sources#outline#defaults#javascript#outline_info()
   return s:outline_info
 endfunction
 
-" patterns
+" sub patterns
 let s:ident  = '\<\h\w*\>'
 
-let s:assign = '\%(var\s\+\)\=\('.s:ident.'\%(\.'.s:ident.'\)*\)\s*='
+let s:assign = '\%(var\s\+\)\=\(' . s:ident . '\%(\.' . s:ident . '\)*\)\s*='
 " NOTE: This pattern contains 1 capture;  1:lvalue
 
-let s:label  = '\('.s:ident.'\)\s*:'
+let s:label  = '\(' . s:ident . '\)\s*:'
 " NOTE: This pattern contains 1 capture;  1:label
 
 let s:rvalue = '\(function\s*(\([^)]*\))\|{\)'
@@ -31,7 +31,7 @@ let s:rvalue = '\(function\s*(\([^)]*\))\|{\)'
 
 let s:outline_info = {
       \ 'heading-1': unite#sources#outline#util#shared_pattern('cpp', 'heading-1'),
-      \ 'heading'  : '^\s*\(function\>\|\('.s:assign.'\|'.s:label.'\)\s*'.s:rvalue.'\)',
+      \ 'heading'  : '^\s*\(function\>\|\(' . s:assign . '\|' . s:label . '\)\s*' . s:rvalue . '\)',
       \ 'skip': {
       \   'header': unite#sources#outline#util#shared_pattern('cpp', 'header'),
       \ },
@@ -57,7 +57,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   elseif a:which ==# 'heading'
 
     let matched_list = matchlist(a:heading_line,
-          \ '^\s*function\s\+\('.s:ident.'\)\s*(\(.*\))')
+          \ '^\s*function\s\+\(' . s:ident . '\)\s*(\(.*\))')
     if len(matched_list) > 0
       " function Foo(...) -> c Foo(...)
       " function foo(...) -> f foo(...)
@@ -67,7 +67,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     endif
 
     let matched_list = matchlist(a:heading_line,
-          \ '^\s*\%('.s:assign.'\|'.s:label.'\)\s*'.s:rvalue)
+          \ '^\s*\%(' . s:assign . '\|' . s:label . '\)\s*' . s:rvalue)
     if len(matched_list) > 0
       let [lvalue, label, rvalue, arg_list] = matched_list[1:4]
       if lvalue =~ '\S'

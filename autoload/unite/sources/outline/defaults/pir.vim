@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for PIR
-" Version: 0.0.1
+" Version: 0.0.1 (draft)
 
 function! unite#sources#outline#defaults#pir#outline_info()
   return s:outline_info

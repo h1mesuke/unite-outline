@@ -15,7 +15,7 @@ function! unite#sources#outline#defaults#c#outline_info()
   return s:outline_info
 endfunction
 
-" patterns
+" sub patterns
 let s:define_macro = '\s*#\s*define\s\+\h\w*('
 let s:func_def = '\(\h\w*\(\s\+\|\s*\*\s*\)\)*\h\w*\s*('
 

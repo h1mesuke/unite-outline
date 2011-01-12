@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/help.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-09
+" Updated : 2011-01-11
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -40,14 +40,14 @@ endfunction
 "   HEADING ~
 "                                                   *tag*
 
-" patterns
+" sub patterns
 let s:section_number = '\d\+\.\d\+\s\+\S'
 let s:upper_word = '\u[[:upper:][:digit:]_]\+\>'
 let s:helptag = '\*[^*]\+\*'
 
 let s:outline_info = {
       \ 'heading-1': '^[-=]\{10,}\s*$',
-      \ 'heading'  : '^\('.s:section_number.'\|'.s:upper_word.'.*\('.s:helptag.'\|\~\)\)',
+      \ 'heading'  : '^\(' . s:section_number . '\|' . s:upper_word . '.*\(' . s:helptag . '\|\~\)\)',
       \ }
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
@@ -68,7 +68,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     endif
   elseif a:which ==# 'heading'
     let h = a:context.heading_index
-    if a:heading_line =~ '^'.s:section_number
+    if a:heading_line =~ '^' . s:section_number
       if a:heading_line =~ '\~\s*$'
         let heading.level = 3
       endif
@@ -89,13 +89,13 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   endif
 endfunction
 
-function! s:normalize_heading_word(str)
-  let str = substitute(a:str, '\(\~\|{{{\d\=\)\s*$', '', '')
-  let str = substitute(str, s:helptag, '', 'g')
-  if str !~ '\l'
-    let str = unite#sources#outline#util#capitalize(str, 'g')
+function! s:normalize_heading_word(heading_word)
+  let heading_word = substitute(a:heading_word, '\(\~\|{{{\d\=\)\s*$', '', '')
+  let heading_word = substitute(heading_word, s:helptag, '', 'g')
+  if heading_word !~ '\l'
+    let heading_word = unite#sources#outline#util#capitalize(heading_word, 'g')
   endif
-  return str
+  return heading_word
 endfunction
 
 " vim: filetype=vim

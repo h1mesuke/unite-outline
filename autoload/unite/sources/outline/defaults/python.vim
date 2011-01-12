@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for Python
-" Version: 0.0.1
+" Version: 0.0.1 (draft)
 
 function! unite#sources#outline#defaults#python#outline_info()
   return s:outline_info
