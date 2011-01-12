@@ -329,22 +329,16 @@ function! s:skip_header()
     let s:line_idx = outline_info.skip_header(lines, s:context)
 
   elseif has_key(outline_info, 'skip') && has_key(outline_info.skip, 'header')
+    " eval once
     let skip_header_leading = has_key(outline_info.skip.header, 'leading')
-    if skip_header_leading
-      let header_leading_pattern = outline_info.skip.header.leading
-    endif
-    let skip_header_block = has_key(outline_info.skip.header, 'block')
-    if skip_header_block
-      let header_beg_pattern = outline_info.skip.header.block.begin
-      let header_end_pattern = outline_info.skip.header.block.end
-    endif
+    let skip_header_block   = has_key(outline_info.skip.header, 'block')
 
     while s:line_idx < num_lines
       let line = lines[s:line_idx]
-      if skip_header_leading && line =~# header_leading_pattern
-        call s:skip_while(header_leading_pattern)
-      elseif skip_header_block && line =~# header_beg_pattern
-        call s:skip_to(header_end_pattern)
+      if skip_header_leading && line =~# outline_info.skip.header.leading
+        call s:skip_while(outline_info.skip.header.leading)
+      elseif skip_header_block && line =~# outline_info.skip.header.block.begin
+        call s:skip_to(outline_info.skip.header.block.end)
       else
         break
       endif
@@ -355,41 +349,31 @@ function! s:skip_header()
 endfunction
 
 function! s:extract_headings()
-  let outline_info = s:context.outline_info
   let s:line_idx = 0
-
   call s:skip_header()
 
-  let skip_block = has_key(outline_info, 'skip') && has_key(outline_info.skip, 'block')
-  if skip_block
-    let block_beg_pattern = outline_info.skip.block.begin
-    let block_end_pattern = outline_info.skip.block.end
-  endif
+  let outline_info = s:context.outline_info
 
+  " eval once
+  let skip_block = has_key(outline_info, 'skip') && has_key(outline_info.skip, 'block')
+  let has_heading_pattern      = has_key(outline_info, 'heading')
   let has_heading_prev_pattern = has_key(outline_info, 'heading-1')
-  if has_heading_prev_pattern
-    let heading_prev_pattern = outline_info['heading-1']
-  endif
-  let has_heading_pattern = has_key(outline_info, 'heading')
-  if has_heading_pattern
-    let heading_pattern = outline_info.heading
-  endif
   let has_heading_next_pattern = has_key(outline_info, 'heading+1')
-  if has_heading_next_pattern
-    let heading_next_pattern = outline_info['heading+1']
-  endif
-  let has_create_heading_func = has_key(outline_info, 'create_heading')
+  let has_create_heading_func  = has_key(outline_info, 'create_heading')
+  " NOTE: outline info is allowed to update heading patterns dynamically on
+  " the runtime, so its attribute values for patterns should not be assigned
+  " to local variables.
 
   let headings = []
   let lines = s:buffer.lines | let num_lines = len(lines)
 
   while s:line_idx < num_lines
     let line = lines[s:line_idx]
-    if skip_block && line =~# block_beg_pattern
+    if skip_block && line =~# outline_info.skip.block.begin
       " skip a documentation block
-      call s:skip_to(block_end_pattern)
+      call s:skip_to(outline_info.skip.block.end)
 
-    elseif has_heading_prev_pattern && line =~# heading_prev_pattern && s:line_idx < num_lines - 3
+    elseif has_heading_prev_pattern && line =~# outline_info['heading-1'] && s:line_idx < num_lines - 3
       " matched: heading-1
       let next_line = lines[s:line_idx + 1]
       if next_line =~ '[[:punct:]]\@!\S'
@@ -422,7 +406,7 @@ function! s:extract_headings()
       endif
       let s:line_idx += 1
 
-    elseif has_heading_pattern && line =~# heading_pattern
+    elseif has_heading_pattern && line =~# outline_info.heading
       " matched: heading
       if has_create_heading_func
         let s:context.heading_index = s:line_idx
@@ -435,7 +419,7 @@ function! s:extract_headings()
         call add(headings, s:normalize_heading(heading, line, s:line_idx))
       endif
 
-    elseif has_heading_next_pattern && line =~# heading_next_pattern && s:line_idx > 0
+    elseif has_heading_next_pattern && line =~# outline_info['heading+1'] && s:line_idx > 0
       " matched: heading+1
       let prev_line = lines[s:line_idx - 1]
       if prev_line =~ '[[:punct:]]\@!\S'
