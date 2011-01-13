@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-10
+" Updated : 2011-01-13
 " Version : 0.3.0
 " License : MIT license {{{
 "
@@ -75,20 +75,12 @@ function! unite#sources#outline#get_outline_info(filetype)
   return {}
 endfunction
 
-function! s:resolve_filetype(filetype, ...)
-  if a:0
-    let start_filetype = a:1
-    if a:filetype == start_filetype
-      throw "unite-outline: cyclic alias definitions for '" . start_filetype . "'"
-    endif
-  else
-    let start_filetype = a:filetype
-  endif
+function! s:resolve_filetype(filetype)
   if has_key(g:unite_source_outline_info, a:filetype) &&
         \ type(g:unite_source_outline_info[a:filetype]) == type("")
     " 1 more hop
     let filetype = g:unite_source_outline_info[a:filetype]
-    return s:resolve_filetype(filetype, start_filetype)
+    return s:resolve_filetype(filetype)
   endif
   return a:filetype
 endfunction
