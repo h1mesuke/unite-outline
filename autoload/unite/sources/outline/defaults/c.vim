@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/c.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-11
+" Updated : 2011-01-15
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,19 +9,20 @@
 "=============================================================================
 
 " Default outline info for C
-" Version: 0.0.2 (draft)
+" Version: 0.0.3
 
 function! unite#sources#outline#defaults#c#outline_info()
   return s:outline_info
 endfunction
 
 " sub patterns
-let s:define_macro = '\s*#\s*define\s\+\h\w*('
+let s:define_macro = '#\s*define\s\+\h\w*('
+let s:typedef = '\(typedef\|enum\)\>'
 let s:func_def = '\(\h\w*\(\s\+\|\s*\*\s*\)\)*\h\w*\s*('
 
 let s:outline_info = {
       \ 'heading-1': unite#sources#outline#util#shared_pattern('c', 'heading-1'),
-      \ 'heading'  : '^\(' . s:define_macro . '\|' . s:func_def . '\)',
+      \ 'heading'  : '^\(\s*\(' . s:define_macro . '\|' . s:typedef . '\)\|' . s:func_def . '\)',
       \ 'skip': {
       \   'header': unite#sources#outline#util#shared_pattern('c', 'header'),
       \ },
@@ -50,14 +51,30 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   elseif a:which == 'heading'
     let heading.level = 3
     if a:heading_line =~ '^\s*#\s*define\>'
+      " #define ()
       let heading.type = 'directive'
       let heading.word = s:normalize_define_macro_heading_word(heading.word)
-    elseif a:heading_line =~ ';\s*$'
-      " it's a declaration, not a definition
-      let heading.level = 0
+    elseif a:heading_line =~ '\<\(typedef\|enum\)\>'
+      " typedef, enum
+      if a:heading_line =~ '{\s*$'
+        let heading.type = 'typedef'
+        let lines = a:context.lines | let h = a:context.heading_index
+        let indent = matchstr(a:heading_line, '^\s*')
+        let closing = unite#sources#outline#util#neighbor_matchstr(
+              \ lines, h, '^' . indent . '}.*$', [0, 50])
+        let heading.word = substitute(heading.word, '{\s*$', '{...' . closing, '')
+      else
+        let heading.level = 0
+      endif
     else
-      let heading.type = 'function'
-      let heading.word = substitute(heading.word, '\s*{.*$', '', '')
+      " function
+      if a:heading_line =~ ';\s*$'
+        " it's a declaration, not a definition
+        let heading.level = 0
+      else
+        let heading.type = 'function'
+        let heading.word = substitute(heading.word, '\s*{.*$', '', '')
+      endif
     endif
   endif
 
