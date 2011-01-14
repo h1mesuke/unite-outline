@@ -1,7 +1,7 @@
 "=============================================================================
 " File       : autoload/unite/sources/outline/defaults/javascript.vim
 " Maintainer : h1mesuke <himesuke@gmail.com>
-" Updated    : 2011-01-12
+" Updated    : 2011-01-15
 "
 " Improved by hamaco, h1mesuke
 "
@@ -11,7 +11,7 @@
 "=============================================================================
 
 " Default outline info for JavaScript
-" Version: 0.0.5
+" Version: 0.0.6
 
 function! unite#sources#outline#defaults#javascript#outline_info()
   return s:outline_info
@@ -37,13 +37,6 @@ let s:outline_info = {
       \ },
       \}
 
-let s:leading_mark = {
-      \ 'constructor': 'c ',
-      \ 'function'   : 'f ',
-      \ 'method'     : 'm ',
-      \ 'object'     : 'o ',
-      \ }
-
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
   let heading = {
         \ 'word' : a:heading_line,
@@ -59,11 +52,10 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     let matched_list = matchlist(a:heading_line,
           \ '^\s*function\s\+\(' . s:ident . '\)\s*(\(.*\))')
     if len(matched_list) > 0
-      " function Foo(...) -> c Foo(...)
-      " function foo(...) -> f foo(...)
+      " function Foo(...) -> Foo(...)
+      " function foo(...) -> foo(...)
       let [func_name, arg_list] = matched_list[1:2]
-      let kind = (func_name =~ '^\u' ? s:leading_mark.constructor : s:leading_mark.function)
-      let heading.word = kind . func_name . '(' . arg_list . ')'
+      let heading.word = func_name . '(' . arg_list . ')'
     endif
 
     let matched_list = matchlist(a:heading_line,
@@ -71,54 +63,50 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     if len(matched_list) > 0
       let [lvalue, label, rvalue, arg_list] = matched_list[1:4]
       if lvalue =~ '\S'
-        "---------------------------------------
         " Assign
-        "
         if lvalue =~ '\.'
           " Property
           let prop_chain = split(lvalue, '\.')
           let prop_name = prop_chain[-1]
           if rvalue =~ '^f'
             if prop_name =~ '^\u'
-              " Foo.Bar = function(...) -> c Foo.Bar(...)
-              let heading.word = s:leading_mark.constructor . lvalue . '(' . arg_list . ')'
+              " Foo.Bar = function(...) -> Foo.Bar(...)
+              let heading.word = lvalue . '(' . arg_list . ')'
             else
-              " Foo.bar = function(...) -> m bar(...)
+              " Foo.bar = function(...) -> bar(...)
               let heading.level += 1
-              let heading.word = s:leading_mark.method . prop_name . '(' . arg_list . ')'
+              let heading.word = prop_name . '(' . arg_list . ')'
             endif
           else
             if match(prop_chain, '^\u') >= 0
-              " Foo.Bar = { -> o Foo.Bar
-              " Foo.bar = { -> o Foo.bar
-              let heading.word = s:leading_mark.object . lvalue
+              " Foo.Bar = { -> Foo.Bar
+              " Foo.bar = { -> Foo.bar
+              let heading.word = lvalue
             else
-              " foo.bar = { -> TOO SMALL GRANULARITY
+              " foo.bar = {
               let heading.level = 0
             endif
           endif
         elseif lvalue =~ '^\u'
           " Variale
           if rvalue =~ '^f'
-            " var Foo = function(...) -> c Foo(...)
-            let heading.word = s:leading_mark.constructor . lvalue . '(' . arg_list . ')'
+            " var Foo = function(...) -> Foo(...)
+            let heading.word = lvalue . '(' . arg_list . ')'
           else
-            " var Foo = { -> o Foo
-            let heading.word = s:leading_mark.object . lvalue
+            " var Foo = { -> Foo
+            let heading.word = lvalue
           endif
         else
-          " var foo = ... -> TOO SMALL GRANULARITY
+          " var foo = ...
           let heading.level = 0
         endif
       else
-        "---------------------------------------
         " Label
-        "
         if rvalue =~ '^f'
-          " foo: function(...) -> m foo(...)
-          let heading.word = s:leading_mark.method . label . '(' . arg_list . ')'
+          " foo: function(...) -> foo(...)
+          let heading.word = label . '(' . arg_list . ')'
         else
-          " foo: { -> TOO SMALL GRANULARITY
+          " foo: {
           let heading.level = 0
         endif
       endif
