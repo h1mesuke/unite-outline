@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for Python
-" Version: 0.0.2
+" Version: 0.0.3
 
 function! unite#sources#outline#defaults#python#outline_info()
   return s:outline_info
@@ -20,6 +20,7 @@ let s:outline_info = {
       \ 'heading'  : '^\s*\(class\|def\)\>',
       \ 'skip': {
       \   'header': unite#sources#outline#util#shared_pattern('sh', 'header'),
+      \   'block' : ['^\s*"""', '^\s*"""'],
       \ },
       \}
 
