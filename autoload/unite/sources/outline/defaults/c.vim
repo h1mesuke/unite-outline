@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/c.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-15
+" Updated : 2011-01-17
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for C
-" Version: 0.0.3
+" Version: 0.0.5
 
 function! unite#sources#outline#defaults#c#outline_info()
   return s:outline_info
@@ -50,15 +50,15 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     endif
   elseif a:which == 'heading'
     let heading.level = 3
+    let lines = a:context.lines | let h = a:context.heading_index
     if a:heading_line =~ '^\s*#\s*define\>'
       " #define ()
       let heading.type = 'directive'
       let heading.word = s:normalize_define_macro_heading_word(heading.word)
-    elseif a:heading_line =~ '\<\(typedef\|enum\)\>'
-      " typedef, enum
+    elseif a:heading_line =~ '\<typedef\>'
+      " typedef
       if a:heading_line =~ '{\s*$'
         let heading.type = 'typedef'
-        let lines = a:context.lines | let h = a:context.heading_index
         let indent = matchstr(a:heading_line, '^\s*')
         let closing = unite#sources#outline#util#neighbor_matchstr(
               \ lines, h, '^' . indent . '}.*$', [0, 50])
@@ -66,8 +66,18 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
       else
         let heading.level = 0
       endif
+    elseif a:heading_line =~ '\<enum\>'
+      " enum
+      if a:heading_line =~ '{\s*$'
+        let heading.type = 'typedef'
+        let first_symbol = unite#sources#outline#util#neighbor_matchstr(
+              \ lines, h, '^\s*\zs[^,]\+,\ze', [0, 3])
+        let heading.word = substitute(heading.word, '{\s*$', '{ ' . first_symbol . ' ...}', '')
+      else
+        let heading.level = 0
+      endif
     else
-      " function
+      " function definition
       if a:heading_line =~ ';\s*$'
         " it's a declaration, not a definition
         let heading.level = 0
