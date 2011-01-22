@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-13
+" Updated : 2011-01-22
 " Version : 0.3.0
 " License : MIT license {{{
 "
@@ -270,6 +270,8 @@ function! s:source.gather_candidates(args, context)
     if !is_volatile && (num_lines > g:unite_source_outline_cache_limit)
       let should_serialize = (num_lines > g:unite_source_outline_cache_serialize_limit)
       call cache.set_data(path, cands, should_serialize)
+    elseif cache.has_data(path)
+      call cache.remove_data(path)
     endif
 
     if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")

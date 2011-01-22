@@ -111,6 +111,8 @@ function! s:cache.set_data(path, cands, should_serialize)
   endif
   if a:should_serialize && s:check_cache_dir()
     call s:save_cache_file(a:path, self.data[a:path])
+  elseif s:exists_cache_file(a:path)
+    call s:remove_cache_file(s:cache_file_path(a:path))
   endif
 endfunction
 
@@ -180,6 +182,13 @@ function! s:remove_dir(path)
     call unite#util#print_error(
           \ "unite-outline: could not delete the cache directory: " . a:path)
   endtry
+endfunction
+
+function! s:cache.remove_data(path)
+  call remove(self.data, a:path)
+  if s:exists_cache_file(a:path)
+    call s:remove_cache_file(s:cache_file_path(a:path))
+  endif
 endfunction
 
 function! s:cache.clear()
