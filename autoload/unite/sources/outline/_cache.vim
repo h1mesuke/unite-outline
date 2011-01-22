@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-10
+" Updated : 2011-01-22
 " Version : 0.3.0
 " License : MIT license {{{
 "
@@ -139,12 +139,12 @@ function! s:cleanup_old_cache_files()
     call sort(cache_files, 's:compare_timestamp')
     let delete_files = map(cache_files[0 : num_deletes - 1], 'v:val[0]')
     for path in delete_files
-      call s:delete_cache_file(path)
+      call s:remove_cache_file(path)
     endfor
   endif
 endfunction
 
-function! s:delete_cache_file(path)
+function! s:remove_cache_file(path)
   try
     call delete(a:path)
     call unite#sources#outline#util#print_debug("[DELETED] cache {FILE}: " . a:path)
@@ -152,16 +152,16 @@ function! s:delete_cache_file(path)
     call unite#util#print_error(
           \ "unite-outline: could not delete the cache file: " . a:path)
   endtry
-  call s:delete_empty_dirs(a:path)
+  call s:remove_empty_dirs(a:path)
 endfunction
 
-function! s:delete_empty_dirs(path)
+function! s:remove_empty_dirs(path)
   let dir = unite#util#path2directory(a:path)
   while 1
     if dir ==# g:unite_source_outline_cache_dir || len(globpath(dir, '*')) > 0
       break
     endif
-    call s:delete_dir(dir)
+    call s:remove_dir(dir)
     let dir = fnamemodify(dir, ':p:h')
   endwhile
 endfunction
@@ -172,7 +172,7 @@ else
   let s:rmdir_command = 'rm -r $srcs'
 endif
 
-function! s:delete_dir(path)
+function! s:remove_dir(path)
   try
     call system(s:rmdir_command . ' "' . a:path . '"')
     call unite#sources#outline#util#print_debug("[DELETED] cache {DIR}: " . a:path)
@@ -184,7 +184,7 @@ endfunction
 
 function! s:cache.clear()
   if s:check_cache_dir(0)
-    call s:delete_dir(g:unite_source_outline_cache_dir)
+    call s:remove_dir(g:unite_source_outline_cache_dir)
     echomsg "unite-outline: deleted the cache"
   else
     call unite#util#print_error("unite-outline: the cache directory doesn't exist")
