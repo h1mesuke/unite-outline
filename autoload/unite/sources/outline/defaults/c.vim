@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/c.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-17
+" Updated : 2011-01-27
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for C
-" Version: 0.0.5
+" Version: 0.0.6
 
 function! unite#sources#outline#defaults#c#outline_info()
   return s:outline_info
@@ -53,7 +53,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     let lines = a:context.lines | let h = a:context.heading_index
     if a:heading_line =~ '^\s*#\s*define\>'
       " #define ()
-      let heading.type = 'directive'
+      let heading.type = '#define'
       let heading.word = s:normalize_define_macro_heading_word(heading.word)
     elseif a:heading_line =~ '\<typedef\>'
       " typedef
@@ -69,10 +69,11 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     elseif a:heading_line =~ '\<enum\>'
       " enum
       if a:heading_line =~ '{\s*$'
-        let heading.type = 'typedef'
-        let first_symbol = unite#sources#outline#util#neighbor_matchstr(
-              \ lines, h, '^\s*\zs[^,]\+,\ze', [0, 3])
-        let heading.word = substitute(heading.word, '{\s*$', '{ ' . first_symbol . ' ...}', '')
+        let heading.type = 'enum'
+        let first_sym_def = unite#sources#outline#util#neighbor_matchstr(
+              \ lines, h, '^\s*\zs\S.\{-},\=\ze\s*\(/[/*]\|$\)', [0, 3], 1)
+        let closing = (first_sym_def =~ ',$' ? ' ...}' : ' }')
+        let heading.word = substitute(heading.word, '{\s*$', '{ ' . first_sym_def . closing, '')
       else
         let heading.level = 0
       endif
