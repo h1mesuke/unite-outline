@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-07
+" Updated : 2011-01-27
 " Version : 0.3.0
 " License : MIT license {{{
 "
@@ -26,6 +26,7 @@
 " }}}
 "=============================================================================
 
+" unite#sources#outline#util#capitalize(str [, flag])
 function! unite#sources#outline#util#capitalize(str, ...)
   let flag = (a:0 ? a:1 : '')
   return substitute(a:str, '\<\(\u\)\(\u\+\)\>', '\u\1\L\2', flag)
@@ -41,7 +42,7 @@ endfunction
 " function! unite#sources#outline#util#indent(str, level)
 " function! unite#sources#outline#util#indent(level)
 function! unite#sources#outline#util#indent(...)
-  let level = a:000[-1]
+  let level = get(a:000, -1, 1)
   let indent = repeat(' ', (level - 1) * g:unite_source_outline_indent_width)
   if len(a:000) >= 2
     return indent . a:000[0]
@@ -51,6 +52,7 @@ function! unite#sources#outline#util#indent(...)
   endif
 endfunction
 
+" unite#sources#outline#util#join_to(lines, idx, pattern [, limit])
 function! unite#sources#outline#util#join_to(lines, idx, pattern, ...)
   let limit = (a:0 ? a:1 : 3)
   if limit < 0
@@ -68,10 +70,9 @@ function! unite#sources#outline#util#join_to(lines, idx, pattern, ...)
   return join(a:lines[a:idx : idx], "\n")
 endfunction
 
-function! s:join_to_backward(lines, idx, pattern, ...)
-  let limit = (a:0 ? a:1 : 3)
+function! s:join_to_backward(lines, idx, pattern, limit)
   let idx = a:idx
-  let lim_idx = max(0, a:idx - limit])
+  let lim_idx = max(0, a:idx - a:limit])
   while idx > 0
     let line = a:lines[idx]
     if line =~ a:pattern
@@ -82,15 +83,22 @@ function! s:join_to_backward(lines, idx, pattern, ...)
   return join(a:lines[idx : a:idx], "\n")
 endfunction
 
+" unite#sources#outline#util#neighbor_match(lines, idx, pattern [, range [, exclusive])
 function! unite#sources#outline#util#neighbor_match(lines, idx, pattern, ...)
-  let neighbor = (a:0 ? a:1 : 1)
-  if type(neighbor) == type([])
-    let [prev, next] = neighbor
+  let range = get(a:000, 0, 1)
+  let exclusive = !!get(a:000, 1, 0)
+  if type(range) == type([])
+    let [prev, next] = range
   else
-    let [prev, next] = [neighbor, neighbor]
+    let [prev, next] = [range, range]
   endif
-  let neighbor_range = range(max([0, a:idx - prev]), min([a:idx + next, len(a:lines) - 1]))
-  for idx in neighbor_range
+  let [bwd_range, fwd_range] = s:neighbor_ranges(a:lines, a:idx, prev, next, exclusive)
+  for idx in bwd_range
+    if a:lines[idx] =~ a:pattern
+      return 1
+    endif
+  endfor
+  for idx in fwd_range
     if a:lines[idx] =~ a:pattern
       return 1
     endif
@@ -98,15 +106,30 @@ function! unite#sources#outline#util#neighbor_match(lines, idx, pattern, ...)
   return 0
 endfunction
 
+function! s:neighbor_ranges(lines, idx, prev, next, exclusive)
+  let max_idx = len(a:lines) - 1
+  let bwd_range = range(max([0, a:idx - a:prev]), max([0, a:idx - a:exclusive]))
+  let fwd_range = range(min([a:idx + a:exclusive, max_idx]), min([a:idx + a:next, max_idx]))
+  return [bwd_range, fwd_range]
+endfunction
+
+" unite#sources#outline#util#neighbor_matchstr(lines, idx, pattern [, range [, exclusive])
 function! unite#sources#outline#util#neighbor_matchstr(lines, idx, pattern, ...)
-  let neighbor = (a:0 ? a:1 : 1)
-  if type(neighbor) == type([])
-    let [prev, next] = neighbor
+  let range = get(a:000, 0, 1)
+  let exclusive = !!get(a:000, 1, 0)
+  if type(range) == type([])
+    let [prev, next] = range
   else
-    let [prev, next] = [neighbor, neighbor]
+    let [prev, next] = [range, range]
   endif
-  let neighbor_range = range(max([0, a:idx - prev]), min([a:idx + next, len(a:lines) - 1]))
-  for idx in neighbor_range
+  let [bwd_range, fwd_range] = s:neighbor_ranges(a:lines, a:idx, prev, next, exclusive)
+  for idx in bwd_range
+    let matched = matchstr(a:lines[idx], a:pattern)
+    if matched != ""
+      return matched
+    endif
+  endfor
+  for idx in fwd_range
     let matched = matchstr(a:lines[idx], a:pattern)
     if matched != ""
       return matched
@@ -146,7 +169,7 @@ let s:shared_patterns = {
       \   'header'   : ['^/\*', '\*/\s*$'],
       \ },
       \ 'cpp': {
-      \   'heading-1': '^\s*\(//\|/\*\)\s*[-=/*]\{10,}\s*$',
+      \   'heading-1': '^\s*/[/*]\s*[-=/*]\{10,}\s*$',
       \   'header'   : {
       \     'leading': '^//',
       \     'block'  : ['^/\*', '\*/\s*$'],
