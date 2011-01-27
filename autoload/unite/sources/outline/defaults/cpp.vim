@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/cpp.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-27
+" Updated : 2011-01-28
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for C++
-" Version: 0.0.1 (draft)
+" Version: 0.0.2 (draft)
 
 function! unite#sources#outline#defaults#cpp#outline_info()
   return s:outline_info
@@ -17,12 +17,19 @@ endfunction
 
 " sub patterns
 let s:define_macro = '#\s*define\s\+\h\w*('
-let s:typedef = '\(typedef\|enum\)\>'
-let s:func_def = '\(\h\w*\(\s\+\|\s*[*&]\s*\)\)*\h[[:alnum:]:]*\s*('
+let s:typedef = '\%(typedef\|enum\)\>'
+
+let s:class_def = '\%(template\s*<[^>]*>\s*\)\=class\>'
+
+let s:ret_type = '\%(\%(<[^>]*>\|\h\w*\)\%(\s\+\|\s*[*&]\s*\)\)*'
+let s:func_def = s:ret_type . '\~\=\h\w*\%(::\%(operator\S\+\|\~\=\h\w*\)\)*\s*('
+
+"-----------------------------------------------------------------------------
+" Outline Info
 
 let s:outline_info = {
       \ 'heading-1': unite#sources#outline#util#shared_pattern('cpp', 'heading-1'),
-      \ 'heading'  : '^\(\s*\(' . s:define_macro . '\|' . s:typedef . '\)\|\(class\>\|' . s:func_def . '\)\)',
+      \ 'heading'  : '^\(\s*\(' . s:define_macro . '\|' . s:typedef . '\)\|\(' . s:class_def . '\|' . s:func_def . '\)\)',
       \ 'skip': {
       \   'header': unite#sources#outline#util#shared_pattern('cpp', 'header'),
       \ },
@@ -79,16 +86,16 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
       if a:heading_line =~ '{\s*$'
         let heading.type = 'enum'
         let first_symbol_def = unite#sources#outline#util#neighbor_matchstr(
-              \ lines, h, '^\s*\zs\S.\{-},\=\ze\s*\(/[/*]\|$\)', [0, 3], 1)
+              \ lines, h, '^\s*\zs\S.\{-},\=\ze\s*\%(/[/*]\|$\)', [0, 3], 1)
         let closing = (first_symbol_def =~ ',$' ? ' ...}' : ' }')
         let heading.word = substitute(heading.word, '{\s*$', '{ ' . first_symbol_def . closing, '')
       else
         let heading.level = 0
       endif
-    elseif a:heading_line =~ '\<class\>'
+    elseif a:heading_line =~ '^class\>'
       " class
       let heading.type = 'class'
-      let class_name = matchstr(a:heading_line, '\<class\s\+\zs\h\w*')
+      let class_name = matchstr(a:heading_line, '^class\s\+\zs\h\w*\%(::\h\w*\)*')
       call s:rebuild_class_names_pattern(class_name)
       let heading.word = substitute(heading.word, '\s*{.*$', '', '')
     else
@@ -121,7 +128,7 @@ endfunction
 
 function! s:rebuild_class_names_pattern(class_name)
   call add(s:class_names, a:class_name)
-  let s:class_names_pattern = '\<\(' . join(s:class_names, '\|') . '\)::'
+  let s:class_names_pattern = '\<\%(' . join(s:class_names, '\|') . '\)::'
 endfunction
 
 " vim: filetype=vim
