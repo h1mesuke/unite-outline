@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-22
+" Updated : 2011-01-27
 " Version : 0.3.0
 " License : MIT license {{{
 "
@@ -363,8 +363,8 @@ function! s:extract_headings()
   let has_heading_next_pattern = has_key(outline_info, 'heading+1')
   let has_create_heading_func  = has_key(outline_info, 'create_heading')
   " NOTE: outline info is allowed to update heading patterns dynamically on
-  " the runtime, so its attribute values for patterns should not be assigned
-  " to local variables.
+  " the runtime, so attribute values for them must not be assigned to local
+  " variables.
 
   let headings = []
   let lines = s:buffer.lines | let num_lines = len(lines)
@@ -560,17 +560,17 @@ function! s:source.calc_signature(lnum, ...)
     let lines = a:1 | let idx = a:lnum - 1
     let from = max([0, idx - range])
     let to   = min([idx + range, len(lines) - 1])
-    let backward = lines[from : idx]
-    let forward  = lines[idx  : to]
+    let bwd_lines = lines[from : idx]
+    let fwd_lines = lines[idx  : to]
   else
     let from = max([1, a:lnum - range])
     let to   = min([a:lnum + range, line('$')])
-    let backward = getline(from, a:lnum)
-    let forward  = getline(a:lnum, to)
+    let bwd_lines = getline(from, a:lnum)
+    let fwd_lines = getline(a:lnum, to)
   endif
-  let backward = filter(backward, 'v:val =~ "\\S"')[-precision-1 : -2]
-  let forward  = filter(forward,  'v:val =~ "\\S"')[1 : precision]
-  return join(map(backward + forward, 's:digest_line(v:val)'), '')
+  let bwd_lines = filter(bwd_lines, 'v:val =~ "\\S"')[-precision-1 : -2]
+  let fwd_lines = filter(fwd_lines, 'v:val =~ "\\S"')[1 : precision]
+  return join(map(bwd_lines + fwd_lines, 's:digest_line(v:val)'), '')
 endfunction
 
 " quick and dirty digest
