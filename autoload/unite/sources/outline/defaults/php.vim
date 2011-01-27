@@ -1,7 +1,7 @@
 "=============================================================================
 " File       : autoload/unite/sources/outline/defaults/php.vim
 " Maintainer : h1mesuke <himesuke@gmail.com>
-" Updated    : 2011-01-09
+" Updated    : 2011-01-28
 "
 " Improved by hamaco
 "
@@ -11,7 +11,7 @@
 "=============================================================================
 
 " Default outline info for PHP
-" Version: 0.0.3
+" Version: 0.0.5
 
 function! unite#sources#outline#defaults#php#outline_info()
   return s:outline_info
@@ -19,10 +19,10 @@ endfunction
 
 let s:outline_info = {
       \ 'heading-1': unite#sources#outline#util#shared_pattern('cpp', 'heading-1'),
-      \ 'heading'  : '^\s*[a-z ]*\(interface\|class\|function\)\>',
+      \ 'heading'  : '^\s*[a-z ]*\%(interface\|class\|function\)\>',
       \ 'skip': {
       \   'header': {
-      \     'leading': '^\(<?php\|//\)',
+      \     'leading': '^\%(<?php\|//\)',
       \     'block'  : unite#sources#outline#util#shared_pattern('c', 'header'),
       \   },
       \ },

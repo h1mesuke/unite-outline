@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/pir.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-22
+" Updated : 2011-01-28
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for PIR
-" Version: 0.0.1 (draft)
+" Version: 0.0.2 (draft)
 
 function! unite#sources#outline#defaults#pir#outline_info()
   return s:outline_info
@@ -20,7 +20,7 @@ let s:outline_info = {
       \ 'heading'  : '^\.sub\>',
       \ 'skip': {
       \   'header': unite#sources#outline#util#shared_pattern('sh', 'header'),
-      \   'block' : ['^=\(cut\)\@!\w\+', '^=cut'],
+      \   'block' : ['^=\%(cut\)\@!\w\+', '^=cut'],
       \ },
       \}
 

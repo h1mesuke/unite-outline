@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/c.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-27
+" Updated : 2011-01-28
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for C
-" Version: 0.0.6
+" Version: 0.0.7
 
 function! unite#sources#outline#defaults#c#outline_info()
   return s:outline_info
@@ -17,14 +17,17 @@ endfunction
 
 " sub patterns
 let s:define_macro = '#\s*define\s\+\h\w*('
-let s:typedef = '\(typedef\|enum\)\>'
-let s:func_def = '\(\h\w*\(\s\+\|\s*\*\s*\)\)*\h\w*\s*('
+let s:typedef = '\%(typedef\|enum\)\>'
+let s:func_def = '\%(\h\w*\%(\s\+\|\s*\*\s*\)\)*\h\w*\s*('
+
+"-----------------------------------------------------------------------------
+" Outline Info
 
 let s:outline_info = {
-      \ 'heading-1': unite#sources#outline#util#shared_pattern('c', 'heading-1'),
-      \ 'heading'  : '^\(\s*\(' . s:define_macro . '\|' . s:typedef . '\)\|' . s:func_def . '\)',
+      \ 'heading-1': unite#sources#outline#util#shared_pattern('cpp', 'heading-1'),
+      \ 'heading'  : '^\%(\s*\%(' . s:define_macro . '\|' . s:typedef . '\)\|' . s:func_def . '\)',
       \ 'skip': {
-      \   'header': unite#sources#outline#util#shared_pattern('c', 'header'),
+      \   'header': unite#sources#outline#util#shared_pattern('cpp', 'header'),
       \ },
       \}
 
@@ -71,7 +74,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
       if a:heading_line =~ '{\s*$'
         let heading.type = 'enum'
         let first_sym_def = unite#sources#outline#util#neighbor_matchstr(
-              \ lines, h, '^\s*\zs\S.\{-},\=\ze\s*\(/[/*]\|$\)', [0, 3], 1)
+              \ lines, h, '^\s*\zs\S.\{-},\=\ze\s*\%(/[/*]\|$\)', [0, 3], 1)
         let closing = (first_sym_def =~ ',$' ? ' ...}' : ' }')
         let heading.word = substitute(heading.word, '{\s*$', '{ ' . first_sym_def . closing, '')
       else

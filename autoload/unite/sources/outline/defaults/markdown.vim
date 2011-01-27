@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/markdown.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-09
+" Updated : 2011-01-28
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for Markdown
-" Version: 0.0.3
+" Version: 0.0.5
 
 function! unite#sources#outline#defaults#markdown#outline_info()
   return s:outline_info
@@ -40,7 +40,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   endif
 
   if heading.level > 0
-    let heading.word = substitute(heading.word, '\s*<a[^>]*>\s*\(</a>\s*\)\=$', '', '')
+    let heading.word = substitute(heading.word, '\s*<a[^>]*>\s*\%(</a>\s*\)\=$', '', '')
     return heading
   else
     return {}

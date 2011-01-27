@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-27
+" Updated : 2011-01-28
 " Version : 0.3.0
 " License : MIT license {{{
 "
@@ -32,10 +32,10 @@ function! unite#sources#outline#util#capitalize(str, ...)
   return substitute(a:str, '\<\(\u\)\(\u\+\)\>', '\u\1\L\2', flag)
 endfunction
 
-function! unite#sources#outline#util#get_indent_level(str, context)
+function! unite#sources#outline#util#get_indent_level(line, context)
   let sw = a:context.buffer.shiftwidth
   let ts = a:context.buffer.tabstop
-  let indent = substitute(matchstr(a:str, '^\s*'), '\t', repeat(' ', ts), 'g')
+  let indent = substitute(matchstr(a:line, '^\s*'), '\t', repeat(' ', ts), 'g')
   return strlen(indent) / sw + 1
 endfunction
 

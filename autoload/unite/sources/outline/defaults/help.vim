@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/help.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-11
+" Updated : 2011-01-28
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for Vim Help
-" Version: 0.1.0
+" Version: 0.1.1
 
 function! unite#sources#outline#defaults#help#outline_info()
   return s:outline_info
@@ -45,9 +45,12 @@ let s:section_number = '\d\+\.\d\+\s\+\S'
 let s:upper_word = '\u[[:upper:][:digit:]_]\+\>'
 let s:helptag = '\*[^*]\+\*'
 
+"-----------------------------------------------------------------------------
+" Outline Info
+
 let s:outline_info = {
       \ 'heading-1': '^[-=]\{10,}\s*$',
-      \ 'heading'  : '^\(' . s:section_number . '\|' . s:upper_word . '.*\(' . s:helptag . '\|\~\)\)',
+      \ 'heading'  : '^\%(' . s:section_number . '\|' . s:upper_word . '.*\%(' . s:helptag . '\|\~\)\)',
       \ }
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
@@ -90,7 +93,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
 endfunction
 
 function! s:normalize_heading_word(heading_word)
-  let heading_word = substitute(a:heading_word, '\(\~\|{{{\d\=\)\s*$', '', '')
+  let heading_word = substitute(a:heading_word, '\%(\~\|{{{\d\=\)\s*$', '', '')
   let heading_word = substitute(heading_word, s:helptag, '', 'g')
   if heading_word !~ '\l'
     let heading_word = unite#sources#outline#util#capitalize(heading_word, 'g')

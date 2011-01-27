@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/perl.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-09
+" Updated : 2011-01-28
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for Perl
-" Version: 0.0.3
+" Version: 0.0.5
 
 function! unite#sources#outline#defaults#perl#outline_info()
   return s:outline_info
@@ -17,10 +17,10 @@ endfunction
 
 let s:outline_info = {
       \ 'heading-1': unite#sources#outline#util#shared_pattern('sh', 'heading-1'),
-      \ 'heading'  : '^\(\s*\(sub\s\+\h\|\(package\|BEGIN\|CHECK\|INIT\|END\)\>\)\|__\(DATA\|END\)__$\)',
+      \ 'heading'  : '^\%(\s*\%(sub\s\+\h\|\%(package\|BEGIN\|CHECK\|INIT\|END\)\>\)\|__\%(DATA\|END\)__$\)',
       \ 'skip': {
       \   'header': unite#sources#outline#util#shared_pattern('sh', 'header'),
-      \   'block' : ['^=\(cut\)\@!\w\+', '^=cut'],
+      \   'block' : ['^=\%(cut\)\@!\w\+', '^=cut'],
       \ },
       \}
 

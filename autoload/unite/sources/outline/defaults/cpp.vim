@@ -43,9 +43,6 @@ function! s:outline_info.initialize(context)
   let s:class_names = []
   let s:class_names_pattern = ''
 endfunction
-function! s:outline_info.finalize(context)
-  unlet s:class_names
-endfunction
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
   let heading = {

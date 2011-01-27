@@ -1,7 +1,7 @@
 "=============================================================================
 " File       : autoload/unite/sources/outline/defaults/javascript.vim
 " Maintainer : h1mesuke <himesuke@gmail.com>
-" Updated    : 2011-01-15
+" Updated    : 2011-01-28
 "
 " Improved by hamaco, h1mesuke
 "
@@ -11,7 +11,7 @@
 "=============================================================================
 
 " Default outline info for JavaScript
-" Version: 0.0.6
+" Version: 0.0.7
 
 function! unite#sources#outline#defaults#javascript#outline_info()
   return s:outline_info
@@ -29,9 +29,12 @@ let s:label  = '\(' . s:ident . '\)\s*:'
 let s:rvalue = '\(function\s*(\([^)]*\))\|{\)'
 " NOTE: This pattern contains 2 captures; 1:rvalue [, 2:arg_list]
 
+"-----------------------------------------------------------------------------
+" Outline Info
+
 let s:outline_info = {
       \ 'heading-1': unite#sources#outline#util#shared_pattern('cpp', 'heading-1'),
-      \ 'heading'  : '^\s*\(function\>\|\(' . s:assign . '\|' . s:label . '\)\s*' . s:rvalue . '\)',
+      \ 'heading'  : '^\s*\%(function\>\|\%(' . s:assign . '\|' . s:label . '\)\s*' . s:rvalue . '\)',
       \ 'skip': {
       \   'header': unite#sources#outline#util#shared_pattern('cpp', 'header'),
       \ },

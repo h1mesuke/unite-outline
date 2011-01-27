@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-27
+" Updated : 2011-01-28
 " Version : 0.3.0
 " License : MIT license {{{
 "
@@ -169,6 +169,7 @@ for [alias, src_filetype] in s:default_alias_map
     call unite#sources#outline#alias(alias, src_filetype)
   endif
 endfor
+unlet alias | unlet src_filetype
 unlet s:default_alias_map
 
 "-----------------------------------------------------------------------------
@@ -197,11 +198,6 @@ function! s:source.hooks.on_init(args, context)
         \ 'shiftwidth': getbufvar('%', '&shiftwidth'),
         \ 'tabstop'   : getbufvar('%', '&tabstop'),
         \ }
-  let s:context = {}
-endfunction
-
-function! s:source.hooks.on_close(args, context)
-  let s:buffer  = {}
   let s:context = {}
 endfunction
 
@@ -241,15 +237,12 @@ function! s:source.gather_candidates(args, context)
           \ 'outline_info' : outline_info
           \ }
 
-    " initialize the outline info
     if has_key(outline_info, 'initialize')
       call outline_info.initialize(s:context)
     endif
 
-    " extract headings
     let headings = s:extract_headings()
 
-    " finalize the outline info
     if has_key(outline_info, 'finalize')
       call outline_info.finalize(s:context)
     endif
@@ -579,7 +572,7 @@ function! s:digest_line(line)
   if s:strchars(line) <= 20
     let digest = line
   else
-    let line = matchstr(line, '^\(\%(.\{5}\)\{,20}\)')
+    let line = matchstr(line, '^\%(\%(.\{5}\)\{,20}\)')
     let digest = substitute(line, '\(.\).\{4}', '\1', 'g')
   endif
   return digest
