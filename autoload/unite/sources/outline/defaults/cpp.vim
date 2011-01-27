@@ -1,0 +1,127 @@
+"=============================================================================
+" File    : autoload/unite/sources/outline/defaults/cpp.vim
+" Author  : h1mesuke <himesuke@gmail.com>
+" Updated : 2011-01-27
+"
+" Licensed under the MIT license:
+" http://www.opensource.org/licenses/mit-license.php
+"
+"=============================================================================
+
+" Default outline info for C++
+" Version: 0.0.1 (draft)
+
+function! unite#sources#outline#defaults#cpp#outline_info()
+  return s:outline_info
+endfunction
+
+" sub patterns
+let s:define_macro = '#\s*define\s\+\h\w*('
+let s:typedef = '\(typedef\|enum\)\>'
+let s:func_def = '\(\h\w*\(\s\+\|\s*[*&]\s*\)\)*\h[[:alnum:]:]*\s*('
+
+let s:outline_info = {
+      \ 'heading-1': unite#sources#outline#util#shared_pattern('cpp', 'heading-1'),
+      \ 'heading'  : '^\(\s*\(' . s:define_macro . '\|' . s:typedef . '\)\|\(class\>\|' . s:func_def . '\)\)',
+      \ 'skip': {
+      \   'header': unite#sources#outline#util#shared_pattern('cpp', 'header'),
+      \ },
+      \}
+
+" FIXME: This implementation assumes that the source code is properly
+" indented. Therefore, if the source code is not indented at all, function
+" calls will matches as function definitions.
+
+function! s:outline_info.initialize(context)
+  let s:class_names = []
+  let s:class_names_pattern = ''
+endfunction
+function! s:outline_info.finalize(context)
+  unlet s:class_names
+endfunction
+
+function! s:outline_info.create_heading(which, heading_line, matched_line, context)
+  let heading = {
+        \ 'word' : a:heading_line,
+        \ 'level': 0,
+        \ 'type' : 'generic',
+        \ }
+
+  if a:which == 'heading-1'
+    let heading.type = 'comment'
+    if a:matched_line =~ '^\s'
+      let heading.level = 4
+    elseif strlen(substitute(a:matched_line, '\s*', '', 'g')) > 40
+      let heading.level = 1
+    else
+      let heading.level = 2
+    endif
+  elseif a:which == 'heading'
+    let heading.level = 3
+    let lines = a:context.lines | let h = a:context.heading_index
+    if a:heading_line =~ '^\s*#\s*define\>'
+      " #define ()
+      let heading.type = '#define'
+      let heading.word = s:normalize_define_macro_heading_word(heading.word)
+    elseif a:heading_line =~ '\<typedef\>'
+      " typedef
+      if a:heading_line =~ '{\s*$'
+        let heading.type = 'typedef'
+        let indent = matchstr(a:heading_line, '^\s*')
+        let closing = unite#sources#outline#util#neighbor_matchstr(
+              \ lines, h, '^' . indent . '}.*$', [0, 50])
+        let heading.word = substitute(heading.word, '{\s*$', '{...' . closing, '')
+      else
+        let heading.level = 0
+      endif
+    elseif a:heading_line =~ '\<enum\>'
+      " enum
+      if a:heading_line =~ '{\s*$'
+        let heading.type = 'enum'
+        let first_symbol_def = unite#sources#outline#util#neighbor_matchstr(
+              \ lines, h, '^\s*\zs\S.\{-},\=\ze\s*\(/[/*]\|$\)', [0, 3], 1)
+        let closing = (first_symbol_def =~ ',$' ? ' ...}' : ' }')
+        let heading.word = substitute(heading.word, '{\s*$', '{ ' . first_symbol_def . closing, '')
+      else
+        let heading.level = 0
+      endif
+    elseif a:heading_line =~ '\<class\>'
+      " class
+      let heading.type = 'class'
+      let class_name = matchstr(a:heading_line, '\<class\s\+\zs\h\w*')
+      call s:rebuild_class_names_pattern(class_name)
+      let heading.word = substitute(heading.word, '\s*{.*$', '', '')
+    else
+      " function definition
+      if a:heading_line =~ ';\s*$'
+        " it's a declaration, not a definition
+        let heading.level = 0
+      else
+        let heading.type = 'function'
+        if !empty(s:class_names) && a:heading_line =~ s:class_names_pattern
+          let heading.level += 1
+        endif
+        let heading.word = substitute(heading.word, '\s*{.*$', '', '')
+      endif
+    endif
+  endif
+
+  if heading.level > 0
+    return heading
+  else
+    return {}
+  endif
+endfunction
+
+function! s:normalize_define_macro_heading_word(heading_word)
+  let heading_word = substitute(a:heading_word, '#\s*define', '#define', '')
+  let heading_word = substitute(heading_word, ')\zs.*$', '', '')
+  return heading_word
+endfunction
+
+function! s:rebuild_class_names_pattern(class_name)
+  call add(s:class_names, a:class_name)
+  let s:class_names_pattern = '\<\(' . join(s:class_names, '\|') . '\)::'
+endfunction
+
+" vim: filetype=vim
