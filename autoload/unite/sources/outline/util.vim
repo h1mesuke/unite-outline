@@ -32,6 +32,18 @@ function! unite#sources#outline#util#capitalize(str, ...)
   return substitute(a:str, '\<\(\u\)\(\u\+\)\>', '\u\1\L\2', flag)
 endfunction
 
+function! unite#sources#outline#util#get_comment_heading_level(line, context)
+  if a:line =~ '^\s'
+    let level =  (type(a:context) == type({})
+          \ ? unite#sources#outline#util#get_indent_level(a:line, a:context) + 3
+          \ : a:context)
+  else
+    let level = (strlen(substitute(a:line, '\s*', '', 'g')) > 40 ? 2 : 3)
+    let level -= (a:line =~ '=')
+  endif
+  return level
+endfunction
+
 function! unite#sources#outline#util#get_indent_level(line, context)
   let sw = a:context.buffer.shiftwidth
   let ts = a:context.buffer.tabstop
