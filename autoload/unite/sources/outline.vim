@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-28
+" Updated : 2011-01-29
 " Version : 0.3.0
 " License : MIT license {{{
 "
@@ -31,7 +31,7 @@ function! unite#sources#outline#define()
 endfunction
 
 function! unite#sources#outline#alias(alias, src_filetype)
-  let g:unite_source_outline_info[a:alias] = a:src_filetype
+  let s:filetype_alias_table[a:alias] = a:src_filetype
 endfunction
 
 function! unite#sources#outline#clear_cache()
@@ -42,7 +42,7 @@ endfunction
 let s:outline_info_ftime = {}
 
 function! unite#sources#outline#get_outline_info(filetype)
-  let filetype = s:resolve_filetype(a:filetype)
+  let filetype = s:resolve_filetype_alias(a:filetype)
   if has_key(g:unite_source_outline_info, filetype)
     return g:unite_source_outline_info[filetype]
   else
@@ -75,12 +75,10 @@ function! unite#sources#outline#get_outline_info(filetype)
   return {}
 endfunction
 
-function! s:resolve_filetype(filetype)
-  if has_key(g:unite_source_outline_info, a:filetype) &&
-        \ type(g:unite_source_outline_info[a:filetype]) == type("")
-    " 1 more hop
-    let filetype = g:unite_source_outline_info[a:filetype]
-    return s:resolve_filetype(filetype)
+function! s:resolve_filetype_alias(filetype)
+  if has_key(s:filetype_alias_table, a:filetype)
+    let filetype = s:filetype_alias_table[a:filetype]
+    return s:resolve_filetype_alias(filetype) | " 1 more hop
   endif
   return a:filetype
 endfunction
@@ -130,6 +128,10 @@ if !exists('g:unite_source_outline_indent_width')
   let g:unite_source_outline_indent_width = 2
 endif
 
+if !exists('g:unite_source_outline_ignore_heading_types')
+  let g:unite_source_outline_ignore_heading_types = {}
+endif
+
 if !exists('g:unite_source_outline_max_headings')
   let g:unite_source_outline_max_headings = 1000
 endif
@@ -154,6 +156,8 @@ endif
 "-----------------------------------------------------------------------------
 " Aliases
 
+let s:filetype_alias_table = {}
+
 let s:default_alias_map = [
       \ ['cfg',      'dosini'  ],
       \ ['mkd',      'markdown'],
@@ -164,7 +168,7 @@ let s:default_alias_map = [
       \]
 for [alias, src_filetype] in s:default_alias_map
   " NOTE: If the user has his/her own outline info for {alias} filetype, not
-  " define any aliases for the filetype by default.
+  " define it as an alias of the other filetype by default.
   if s:find_outline_info_file(alias) == ""
     call unite#sources#outline#alias(alias, src_filetype)
   endif
@@ -247,6 +251,7 @@ function! s:source.gather_candidates(args, context)
       call outline_info.finalize(s:context)
     endif
 
+    call s:filter_headings(headings, s:get_ignore_heading_types(filetype))
     let levels = s:shift_levels(headings)
 
     " headings -> candidates
@@ -489,6 +494,25 @@ function! s:normalize_heading_word(str)
   let str = substitute(substitute(a:str, '^\s*', '', ''), '\s*$', '', '')
   let str = substitute(str, '\s\+', ' ', 'g')
   return str
+endfunction
+
+function! s:get_ignore_heading_types(filetype)
+  if has_key(g:unite_source_outline_ignore_heading_types, a:filetype)
+    return g:unite_source_outline_ignore_heading_types[a:filetype]
+  elseif has_key(s:filetype_alias_table, a:filetype)
+    return g:unite_source_outline_ignore_heading_types[s:resolve_filetype_alias(a:filetype)]
+  elseif has_key(g:unite_source_outline_ignore_heading_types, '*')
+    return g:unite_source_outline_ignore_heading_types['*']
+  else
+    return []
+  endif
+endfunction
+
+function! s:filter_headings(headings, ignore_types)
+  if !empty(a:ignore_types)
+    let ignore_types_pattern = '^\%(' . join(a:ignore_types, '\|') . '\)$'
+    call filter(a:headings, 'v:val.type !~# ignore_types_pattern')
+  endif
 endfunction
 
 function! s:shift_levels(headings)
