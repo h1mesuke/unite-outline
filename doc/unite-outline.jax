@@ -1,7 +1,7 @@
-*unite-outline.txt*	ファイルの見出し一覧を表示し、ジャンプ機能を提供する。
+*unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-01-10
+Updated : 2011-01-29
 Version : 0.3.0
 License : MIT license {{{
 
@@ -50,7 +50,7 @@ License : MIT license {{{
 ==============================================================================
 概要						*unite-outline-introduction*
 
-	*unite-outline* は、ファイルの見出しを抽出し、|unite|のインターフェー
+	*unite-outline* は、バッファの見出しを抽出し、|unite|のインターフェー
 	スを使ってそれらを一覧表示、各見出しへのジャンプ機能を提供する source
 	です。見出しを抽出するためのパターンおよび見出しレベルの決定ロジックを
 	ファイルタイプごとに設定することができ、ユーザーによる高度なカスタマイ
@@ -70,7 +70,7 @@ License : MIT license {{{
 
 	になります。
 
-	インストールに成功すると :Unite outline でファイルの見出し一覧を表示で
+	インストールに成功すると :Unite outline でバッファの見出し一覧を表示で
 	きます。（そのファイルタイプ用の outline info が存在する場合）
 
 ==============================================================================
@@ -79,7 +79,7 @@ License : MIT license {{{
 	|unite|の使い方については、unite.vim のヘルプを参照して下さい。ここで
 	は、unite.vim の source である unite-outline の使い方を説明します。
 
-	ファイルの見出し一覧を表示するには、source として outline を指定し、
+	バッファの見出し一覧を表示するには、source として outline を指定し、
 	:Unite を実行します。
 >
 	:Unite outline
@@ -89,7 +89,7 @@ License : MIT license {{{
 	れます。表示された一覧から見出しを選択すると、該当箇所へジャンプできま
 	す。
 
-	見出し抽出の対象ファイルの行数が変数
+	見出し抽出の対象バッファの行数が変数
 	|g:unite_source_outline_cache_limit|に設定された値より大きい場合、抽出
 	された見出しはキャッシュされます。これにより、２回目以降は見出し一覧の
 	表示が高速になります。
@@ -126,7 +126,26 @@ g:unite_source_outline_indent_width	*g:unite_source_outline_indent_width*
 	ための空白文字列を生成します。
 
 	初期値は 2
+					*g:unite_source_outline_ignore_heading_types*
+g:unite_source_outline_ignore_heading_types
 
+	非表示にしたい見出しの種類を設定するための辞書
+	ファイルタイプごとに、見出しの種類を表す文字列のリストを設定します。
+
+	「すべてのファイルタイプ」を意味する特殊なファイルタイプ名として "*"
+	が使用できます。個別の設定がなされていないファイルタイプにはその設定が
+	適用されます。
+
+	各見出しの種類については outline info の定義を参照して下さい。
+
+	初期値は {}
+>
+	let ignore_heading_types = {}
+	let ignore_heading_types['*'] = ['comment']
+	let ignore_heading_types.cpp  = ['comment', '#define', 'typedef', 'enum']
+	let g:unite_source_outline_ignore_heading_types = ignore_heading_types
+	unlet ignore_heading_types
+<
 g:unite_source_outline_max_headings	*g:unite_source_outline_max_headings*
 
 	抽出する見出し数の上限
@@ -153,15 +172,15 @@ g:unite_source_outline_cache_buffers	*g:unite_source_outline_cache_buffers*
 g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
 
 	見出しをキャッシュするバッファの行数しきい値
-	見出し抽出の対象ファイルの行数がこの値より大きい場合、抽出した見出しを
+	見出し抽出の対象バッファの行数がこの値より大きい場合、抽出した見出しを
 	キャッシュします。
 
 	初期値は 100
-
-g:unite_source_outline_cache_serialize limit
 				*g:unite_source_outline_cache_serialize_limit*
+g:unite_source_outline_cache_serialize_limit
+
 	見出しをキャッシュするバッファの行数しきい値
-	見出し抽出の対象ファイルの行数がこの値より大きい場合、抽出した見出しを
+	見出し抽出の対象バッファの行数がこの値より大きい場合、抽出した見出しを
 	キャッシュするとともに、ファイルに保存します。
 	キャッシュがファイルに保存されると、Vim の再起動後もそのファイルから見
 	出しを読み込むため、見出し一覧の表示が初回から高速になります。
@@ -173,25 +192,25 @@ Outline Info					*unite-outline-info*
 
 	unite-outline では、ファイルタイプごとの見出しの抽出パターンと、見出し
 	レベルの決定ロジック（関数）などを outline info と呼ばれる辞書によって
-	定義します。これを vimrc にて、あるいは所定の位置に配置した VimScript
+	定義します。これを vimrc にて、あるいは所定の位置に配置した Vimscript
 	によって記述することで、ファイルタイプごとの見出し抽出と見出し一覧の作
 	成を自在にカスタマイズできます。
 
 ------------------------------------------------------------------------------
 outline info の探索				*unite-outline-info-search*
 
-	見出し一覧の表示を実行した際、対象ファイルのファイルタイプにもとづき
+	見出し一覧の表示を実行した際、対象バッファのファイルタイプにもとづき
 	outline info の探索が実行されます。探索の順序は以下の通りです。
 
-	(1) g:unite_source_outline_info.{filetype}
-	(2) unite#sources#outline#{filetype}#outline_info()
-	(3) unite#sources#outline#defaults#{filetype}#outline_info()
+	[1] g:unite_source_outline_info.{filetype}
+	[2] unite#sources#outline#{filetype}#outline_info()
+	[3] unite#sources#outline#defaults#{filetype}#outline_info()
 
 ------------------------------------------------------------------------------
 outline info の作成				*unite-outline-info-create*
 
 	unite-outline がデフォルトで提供する outline info ではなく、ユーザー独
-	自の outline info を作成・使用したい場合、その方法は以下の２つです。
+	自の outline info を作成／使用したい場合、その方法は以下の２つです。
 
 	1. vimrc にてグローバル変数に設定する
 
@@ -301,7 +320,7 @@ create_heading	関数（任意） 		*unite-outline-info-create_heading()*
 	  			lines中の matched_line の添字
 
 	  * lines		リスト
-	  			ファイルの全行
+	  			バッファの全行
 
 	  * buffer		辞書
 				バッファ情報
@@ -327,7 +346,7 @@ create_heading	関数（任意） 		*unite-outline-info-create_heading()*
 			省略した場合は 1 になります。
 
 	* type		文字列（任意）
-			見出し種別
+			見出しの種類
 			省略した場合は "generic" になります。
 
 	空の辞書を返すと、見出しではないとみなされ、無視されます。
@@ -350,12 +369,12 @@ skip		辞書（任意）				*unite-outline-info-skip*
 	見出し抽出の対象としない領域を指定するための辞書です。以下の属性を設定
 	することで、指定の領域を見出し抽出の対象外にできます。
 
-	header	文字列、リスト、辞書のいずれか（任意）
 						*unite-outline-info-skip-header*
-		ファイルの先頭にあるヘッダ部分（作者や著作権の表示がある部分）
+	header	文字列、リスト、辞書のいずれか（任意）
+		バッファの先頭にあるヘッダ部分（作者や著作権の表示がある部分）
 		から見出しが抽出されるのを防ぐために設定します。
 
-		(1) 文字列が設定された場合は、それをパターンとみなし、ファイル
+		(1) 文字列が設定された場合は、それをパターンとみなし、バッファ
 		の先頭からそのパターンにマッチする行が続く間をスキップします。
 >
 		\ 'skip': {
@@ -371,7 +390,7 @@ skip		辞書（任意）				*unite-outline-info-skip*
 		\ },
 <
 		(3) 辞書が設定された場合は、leading属性に (1) のパターン、
-		block属性に (2) のリストが設定されているものとし、ファイルの先
+		block属性に (2) のリストが設定されているものとし、バッファの先
 		頭からそれぞれにマッチする部分をスキップします。
 >
 		\ 'skip': {
@@ -382,7 +401,7 @@ skip		辞書（任意）				*unite-outline-info-skip*
 		\ },
 <
 	block	リスト（任意）			*unite-outline-info-skip-block*
-		設定されていると、値をパターンのペアと見なし、ファイル中の、
+		設定されていると、値をパターンのペアと見なし、バッファ中の、
 		skip.block[0] にマッチする行から skip.block[1] にマッチする行
 		までをスキップします。
 >
@@ -402,8 +421,11 @@ skip_header()	関数（任意）			*unite-outline-info-skip_header()*
 
 	skip_header()関数に渡される引数は以下の通りです。
 
-	* {lines} - リスト：ファイルの全行
-	* {context} - 辞書：詳細は|unite-outline-info-context|を参照
+	* {lines}	リスト
+			バッファの全行
+
+	* {context}	辞書
+			その他の情報、詳細は|unite-outline-info-context|を参照
 
 CACHING HEADINGS ~
 
@@ -436,8 +458,9 @@ finalize	関数（任意） 			*unite-outline-info-finalize()*
 ------------------------------------------------------------------------------
 関数						*unite-outline-functions*
 
+						*unite#sources#outline#alias()*
 unite#sources#outline#alias({alias}, {src-filetype})
-					*unite#sources#outline#alias()*
+
 	ファイルタイプの別名を設定します。{src-filetype} の outline-info を別
 	のファイルタイプでも利用したい場合に使用します。
 >
@@ -448,8 +471,9 @@ unite#sources#outline#clear_cache()	 *unite#sources#outline#clear_cache()*
 
 	ファイルに保存した見出しのキャッシュを削除します。
 
-unite#sources#outline#get_outline_info({filetype})
 					*unite#sources#outline#get_outline_info()*
+unite#sources#outline#get_outline_info({filetype})
+
 	{filetype} のための outline info を返します。outline info が見つからな
 	い場合は空の辞書 {} を返します。
 
@@ -458,46 +482,57 @@ UTILITY FUNCTIONS			*unite-outline-utility-functions*
 	以下は、outline info を作成するにあたり、create_heading()関数などで使
 	用すると便利なユーティリティ関数です。
 
-unite#sources#outline#util#capitalize({str} [, {flag}])
 					*unite#sources#outline#util#capitalize()*
+unite#sources#outline#util#capitalize({str} [, {flag}])
+
 	{str} の先頭の文字を大文字に、残りを小文字に変換した文字列を返します。
 	{flag} に "g" を指定すると、すべての単語を同様に処理します。
 
-unite#sources#outline#util#get_indent_level({str}, {context})
 				*unite#sources#outline#util#get_indent_level()*
+unite#sources#outline#util#get_indent_level({str}, {context})
+
 	{str} のインデントレベルを返します。
 	{context} には create_heading()関数などが引数として受け取る辞書
 	|unite-outline-info-context|を渡します。
 
-unite#sources#outline#util#indent({str}, {level})
 					*unite#sources#outline#util#indent()*
+unite#sources#outline#util#indent({str}, {level})
+
 	{level} の見出しレベルに応じたインデントのための空白文字列を {str} の
 	先頭に付加して返します。インデントの幅には
 	|g:unite_source_outline_indent_width|の値が考慮されます。
 
-unite#sources#outline#util#join_to({lines}, {idx}, {pattern} [, {limit}])
 					*unite#sources#outline#util#join_to()*
+unite#sources#outline#util#join_to({lines}, {idx}, {pattern} [, {limit}])
+
 	{lines} の添字が {idx} の行から {pattern} にマッチする行までを連結
 	した文字列を返します。連結される行は "\n" で区切られます。
-	{limit} には最大何行先までマッチを試行・連結するかを指定でき、省略した
+	{limit} には最大何行先までマッチを試行／連結するかを指定でき、省略した
 	場合は 3 になります。{limit} に負の値を指定すると、{lines} の添字が
 	{idx} の行から前の行に対してマッチの試行と連結を行います。
 
-unite#sources#outline#util#neighbor_match({lines}, {idx}, {pattern} [, {range}])
 				*unite#sources#outline#util#neighbor_match()*
+unite#sources#outline#util#neighbor_match(
+	{lines}, {idx}, {pattern} [, {range} [, {exclusive}]])
+
 	{lines} の添字が {idx} の行およびその前後の行が {pattern} にマッチする
 	ならば真、そうでないなら偽を返します。
 	{range} には前後の何行分に対しマッチを試行するかを指定でき、省略した場
 	合は 1 になります。{range} にリストを指定すると、マッチを試行する行数
 	を前と後ろ、個別に設定できます。
+	{exclusive} に 1 を指定すると添字が {idx} の行をマッチの試行対象から除
+	外します。
 
-unite#sources#outline#util#neighbor_matchstr({lines}, {idx}, {pattern} [, {range}])
 				*unite#sources#outline#util#neighbor_matchstr()*
+unite#sources#outline#util#neighbor_matchstr(
+	{lines}, {idx}, {pattern} [, {range} [, {exclusive}]])
+
 	|unite#sources#outline#util#neighbor_match()|の派生形。真偽値ではなく、
 	マッチした部分文字列を返します。マッチしない場合は "" を返します。
 
-unite#sources#outline#util#nr2roman({nr})
 					*unite#sources#outline#util#nr2roman()*
+unite#sources#outline#util#nr2roman({nr})
+
 	{nr} をローマ数字へと変換します。
 	ローマ数字として表現可能な範囲は 1以上 4999以下の範囲で、{nr} がその範
 	囲外にある場合は、{nr} を単に文字列に変換したものを返します。
@@ -505,9 +540,9 @@ unite#sources#outline#util#nr2roman({nr})
 ==============================================================================
 TODO						*unite-outline-todo*
 
-	* C, C++, Java, D などの outline info
+	* Erlang, Go, Haskell, Scala などの outline info
 
-		作者がスクリプト言語ばっかりやってる影響で対応が遅れています。
+		作者にとって未知の言語なため対応が遅れています。
 		なんとかしなければ。
 
 	* 英語ヘルプ
@@ -545,19 +580,27 @@ outline info 募集！
 
 https://github.com/h1mesuke/unite-outline/commits/master
 
+0.3.1	2011-01-29
+	- 特定の種類の見出しを非表示にする機能を実装
+	- 以下の変数を追加
+	  -|g:unite_source_outline_ignore_heading_types|
+
 0.3.0	2011-01-10
 	- outline info の仕様を拡張
 	  - create_heading()関数から辞書を返せるようにした
 	  - 添付のデフォルト outline info を新仕様にあわせ刷新
 
-	-|unite#sources#outline#clear_cache()|を追加
-	-|unite#sources#outline#util#get_indent_level()|を追加
-	-|unite#sources#outline#util#indent()|の仕様を変更
-	  - 後方互換性は維持
+	- 以下の関数を追加
+	  -|unite#sources#outline#clear_cache()|
+	  -|unite#sources#outline#util#get_indent_level()|
+
+	- 以下の関数を仕様変更
+	  -|unite#sources#outline#util#indent()|
+	    - 後方互換性は維持
 
 0.2.1	2011-01-04
 	- キャッシュの一部永続化を実装
-	- キャッシュの永続化を制御するための以下の変数を追加
+	- 以下の変数を追加
 	  -|g:unite_source_outline_cache_dir|
 	  -|g:unite_source_outline_cache_serialize_limit|
 
