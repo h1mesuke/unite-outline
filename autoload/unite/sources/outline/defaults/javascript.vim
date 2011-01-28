@@ -1,9 +1,9 @@
 "=============================================================================
-" File       : autoload/unite/sources/outline/defaults/javascript.vim
-" Maintainer : h1mesuke <himesuke@gmail.com>
-" Updated    : 2011-01-28
+" File    : autoload/unite/sources/outline/defaults/javascript.vim
+" Author  : h1mesuke <himesuke@gmail.com>
+" Updated : 2011-01-29
 "
-" Improved by hamaco, h1mesuke
+" Contributed by hamaco
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -11,7 +11,7 @@
 "=============================================================================
 
 " Default outline info for JavaScript
-" Version: 0.0.7
+" Version: 0.0.8
 
 function! unite#sources#outline#defaults#javascript#outline_info()
   return s:outline_info
@@ -41,14 +41,18 @@ let s:outline_info = {
       \}
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
+  let level = unite#sources#outline#
+        \util#get_indent_level(a:heading_line, a:context) + 3
   let heading = {
         \ 'word' : a:heading_line,
-        \ 'level': unite#sources#outline#util#get_indent_level(a:heading_line, a:context),
+        \ 'level': level,
         \ 'type' : 'generic',
         \ }
 
   if a:which ==# 'heading-1'
     let heading.type = 'comment'
+    let heading.level = unite#sources#outline#
+          \util#get_comment_heading_level(a:matched_line, a:context)
 
   elseif a:which ==# 'heading'
 

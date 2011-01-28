@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/css.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2010-12-11
+" Updated : 2011-01-28
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -24,5 +24,25 @@ let s:outline_info = {
       \   },
       \ },
       \}
+
+function! s:outline_info.create_heading(which, heading_line, matched_line, context)
+  let heading = {
+        \ 'word' : a:heading_line,
+        \ 'level': 0,
+        \ 'type' : 'generic',
+        \ }
+
+  if a:which ==# 'heading-1'
+    let heading.type = 'comment'
+    let heading.level = unite#sources#outline#
+          \util#get_comment_heading_level(a:matched_line, 4)
+  endif
+
+  if heading.level > 0
+    return heading
+  else
+    return {}
+  endif
+endfunction
 
 " vim: filetype=vim

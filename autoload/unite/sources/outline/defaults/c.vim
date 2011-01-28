@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for C
-" Version: 0.0.7
+" Version: 0.0.8
 
 function! unite#sources#outline#defaults#c#outline_info()
   return s:outline_info
@@ -44,15 +44,10 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
 
   if a:which == 'heading-1'
     let heading.type = 'comment'
-    if a:matched_line =~ '^\s'
-      let heading.level = 4
-    elseif strlen(substitute(a:matched_line, '\s*', '', 'g')) > 40
-      let heading.level = 1
-    else
-      let heading.level = 2
-    endif
+    let heading.level = unite#sources#outline#
+          \util#get_comment_heading_level(a:matched_line, 5)
   elseif a:which == 'heading'
-    let heading.level = 3
+    let heading.level = 4
     let lines = a:context.lines | let h = a:context.heading_index
     if a:heading_line =~ '^\s*#\s*define\>'
       " #define ()
@@ -63,8 +58,8 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
       if a:heading_line =~ '{\s*$'
         let heading.type = 'typedef'
         let indent = matchstr(a:heading_line, '^\s*')
-        let closing = unite#sources#outline#util#neighbor_matchstr(
-              \ lines, h, '^' . indent . '}.*$', [0, 50])
+        let closing = unite#sources#outline#
+              \util#neighbor_matchstr(lines, h, '^' . indent . '}.*$', [0, 50])
         let heading.word = substitute(heading.word, '{\s*$', '{...' . closing, '')
       else
         let heading.level = 0
@@ -73,8 +68,8 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
       " enum
       if a:heading_line =~ '{\s*$'
         let heading.type = 'enum'
-        let first_sym_def = unite#sources#outline#util#neighbor_matchstr(
-              \ lines, h, '^\s*\zs\S.\{-},\=\ze\s*\%(/[/*]\|$\)', [0, 3], 1)
+        let first_sym_def = unite#sources#outline#
+              \util#neighbor_matchstr(lines, h, '^\s*\zs\S.\{-},\=\ze\s*\%(/[/*]\|$\)', [0, 3], 1)
         let closing = (first_sym_def =~ ',$' ? ' ...}' : ' }')
         let heading.word = substitute(heading.word, '{\s*$', '{ ' . first_sym_def . closing, '')
       else

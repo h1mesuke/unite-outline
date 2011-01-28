@@ -45,8 +45,8 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   if a:heading_line =~ '^\\begin{thebibliography}{'
     " Bibliography
     let heading.level = s:bib_level
-    let bib_label = unite#sources#outline#util#neighbor_matchstr(
-          \ lines, h, '\\renewcommand{\\bibname}{\zs.*\ze}\s*$', 3)
+    let bib_label = unite#sources#outline#
+          \util#neighbor_matchstr(lines, h, '\\renewcommand{\\bibname}{\zs.*\ze}\s*$', 3)
     let heading.word = (bib_label == "" ? "Bibliography" : bib_label)
   else
     " Parts, Chapters, Sections, etc

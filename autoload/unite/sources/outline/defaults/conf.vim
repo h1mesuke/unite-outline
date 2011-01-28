@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/conf.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-22
+" Updated : 2011-01-28
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for Conf files
-" Version: 0.0.2
+" Version: 0.0.3
 
 function! unite#sources#outline#defaults#conf#outline_info()
   return s:outline_info
@@ -31,13 +31,8 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
 
   if a:which ==# 'heading-1'
     let heading.type = 'comment'
-    if a:matched_line =~ '^#\s*='
-      let heading.level = 1
-    elseif strlen(substitute(a:matched_line, '\s*', '', 'g')) > 40
-      let heading.level = 2
-    else
-      let heading.level = 3
-    endif
+    let heading.level = unite#sources#outline#
+          \util#get_comment_heading_level(a:matched_line, 4)
   endif
 
   if heading.level > 0

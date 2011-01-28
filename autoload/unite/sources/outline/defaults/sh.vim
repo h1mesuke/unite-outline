@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for Shell Scripts
-" Version: 0.0.6
+" Version: 0.0.7
 
 function! unite#sources#outline#defaults#sh#outline_info()
   return s:outline_info
@@ -32,15 +32,11 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
 
   if a:which ==# 'heading-1'
     let heading.type = 'comment'
-    if a:matched_line =~ '^\s'
-      let heading.level = 4
-    elseif strlen(substitute(a:matched_line, '\s*', '', 'g')) > 40
-      let heading.level = 1
-    else
-      let heading.level = 2
-    endif
+    let heading.level = unite#sources#outline#
+          \util#get_comment_heading_level(a:matched_line, 5)
   elseif a:which ==# 'heading'
-    let heading.level = 3 | let heading.type = 'function'
+    let heading.level = 4
+    let heading.type = 'function'
     let heading.word = substitute(heading.word, '\s*{.*$', '', '')
   endif
 
