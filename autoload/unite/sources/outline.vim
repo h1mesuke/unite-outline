@@ -499,12 +499,15 @@ endfunction
 function! s:get_ignore_heading_types(filetype)
   if has_key(g:unite_source_outline_ignore_heading_types, a:filetype)
     return g:unite_source_outline_ignore_heading_types[a:filetype]
-  elseif has_key(s:filetype_alias_table, a:filetype)
-    return g:unite_source_outline_ignore_heading_types[s:resolve_filetype_alias(a:filetype)]
-  elseif has_key(g:unite_source_outline_ignore_heading_types, '*')
-    return g:unite_source_outline_ignore_heading_types['*']
   else
-    return []
+    let resolved_filetype = s:resolve_filetype_alias(a:filetype)
+    if has_key(g:unite_source_outline_ignore_heading_types, resolved_filetype)
+      return g:unite_source_outline_ignore_heading_types[resolved_filetype]
+    elseif has_key(g:unite_source_outline_ignore_heading_types, '*')
+      return g:unite_source_outline_ignore_heading_types['*']
+    else
+      return []
+    endif
   endif
 endfunction
 
