@@ -252,7 +252,7 @@ function! s:source.gather_candidates(args, context)
     endif
 
     call s:filter_headings(headings, s:get_ignore_heading_types(filetype))
-    let levels = s:shift_levels(headings)
+    let levels = s:smooth_levels(headings)
 
     " headings -> candidates
     let cands = map(headings, '{
@@ -314,7 +314,6 @@ function! s:normalize_outline_info(outline_info)
       let a:outline_info.skip.block = s:normalize_block_patterns(a:outline_info.skip.block)
     endif
   endif
-  call extend(a:outline_info, { 'level_shift': 'smooth' }, 'keep')
 endfunction
 
 function! s:normalize_block_patterns(patterns)
@@ -518,21 +517,9 @@ function! s:filter_headings(headings, ignore_types)
   endif
 endfunction
 
-function! s:shift_levels(headings)
-  let shift_method = s:context.outline_info.level_shift
+function! s:smooth_levels(headings)
   let levels = map(copy(a:headings), 'v:val["level"]')
-  if shift_method ==# 'shift'
-    let shift = min(levels) - 1
-    call map(levels, 'v:val - shift')
-  elseif shift_method ==# 'smooth'
-    let levels = s:smooth_levels(levels)
-  elseif shift_method ==# 'none'
-  endif
-  return levels
-endfunction
-
-function! s:smooth_levels(levels)
-  return s:_smooth_levels(a:levels, 0)
+  return s:_smooth_levels(levels, 0)
 endfunction
 
 function! s:_smooth_levels(levels, base_level)
