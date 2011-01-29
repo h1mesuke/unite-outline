@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/cpp.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-28
+" Updated : 2011-01-29
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,14 +9,14 @@
 "=============================================================================
 
 " Default outline info for C++
-" Version: 0.0.3 (draft)
+" Version: 0.0.5
 
 function! unite#sources#outline#defaults#cpp#outline_info()
   return s:outline_info
 endfunction
 
 " sub patterns
-let s:define_macro = '#\s*define\s\+\h\w*('
+let s:func_macro = '#\s*define\s\+\h\w*('
 let s:typedef = '\%(typedef\|enum\)\>'
 
 let s:class_def = '\%(template\s*<[^>]*>\s*\)\=class\>'
@@ -29,7 +29,7 @@ let s:func_def = s:ret_type . '\~\=\h\w*\%(::\%(operator\S\+\|\~\=\h\w*\)\)*\s*(
 
 let s:outline_info = {
       \ 'heading-1': unite#sources#outline#util#shared_pattern('cpp', 'heading-1'),
-      \ 'heading'  : '^\(\s*\(' . s:define_macro . '\|' . s:typedef . '\)\|\(' . s:class_def . '\|' . s:func_def . '\)\)',
+      \ 'heading'  : '^\(\s*\(' . s:func_macro . '\|' . s:typedef . '\)\|\(' . s:class_def . '\|' . s:func_def . '\)\)',
       \ 'skip': {
       \   'header': unite#sources#outline#util#shared_pattern('cpp', 'header'),
       \ },
@@ -91,9 +91,10 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
       call s:rebuild_class_names_pattern(class_name)
       let heading.word = substitute(heading.word, '\s*{.*$', '', '')
     else
-      " function definition
-      if a:heading_line =~ ';\s*$'
-        " it's a declaration, not a definition
+      " function
+      if a:heading_line =~ ';\s*$' || a:heading_line =~ '\<[[:upper:]_]\+\s*('
+        " this is a function prototype or a functional macro application, not
+        " a function definition
         let heading.level = 0
       else
         let heading.type = 'function'
