@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-29
+" Updated : 2011-02-01
 " Version : 0.3.0
 " License : MIT license {{{
 "
@@ -368,6 +368,7 @@ function! s:extract_headings()
 
   while s:line_idx < num_lines
     let line = lines[s:line_idx]
+
     if skip_block && line =~# outline_info.skip.block.begin
       " skip a documentation block
       call s:skip_to(outline_info.skip.block.end)
@@ -385,6 +386,7 @@ function! s:extract_headings()
         endif
         if !empty(heading)
           call add(headings, s:normalize_heading(heading, next_line, s:line_idx + 1))
+          let s:line_idx += 1
         endif
       elseif next_line =~ '\S' && s:line_idx < num_lines - 4
         " see one more next
@@ -399,11 +401,10 @@ function! s:extract_headings()
           endif
           if !empty(heading)
             call add(headings, s:normalize_heading(heading, next_line, s:line_idx + 2))
+            let s:line_idx += 2
           endif
         endif
-        let s:line_idx += 1
       endif
-      let s:line_idx += 1
 
     elseif has_heading_pattern && line =~# outline_info.heading
       " matched: heading
@@ -521,7 +522,6 @@ function! s:smooth_levels(headings)
   let levels = map(copy(a:headings), 'v:val["level"]')
   return s:_smooth_levels(levels, 0)
 endfunction
-
 function! s:_smooth_levels(levels, base_level)
   let splitted = s:split_list(a:levels, a:base_level)
   for sub_levels in splitted
