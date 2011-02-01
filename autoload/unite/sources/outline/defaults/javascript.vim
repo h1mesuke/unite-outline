@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/javascript.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-29
+" Updated : 2011-02-01
 "
 " Contributed by hamaco
 "
@@ -11,7 +11,7 @@
 "=============================================================================
 
 " Default outline info for JavaScript
-" Version: 0.0.8
+" Version: 0.0.9
 
 function! unite#sources#outline#defaults#javascript#outline_info()
   return s:outline_info
@@ -49,7 +49,9 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
         \ 'type' : 'generic',
         \ }
 
-  if a:which ==# 'heading-1'
+  if a:which == 'heading-1' &&
+        \ ((a:matched_line =~ '^\s*//'  && a:heading_line =~ '^\s*//') ||
+        \  (a:matched_line =~ '^\s*/\*' && a:matched_line !~ '\*/\s*$'))
     let heading.type = 'comment'
     let heading.level = unite#sources#outline#
           \util#get_comment_heading_level(a:matched_line, a:context)

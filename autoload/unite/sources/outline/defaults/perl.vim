@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/perl.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-28
+" Updated : 2011-02-01
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for Perl
-" Version: 0.0.6
+" Version: 0.0.7
 
 function! unite#sources#outline#defaults#perl#outline_info()
   return s:outline_info
@@ -33,7 +33,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
         \ 'type' : 'generic',
         \ }
 
-  if a:which == 'heading-1'
+  if a:which == 'heading-1' && a:heading_line =~ '^\s*#'
     let heading.type = 'comment'
     let heading.level = unite#sources#outline#
           \util#get_comment_heading_level(a:matched_line, a:context)

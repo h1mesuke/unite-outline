@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/cpp.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-29
+" Updated : 2011-02-01
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for C++
-" Version: 0.0.5
+" Version: 0.0.6
 
 function! unite#sources#outline#defaults#cpp#outline_info()
   return s:outline_info
@@ -51,7 +51,9 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
         \ 'type' : 'generic',
         \ }
 
-  if a:which == 'heading-1'
+  if a:which == 'heading-1' &&
+        \ ((a:matched_line =~ '^\s*//'  && a:heading_line =~ '^\s*//') ||
+        \  (a:matched_line =~ '^\s*/\*' && a:matched_line !~ '\*/\s*$'))
     let heading.type = 'comment'
     let heading.level = unite#sources#outline#
           \util#get_comment_heading_level(a:matched_line, 6)
