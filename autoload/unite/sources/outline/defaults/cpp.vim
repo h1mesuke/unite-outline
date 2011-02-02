@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/cpp.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-02-01
+" Updated : 2011-02-02
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -51,9 +51,8 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
         \ 'type' : 'generic',
         \ }
 
-  if a:which == 'heading-1' &&
-        \ ((a:matched_line =~ '^\s*//'  && a:heading_line =~ '^\s*//') ||
-        \  (a:matched_line =~ '^\s*/\*' && a:matched_line !~ '\*/\s*$'))
+  if a:which == 'heading-1' && unite#sources#outline#
+        \util#_cpp_is_in_comment(a:heading_line, a:matched_line)
     let heading.type = 'comment'
     let heading.level = unite#sources#outline#
           \util#get_comment_heading_level(a:matched_line, 6)
@@ -63,7 +62,8 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     if a:heading_line =~ '^\s*#\s*define\>'
       " #define ()
       let heading.type = '#define'
-      let heading.word = s:normalize_define_macro_heading_word(heading.word)
+      let heading.word = unite#sources#outline#
+            \util#_c_normalize_define_macro_heading_word(heading.word)
     elseif a:heading_line =~ '\<typedef\>'
       " typedef
       if a:heading_line =~ '{\s*$'
@@ -113,12 +113,6 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   else
     return {}
   endif
-endfunction
-
-function! s:normalize_define_macro_heading_word(heading_word)
-  let heading_word = substitute(a:heading_word, '#\s*define', '#define', '')
-  let heading_word = substitute(heading_word, ')\zs.*$', '', '')
-  return heading_word
 endfunction
 
 function! s:rebuild_class_names_pattern(class_name)

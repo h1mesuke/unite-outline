@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-28
+" Updated : 2011-02-02
 " Version : 0.3.1
 " License : MIT license {{{
 "
@@ -26,7 +26,8 @@
 " }}}
 "=============================================================================
 
-" unite#sources#outline#util#capitalize(str [, flag])
+" unite#sources#outline#util#capitalize({str} [, {flag}])
+"
 function! unite#sources#outline#util#capitalize(str, ...)
   let flag = (a:0 ? a:1 : '')
   return substitute(a:str, '\<\(\u\)\(\u\+\)\>', '\u\1\L\2', flag)
@@ -51,8 +52,9 @@ function! unite#sources#outline#util#get_indent_level(line, context)
   return strlen(indent) / sw + 1
 endfunction
 
-" function! unite#sources#outline#util#indent(str, level)
-" function! unite#sources#outline#util#indent(level)
+" function! unite#sources#outline#util#indent({str}, {level})
+" function! unite#sources#outline#util#indent({level})
+"
 function! unite#sources#outline#util#indent(...)
   let level = get(a:000, -1, 1)
   let indent = repeat(' ', (level - 1) * g:unite_source_outline_indent_width)
@@ -64,7 +66,8 @@ function! unite#sources#outline#util#indent(...)
   endif
 endfunction
 
-" unite#sources#outline#util#join_to(lines, idx, pattern [, limit])
+" unite#sources#outline#util#join_to({lines}, {idx}, {pattern} [, {limit}])
+"
 function! unite#sources#outline#util#join_to(lines, idx, pattern, ...)
   let limit = (a:0 ? a:1 : 3)
   if limit < 0
@@ -95,7 +98,9 @@ function! s:join_to_backward(lines, idx, pattern, limit)
   return join(a:lines[idx : a:idx], "\n")
 endfunction
 
-" unite#sources#outline#util#neighbor_match(lines, idx, pattern [, range [, exclusive])
+" unite#sources#outline#util#neighbor_match(
+"   {lines}, {idx}, {pattern} [, {range} [, {exclusive}])
+"
 function! unite#sources#outline#util#neighbor_match(lines, idx, pattern, ...)
   let range = get(a:000, 0, 1)
   let exclusive = !!get(a:000, 1, 0)
@@ -125,7 +130,9 @@ function! s:neighbor_ranges(lines, idx, prev, next, exclusive)
   return [bwd_range, fwd_range]
 endfunction
 
-" unite#sources#outline#util#neighbor_matchstr(lines, idx, pattern [, range [, exclusive])
+" unite#sources#outline#util#neighbor_matchstr(
+"   {lines}, {idx}, {pattern} [, {range} [, {exclusive}])
+"
 function! unite#sources#outline#util#neighbor_matchstr(lines, idx, pattern, ...)
   let range = get(a:000, 0, 1)
   let exclusive = !!get(a:000, 1, 0)
@@ -194,8 +201,18 @@ let s:shared_patterns = {
       \}
 
 function! unite#sources#outline#util#shared_pattern(filetype, which)
-  let ft_patterns = s:shared_patterns[a:filetype]
-  return ft_patterns[a:which]
+  return s:shared_patterns[a:filetype][a:which]
+endfunction
+
+function! unite#sources#outline#util#_c_normalize_define_macro_heading_word(heading_word)
+  let heading_word = substitute(a:heading_word, '#\s*define', '#define', '')
+  let heading_word = substitute(heading_word, ')\zs.*$', '', '')
+  return heading_word
+endfunction
+
+function! unite#sources#outline#util#_cpp_is_in_comment(heading_line, matched_line)
+  return ((a:matched_line =~ '^\s*//'  && a:heading_line =~ '^\s*//') ||
+        \ (a:matched_line =~ '^\s*/\*' && a:matched_line !~ '\*/\s*$'))
 endfunction
 
 function! unite#sources#outline#util#print_debug(msg)
