@@ -497,23 +497,18 @@ function! s:normalize_heading_word(str)
 endfunction
 
 function! s:get_ignore_heading_types(filetype)
-  if has_key(g:unite_source_outline_ignore_heading_types, a:filetype)
-    return g:unite_source_outline_ignore_heading_types[a:filetype]
-  else
-    let resolved_filetype = s:resolve_filetype_alias(a:filetype)
-    if has_key(g:unite_source_outline_ignore_heading_types, resolved_filetype)
-      return g:unite_source_outline_ignore_heading_types[resolved_filetype]
-    elseif has_key(g:unite_source_outline_ignore_heading_types, '*')
-      return g:unite_source_outline_ignore_heading_types['*']
-    else
-      return []
+  for filetype in [a:filetype, s:resolve_filetype_alias(a:filetype), '*']
+    if has_key(g:unite_source_outline_ignore_heading_types, filetype)
+      return g:unite_source_outline_ignore_heading_types[filetype]
     endif
-  endif
+  endfor
+  return []
 endfunction
 
 function! s:filter_headings(headings, ignore_types)
   if !empty(a:ignore_types)
-    let ignore_types_pattern = '^\%(' . join(a:ignore_types, '\|') . '\)$'
+    let ignore_types = map(copy(a:ignore_types), 'unite#util#escape_pattern(v:val)')
+    let ignore_types_pattern = '^\%(' . join(ignore_types, '\|') . '\)$'
     call filter(a:headings, 'v:val.type !~# ignore_types_pattern')
   endif
 endfunction
