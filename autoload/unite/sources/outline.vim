@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-02-01
+" Updated : 2011-02-02
 " Version : 0.3.1
 " License : MIT license {{{
 "
@@ -260,7 +260,7 @@ function! s:source.gather_candidates(args, context)
           \ "source": "outline",
           \ "kind"  : "jump_list",
           \ "action__path"     : path,
-          \ "action__pattern"  : "^" . s:escape_regexp(v:val["line"]) . "$",
+          \ "action__pattern"  : "^" . unite#util#escape_pattern(v:val["line"]) . "$",
           \ "action__signature": self.calc_signature(v:val["line_idx"] + 1, s:buffer.lines),
           \ }')
 
@@ -555,10 +555,6 @@ function! s:join_list(lists, sep)
   endfor
   call remove(result, -1)
   return result
-endfunction
-
-function! s:escape_regexp(str)
-  return escape(a:str, '^$[].*\~')
 endfunction
 
 function! s:source.calc_signature(lnum, ...)
