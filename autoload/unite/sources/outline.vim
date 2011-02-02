@@ -473,9 +473,10 @@ endfunction
 function! s:normalize_heading(heading, line, line_idx)
   if type(a:heading) == type("")
     " normalize to a Dictionary
+    let level = unite#sources#outline#util#get_indent_level(a:heading, s:context)
     let heading = {
           \ 'word' : a:heading,
-          \ 'level': unite#sources#outline#util#get_indent_level(a:heading, s:context),
+          \ 'level': level,
           \ }
   else
     let heading = a:heading
@@ -490,10 +491,10 @@ function! s:normalize_heading(heading, line, line_idx)
   return heading
 endfunction
 
-function! s:normalize_heading_word(str)
-  let str = substitute(substitute(a:str, '^\s*', '', ''), '\s*$', '', '')
-  let str = substitute(str, '\s\+', ' ', 'g')
-  return str
+function! s:normalize_heading_word(heading_word)
+  let heading_word = substitute(substitute(a:heading_word, '^\s*', '', ''), '\s*$', '', '')
+  let heading_word = substitute(heading_word, '\s\+', ' ', 'g')
+  return heading_word
 endfunction
 
 function! s:get_ignore_heading_types(filetype)
