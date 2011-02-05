@@ -11,7 +11,7 @@
 "=============================================================================
 
 " Default outline info for Java
-" Version: 0.0.7
+" Version: 0.0.8
 
 function! unite#sources#outline#defaults#java#outline_info()
   return s:outline_info
@@ -52,7 +52,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     let heading.level = unite#sources#outline#
           \util#get_comment_heading_level(a:matched_line, a:context)
   elseif a:which == 'heading'
-    if a:heading_line =~ '\<\%(new\|return\|throw\)\>'
+    if a:heading_line =~ '\<\%(if\|new\|return\|throw\)\>'
       let heading.level = 0
     else
       if a:heading_line =~ '\<class\>'
@@ -81,7 +81,7 @@ endfunction
 function! s:normalize_method_heading_word(heading_word)
   let heading_word = substitute(substitute(a:heading_word, '{.*$', '', ''), ';.*$', '', '')
   let matched_list = matchlist(heading_word,
-        \ '^\s*\(public\|private\|protected\)\=\s\+\(\%(\h\w*\s\+\)*\)\(\h\w*\s*(.*$\)')
+        \ '^\s*\%(\(public\|private\|protected\)\s\+\)\=\(\%(\h\w*\s\+\)*\)\(\h\w*\s*(.*$\)')
   let [scope, type, method] = matched_list[1:3]
 
   if scope == ''
