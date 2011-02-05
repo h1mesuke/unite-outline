@@ -1,7 +1,9 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/java.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-02-02
+" Updated : 2011-02-05
+"
+" Contributed by basyura
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +11,7 @@
 "=============================================================================
 
 " Default outline info for Java
-" Version: 0.0.6 (draft)
+" Version: 0.0.7
 
 function! unite#sources#outline#defaults#java#outline_info()
   return s:outline_info
@@ -54,10 +56,16 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
       let heading.level = 0
     else
       if a:heading_line =~ '\<class\>'
+        " class
         let class_name = matchstr(a:heading_line, '\<class\s\+\zs\h\w*')
         call self.rebuild_heading_pattern(class_name)
         " rebuild the heading pattern to extract constructor definitions
         " with no modifiers
+      elseif a:heading_line =~ '\<interface\>'
+        " interface
+      else
+        " method
+        let heading.word = s:normalize_method_heading_word(heading.word)
       endif
       let heading.word = substitute(heading.word, '\s*{.*$', '', '')
     endif
@@ -68,6 +76,20 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   else
     return {}
   endif
+endfunction
+
+function! s:normalize_method_heading_word(heading_word)
+  let matched_list = matchlist(a:heading_word,
+        \ '^\s*\(public\|private\|protected\)\=\s\+\(\%(\h\w*\s\+\)*\)\(\h\w*\s*(.*$\)')
+  let [scope, type, method] = matched_list[1:3]
+
+  if scope == ''
+    let scope = '~'
+  else
+    let scope = { 'public': '+', 'private': '-', 'protected': '#' }[scope]
+  endif
+
+  return scope . ' ' . method . type
 endfunction
 
 function! s:outline_info.rebuild_heading_pattern(...)
