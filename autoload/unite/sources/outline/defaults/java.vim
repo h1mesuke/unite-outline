@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/java.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-02-05
+" Updated : 2011-02-06
 "
 " Contributed by basyura
 "
@@ -79,7 +79,8 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
 endfunction
 
 function! s:normalize_method_heading_word(heading_word)
-  let matched_list = matchlist(a:heading_word,
+  let heading_word = substitute(substitute(a:heading_word, '{.*$', '', ''), ';.*$', '', '')
+  let matched_list = matchlist(heading_word,
         \ '^\s*\(public\|private\|protected\)\=\s\+\(\%(\h\w*\s\+\)*\)\(\h\w*\s*(.*$\)')
   let [scope, type, method] = matched_list[1:3]
 
@@ -89,7 +90,7 @@ function! s:normalize_method_heading_word(heading_word)
     let scope = { 'public': '+', 'private': '-', 'protected': '#' }[scope]
   endif
 
-  return scope . ' ' . method . type
+  return scope . ' ' . method . (type == '' ? '' : ' : ' . type)
 endfunction
 
 function! s:outline_info.rebuild_heading_pattern(...)
