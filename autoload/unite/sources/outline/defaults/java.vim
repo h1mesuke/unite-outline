@@ -11,15 +11,16 @@
 "=============================================================================
 
 " Default outline info for Java
-" Version: 0.0.8
+" Version: 0.0.9
 
 function! unite#sources#outline#defaults#java#outline_info()
   return s:outline_info
 endfunction
 
 " sub patterns
-let s:modifiers = '\%(\h\w*\s\+\)*'
-let s:method_def = '\h\w*\s\+\h\w*\s*('
+let s:modifiers  = '\%(\%(\h\w*\|<[^>]*>\)\s\+\)*'
+let s:ret_type   = '\h\w*\%(\[]\)\='
+let s:method_def = s:ret_type . '\s\+\h\w*\s*('
 
 "-----------------------------------------------------------------------------
 " Outline Info
@@ -59,12 +60,14 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
         " class
         let class_name = matchstr(a:heading_line, '\<class\s\+\zs\h\w*')
         call self.rebuild_heading_pattern(class_name)
-        " rebuild the heading pattern to extract constructor definitions
-        " with no modifiers
+          " rebuild the heading pattern to match constructor definitions with
+          " no modifiers
       elseif a:heading_line =~ '\<interface\>'
         " interface
       else
         " method
+        let lines = a:context.lines | let h = a:context.heading_index
+        let heading.word = unite#sources#outline#util#join_to(lines, h, ')')
         let heading.word = s:normalize_method_heading_word(heading.word)
       endif
       let heading.word = substitute(heading.word, '\s*{.*$', '', '')
@@ -79,18 +82,42 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
 endfunction
 
 function! s:normalize_method_heading_word(heading_word)
-  let heading_word = substitute(substitute(a:heading_word, '{.*$', '', ''), ';.*$', '', '')
-  let matched_list = matchlist(heading_word,
-        \ '^\s*\%(\(public\|private\|protected\)\s\+\)\=\(\%(\h\w*\s\+\)*\)\(\h\w*\s*(.*$\)')
-  let [scope, type, method] = matched_list[1:3]
+  let heading_word = substitute(a:heading_word, "\\s*\n\\s*", ' ', 'g')
+  let heading_word = substitute(substitute(heading_word, '{.*$', '', ''), ';.*$', '', '')
 
+  let matched_list = matchlist(heading_word,
+        \ '^\s*\(' . s:modifiers . '\)\(' . s:ret_type . '\)\s\+\(\h\w*\s*(.*$\)')
+  if !empty(matched_list)
+    let [modifiers, ret_type, method] = matched_list[1:3]
+
+    if modifiers == ''
+      let modifiers = ret_type
+      let ret_type = ''
+    endif
+  else
+    " constructor with no modifiers
+    let [modifiers, ret_type, method] = ['', '', matchstr(heading_word, '\h\w*')]
+  endif
+
+  let scope = matchstr(modifiers, '\<\%(public\|private\|protected\)\>')
   if scope == ''
     let scope = '~'
   else
+    let modifiers = substitute(modifiers, scope . '\s*', '', '')
     let scope = { 'public': '+', 'private': '-', 'protected': '#' }[scope]
   endif
 
-  return scope . ' ' . method . (type == '' ? '' : ' : ' . type)
+  let heading_word = scope . method
+
+  if ret_type != ''
+    let heading_word .= ' : ' . ret_type
+  endif
+  if modifiers =~ '\S'
+    let modifiers = substitute(modifiers, '\s*$', '', '')
+    let heading_word .= ' [' . modifiers . ']'
+  endif
+
+  return heading_word
 endfunction
 
 function! s:outline_info.rebuild_heading_pattern(...)
