@@ -19,7 +19,7 @@ endfunction
 
 " sub patterns
 let s:modifiers  = '\%(\%(\h\w*\|<[^>]*>\)\s\+\)*'
-let s:ret_type   = '\h\w*\%(\[]\)\='
+let s:ret_type   = '\h\w*\%(<[^>]*>\)\=\%(\[]\)\='
 let s:method_def = s:ret_type . '\s\+\h\w*\s*('
 
 "-----------------------------------------------------------------------------
