@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-01-29
+Updated : 2011-02-23
 Version : 0.3.1
 License : MIT license {{{
 
@@ -89,10 +89,9 @@ License : MIT license {{{
 	れます。表示された一覧から見出しを選択すると、該当箇所へジャンプできま
 	す。
 
-	見出し抽出の対象バッファの行数が変数
-	|g:unite_source_outline_cache_limit|に設定された値より大きい場合、抽出
-	された見出しはキャッシュされます。これにより、２回目以降は見出し一覧の
-	表示が高速になります。
+	見出し抽出の対象バッファの行数が変数|g:unite_source_outline_cache_limit|
+	に設定された値より大きい場合、抽出された見出しはキャッシュされます。こ
+	れにより、２回目以降は見出し一覧の表示が高速になります。
 
 	キャッシュの内容を破棄し、見出しの抽出をやり直したい場合は、outline の
 	引数に "!" を指定して :Unite を実行します。
@@ -192,7 +191,7 @@ Outline Info					*unite-outline-info*
 
 	unite-outline では、ファイルタイプごとの見出しの抽出パターンと、見出し
 	レベルの決定ロジック（関数）などを outline info と呼ばれる辞書によって
-	定義します。これを vimrc にて、あるいは所定の位置に配置した Vimscript
+	定義します。これを vimrc にて、あるいは所定の位置に配置した Vim script
 	によって記述することで、ファイルタイプごとの見出し抽出と見出し一覧の作
 	成を自在にカスタマイズできます。
 
@@ -540,12 +539,12 @@ unite#sources#outline#util#nr2roman({nr})
 ==============================================================================
 TODO						*unite-outline-todo*
 
-	* Erlang, Go, Haskell, Scala などの outline info
+	* Erlang, Go, Haskell などの outline info
 
 		作者にとって未知の言語なため対応が遅れています。
 		なんとかしなければ。
 
-	* 英語ヘルプ
+	* ヘルプの英訳
 
 	* 対応ファイルタイプの充実
 
