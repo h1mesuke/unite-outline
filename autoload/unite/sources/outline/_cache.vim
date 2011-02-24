@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-22
+" Updated : 2011-02-25
 " Version : 0.3.1
 " License : MIT license {{{
 "
@@ -55,7 +55,7 @@ function! s:check_cache_dir(...)
     try
       call mkdir(g:unite_source_outline_cache_dir, 'p')
     catch
-      call unite#util#print_error("unite-outline: could not create the cache directory")
+      call unite#util#print_error("unite-outline: couldn't create the cache directory")
     endtry
     return isdirectory(g:unite_source_outline_cache_dir)
   else
@@ -64,8 +64,17 @@ function! s:check_cache_dir(...)
 endfunction
 
 function! s:cache_file_path(path)
-  let path = substitute(a:path, '^/', '', '')
-  return g:unite_source_outline_cache_dir . '/' . path
+  try
+    let path = substitute(a:path, '/\.', '/__dot__', 'g')
+    " NOTE: globpath() can't collect dotted names, so substitute initial dots
+    let path = g:unite_source_outline_cache_dir . '/' . substitute(path, '^/', '', '')
+    if path !~ '^[\x00-\x7f]*$' && &termencoding != &encoding
+      let path = iconv(path, &encoding, &termencoding)
+    endif
+    return path
+  catch
+    return ''
+  endtry
 endfunction
 
 function! s:cache.get_data(path)
@@ -89,7 +98,7 @@ function! s:load_cache_file(path)
     return data
   catch
     call unite#util#print_error(
-          \ "unite-outline: could not load the cache file: " . cache_file)
+          \ "unite-outline: couldn't load the cache file: " . cache_file)
     return []
   endtry
 endfunction
@@ -119,6 +128,7 @@ endfunction
 function! s:save_cache_file(path, data)
   try
     let cache_file = s:cache_file_path(a:path)
+    if empty(cache_file) | return | endif | " fallback silently
     let dir = unite#util#path2directory(cache_file)
     if !isdirectory(dir) | call mkdir(dir, 'p') | endif
     let dumped_data = string(a:data)
@@ -126,7 +136,7 @@ function! s:save_cache_file(path, data)
     call unite#sources#outline#util#print_debug("[SAVED] cache file: " . cache_file)
   catch
     call unite#util#print_error(
-          \ "unite-outline: could not save the cache to: " . cache_file)
+          \ "unite-outline: couldn't save the cache to: " . cache_file)
     return
   endtry
   call s:cleanup_old_cache_files()
@@ -152,7 +162,7 @@ function! s:remove_cache_file(path)
     call unite#sources#outline#util#print_debug("[DELETED] cache {FILE}: " . a:path)
   catch
     call unite#util#print_error(
-          \ "unite-outline: could not delete the cache file: " . a:path)
+          \ "unite-outline: couldn't delete the cache file: " . a:path)
   endtry
   call s:remove_empty_dirs(a:path)
 endfunction
@@ -169,18 +179,17 @@ function! s:remove_empty_dirs(path)
 endfunction
 
 if unite#util#is_win() && !executable('rm')
-  let s:rmdir_command = 'rmdir /Q /S $srcs'
+  let s:RMDIR = 'rmdir /Q /S'
 else
-  let s:rmdir_command = 'rm -r $srcs'
+  let s:RMDIR = 'rm -rf'
 endif
-
 function! s:remove_dir(path)
   try
-    call system(s:rmdir_command . ' "' . a:path . '"')
+    call system(s:RMDIR . ' "' . escape(a:path, '"') . '"')
     call unite#sources#outline#util#print_debug("[DELETED] cache {DIR}: " . a:path)
   catch
     call unite#util#print_error(
-          \ "unite-outline: could not delete the cache directory: " . a:path)
+          \ "unite-outline: couldn't delete the cache directory: " . a:path)
   endtry
 endfunction
 
