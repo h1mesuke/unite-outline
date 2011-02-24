@@ -1,9 +1,7 @@
 "=============================================================================
-" File       : autoload/unite/sources/outline/defaults/changelog.vim
-" Maintainer : h1mesuke <himesuke@gmail.com>
-" Updated    : 2010-12-11
-"
-" Contributed by sgur
+" File    : autoload/unite/sources/outline/defaults/changelog.vim
+" Author  : sgur
+" Updated : 2011-02-25
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
