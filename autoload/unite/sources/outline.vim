@@ -98,25 +98,6 @@ function! s:find_outline_info_file(filetype)
   return ""
 endfunction
 
-"---------------------------------------
-" Utils
-
-function! unite#sources#outline#indent(...)
-  return call('unite#sources#outline#util#indent', a:000)
-endfunction
-
-function! unite#sources#outline#capitalize(...)
-  return call('unite#sources#outline#util#capitalize', a:000)
-endfunction
-
-function! unite#sources#outline#join_to(...)
-  return call('unite#sources#outline#util#join_to', a:000)
-endfunction
-
-function! unite#sources#outline#neighbor_match(...)
-  return call('unite#sources#outline#util#neighbor_match', a:000)
-endfunction
-
 "-----------------------------------------------------------------------------
 " Variables
 
