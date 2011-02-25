@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/help.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-28
+" Updated : 2011-02-25
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -40,7 +40,9 @@ endfunction
 "   HEADING ~
 "                                                   *tag*
 
-" sub patterns
+"---------------------------------------
+" Sub Patterns
+
 let s:section_number = '\d\+\.\d\+\s\+\S'
 let s:upper_word = '\u[[:upper:][:digit:]_]\+\>'
 let s:helptag = '\*[^*]\+\*'

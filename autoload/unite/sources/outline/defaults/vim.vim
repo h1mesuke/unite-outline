@@ -1,14 +1,14 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/vim.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-02-01
+" Updated : 2011-02-25
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
 "
 "=============================================================================
 
-" Default outline info for VimScript
+" Default outline info for Vim script
 " Version: 0.1.0
 
 function! unite#sources#outline#defaults#vim#outline_info()

@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/c.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-02-02
+" Updated : 2011-02-25
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -15,7 +15,9 @@ function! unite#sources#outline#defaults#c#outline_info()
   return s:outline_info
 endfunction
 
-" sub patterns
+"---------------------------------------
+" Sub Patterns
+
 let s:func_macro = '#\s*define\s\+\h\w*('
 let s:typedef = '\%(typedef\|enum\)\>'
 let s:func_def = '\%(\h\w*\%(\s\+\|\s*\*\s*\)\)*\h\w*\s*('

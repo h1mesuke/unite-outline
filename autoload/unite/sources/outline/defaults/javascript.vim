@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/javascript.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-02-02
+" Updated : 2011-02-25
 "
 " Contributed by hamaco
 "
@@ -17,7 +17,9 @@ function! unite#sources#outline#defaults#javascript#outline_info()
   return s:outline_info
 endfunction
 
-" sub patterns
+"---------------------------------------
+" Sub Patterns
+
 let s:ident  = '\<\h\w*\>'
 
 let s:assign = '\%(var\s\+\)\=\(' . s:ident . '\%(\.' . s:ident . '\)*\)\s*='
