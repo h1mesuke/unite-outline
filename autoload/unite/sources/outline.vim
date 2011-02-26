@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-02-25
+" Updated : 2011-02-26
 " Version : 0.3.1
 " License : MIT license {{{
 "
@@ -39,39 +39,43 @@ function! unite#sources#outline#clear_cache()
   call cache.clear()
 endfunction
 
+let s:OUTLINE_INFO_PATH = [
+      \ 'autoload/outline/',
+      \ 'autoload/unite/sources/outline/',
+      \ 'autoload/unite/sources/outline/defaults/',
+      \ ]
+
 let s:outline_info_ftime = {}
 
 function! unite#sources#outline#get_outline_info(filetype)
   let filetype = s:resolve_filetype_alias(a:filetype)
+
   if has_key(g:unite_source_outline_info, filetype)
     return g:unite_source_outline_info[filetype]
-  else
-    let tries = [
-          \ 'unite#sources#outline#%s#outline_info()',
-          \ 'unite#sources#outline#defaults#%s#outline_info()',
-          \ ]
-    for funcall_fmt in tries
-      let load_funcall = printf(funcall_fmt, filetype)
-      try
-        execute 'let outline_info = ' . load_funcall
-      catch /^Vim\%((\a\+)\)\=:E117:/
-        " E117: Unknown function:
-        continue
-      endtry
-      " if the outline info has been updated since the last time it was
-      " sourced, re-source and update it
-      let oinfo_file = s:find_outline_info_file(filetype)
-      if oinfo_file != ""
-        let ftime = getftime(oinfo_file)
-        if has_key(s:outline_info_ftime, filetype) && ftime > s:outline_info_ftime[filetype]
-          source `=oinfo_file`
-          execute 'let outline_info = ' . load_funcall
-        endif
-        let s:outline_info_ftime[filetype] = ftime
-      endif
-      return outline_info
-    endfor
   endif
+
+  for path in s:OUTLINE_INFO_PATH
+    let load_funcall = substitute(substitute(path, '^autoload/', '', ''), '/', '#', 'g')
+    let load_funcall .= filetype . '#outline_info()'
+    try
+      execute 'let outline_info = ' . load_funcall
+    catch /^Vim\%((\a\+)\)\=:E117:/
+      " E117: Unknown function:
+      continue
+    endtry
+    " if the outline info has been updated since the last time it was
+    " sourced, re-source and update it
+    let oinfo_file = s:find_outline_info(a:filetype)
+    if oinfo_file != ""
+      let ftime = getftime(oinfo_file)
+      if has_key(s:outline_info_ftime, oinfo_file) && ftime > s:outline_info_ftime[oinfo_file]
+        source `=oinfo_file`
+        execute 'let outline_info = ' . load_funcall
+      endif
+      let s:outline_info_ftime[oinfo_file] = ftime
+    endif
+    return outline_info
+  endfor
   return {}
 endfunction
 
@@ -83,17 +87,10 @@ function! s:resolve_filetype_alias(filetype)
   return a:filetype
 endfunction
 
-function! s:find_outline_info_file(filetype)
-  let tries = [
-        \ 'autoload/unite/sources/outline/%s.vim',
-        \ 'autoload/unite/sources/outline/defaults/%s.vim',
-        \ ]
-  for path_fmt in tries
-    let path = printf(path_fmt, a:filetype)
-    let oinfo_file = findfile(path, &runtimepath)
-    if oinfo_file != ""
-      return oinfo_file
-    endif
+function! s:find_outline_info(filetype)
+  for path in s:OUTLINE_INFO_PATH
+    let oinfo_path = findfile(path . a:filetype . '.vim', &runtimepath)
+    if oinfo_path != "" | return oinfo_path | endif
   endfor
   return ""
 endfunction
@@ -150,7 +147,7 @@ let s:default_alias_map = [
 for [alias, src_filetype] in s:default_alias_map
   " NOTE: If the user has his/her own outline info for {alias} filetype, not
   " define it as an alias of the other filetype by default.
-  if s:find_outline_info_file(alias) == ""
+  if s:find_outline_info(alias) == ""
     call unite#sources#outline#alias(alias, src_filetype)
   endif
 endfor
