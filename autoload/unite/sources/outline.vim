@@ -184,7 +184,9 @@ function! s:source.hooks.on_init(args, context)
 endfunction
 
 function! s:source.gather_candidates(args, context)
+  let save_cpoptions  = &cpoptions
   let save_ignorecase = &ignorecase
+  set cpoptions&vim
   set noignorecase
 
   try
@@ -262,6 +264,7 @@ function! s:source.gather_candidates(args, context)
     call unite#util#print_error(v:exception)
     return []
   finally
+    let &cpoptions  = save_cpoptions
     let &ignorecase = save_ignorecase
   endtry
 endfunction
