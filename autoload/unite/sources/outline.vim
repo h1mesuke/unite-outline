@@ -166,6 +166,7 @@ let s:source = {
       \ }
 
 function! s:source.hooks.on_init(args, context)
+
   " NOTE: The filetype of the buffer may be a "compound filetype", a set of
   " filetypes separated by periods.
   let filetype = getbufvar('%', '&filetype')
@@ -173,14 +174,23 @@ function! s:source.hooks.on_init(args, context)
     " if the filetype is a compound one, use the left most
     let filetype = split(filetype, '\.')[0]
   endif
-  let s:buffer = {
+
+  " initialize the shared context dictionary
+  let s:context = {
+        \ 'heading_lnum': 0,
+        \ 'matched_lnum': 0,
+        \ }
+  let s:context.buffer = {
         \ 'nr'        : bufnr('%'),
         \ 'path'      : expand('%:p'),
         \ 'filetype'  : filetype,
         \ 'shiftwidth': getbufvar('%', '&shiftwidth'),
         \ 'tabstop'   : getbufvar('%', '&tabstop'),
         \ }
-  let s:context = {}
+endfunction
+
+function! s:source.hooks.on_close(args, context)
+  unlet s:context
 endfunction
 
 function! s:source.gather_candidates(args, context)
@@ -196,12 +206,12 @@ function! s:source.gather_candidates(args, context)
 
     let is_force = ((len(a:args) > 0 && a:args[0] == '!') || a:context.is_redraw)
     let cache = unite#sources#outline#_cache#instance()
-    let path = s:buffer.path
+    let path = s:context.buffer.path
     if cache.has_data(path) && !is_force
       return cache.get_data(path)
     endif
 
-    let filetype = s:buffer.filetype
+    let filetype = s:context.buffer.filetype
     let outline_info = unite#sources#outline#get_outline_info(filetype)
     if empty(outline_info)
       call unite#util#print_error("unite-outline: not supported filetype: " . filetype)
@@ -209,17 +219,11 @@ function! s:source.gather_candidates(args, context)
     endif
     call s:normalize_outline_info(outline_info)
 
-    let s:buffer.lines = getbufline(s:buffer.nr, 1, '$')
-    let num_lines = len(s:buffer.lines)
+    let lines = [""] + getbufline(s:context.buffer.nr, 1, '$')
+    let num_lines = len(lines) - 1
 
-    " initialize the shared context dictionary
-    let s:context = {
-          \ 'heading_index': 0,
-          \ 'matched_index': 0,
-          \ 'lines'        : s:buffer.lines,
-          \ 'buffer'       : s:buffer,
-          \ 'outline_info' : outline_info
-          \ }
+    let s:context.outline_info = outline_info
+    let s:context.lines = lines
 
     if has_key(outline_info, 'initialize')
       call outline_info.initialize(s:context)
@@ -303,7 +307,7 @@ endfunction
 
 function! s:skip_header()
   let outline_info = s:context.outline_info
-  let lines = s:buffer.lines | let num_lines = len(lines)
+  let lines = s:context.lines | let num_lines = len(lines)
 
   if has_key(outline_info, 'skip_header')
     let s:line_idx = outline_info.skip_header(lines, s:context)
@@ -345,7 +349,7 @@ function! s:extract_headings()
   " variables.
 
   let headings = []
-  let lines = s:buffer.lines | let num_lines = len(lines)
+  let lines = s:context.lines | let num_lines = len(lines)
 
   while s:line_idx < num_lines
     let line = lines[s:line_idx]
@@ -434,7 +438,7 @@ function! s:extract_headings()
 endfunction
 
 function! s:skip_while(pattern)
-  let lines = s:buffer.lines | let num_lines = len(lines)
+  let lines = s:context.lines | let num_lines = len(lines)
   let s:line_idx += 1
   while s:line_idx < num_lines
     let line = lines[s:line_idx]
@@ -446,7 +450,7 @@ function! s:skip_while(pattern)
 endfunction
 
 function! s:skip_to(pattern)
-  let lines = s:buffer.lines | let num_lines = len(lines)
+  let lines = s:context.lines | let num_lines = len(lines)
   let s:line_idx += 1
   while s:line_idx < num_lines
     let line = lines[s:line_idx]
