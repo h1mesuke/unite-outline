@@ -40,7 +40,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
         \ 'type' : 'generic',
         \ }
 
-  let lines = a:context.lines | let h = a:context.heading_index
+  let lines = a:context.lines | let h = a:context.heading_lnum
 
   if a:heading_line =~ '^\\begin{thebibliography}{'
     " Bibliography

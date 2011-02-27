@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-02-26
+" Updated : 2011-02-27
 " Version : 0.3.1
 " License : MIT license {{{
 "
@@ -240,12 +240,12 @@ function! s:source.gather_candidates(args, context)
 
     " headings -> candidates
     let cands = map(headings, '{
-          \ "word"  : unite#sources#outline#util#indent(v:val["word"], levels[v:key]),
+          \ "word": unite#sources#outline#util#indent(v:val["word"], levels[v:key]),
           \ "source": "outline",
           \ "kind"  : "jump_list",
-          \ "action__path"     : path,
+          \ "action__path": path,
           \ "action__pattern"  : "^" . unite#util#escape_pattern(v:val["line"]) . "$",
-          \ "action__signature": self.calc_signature(v:val["line_idx"] + 1, s:buffer.lines),
+          \ "action__signature": self.calc_signature(v:val["lnum"], s:context.lines),
           \ }')
 
     let is_volatile = has_key(outline_info, 'is_volatile') && outline_info.is_volatile
@@ -310,15 +310,15 @@ function! s:skip_header()
   let lines = s:context.lines | let num_lines = len(lines)
 
   if has_key(outline_info, 'skip_header')
-    let s:line_idx = outline_info.skip_header(lines, s:context)
+    let s:lnum = outline_info.skip_header(lines, s:context)
 
   elseif has_key(outline_info, 'skip') && has_key(outline_info.skip, 'header')
     " eval once
     let skip_header_leading = has_key(outline_info.skip.header, 'leading')
     let skip_header_block   = has_key(outline_info.skip.header, 'block')
 
-    while s:line_idx < num_lines
-      let line = lines[s:line_idx]
+    while s:lnum < num_lines
+      let line = lines[s:lnum]
       if skip_header_leading && line =~# outline_info.skip.header.leading
         call s:skip_while(outline_info.skip.header.leading)
       elseif skip_header_block && line =~# outline_info.skip.header.block.begin
@@ -329,11 +329,11 @@ function! s:skip_header()
     endwhile
   endif
 
-  return s:line_idx
+  return s:lnum
 endfunction
 
 function! s:extract_headings()
-  let s:line_idx = 0
+  let s:lnum = 0
   call s:skip_header()
 
   let outline_info = s:context.outline_info
@@ -351,42 +351,42 @@ function! s:extract_headings()
   let headings = []
   let lines = s:context.lines | let num_lines = len(lines)
 
-  while s:line_idx < num_lines
-    let line = lines[s:line_idx]
+  while s:lnum < num_lines
+    let line = lines[s:lnum]
 
     if skip_block && line =~# outline_info.skip.block.begin
       " skip a documentation block
       call s:skip_to(outline_info.skip.block.end)
 
-    elseif has_heading_prev_pattern && line =~# outline_info['heading-1'] && s:line_idx < num_lines - 3
+    elseif has_heading_prev_pattern && line =~# outline_info['heading-1'] && s:lnum < num_lines - 3
       " matched: heading-1
-      let next_line = lines[s:line_idx + 1]
+      let next_line = lines[s:lnum + 1]
       if next_line =~ '[[:punct:]]\@!\S'
         if has_create_heading_func
-          let s:context.heading_index = s:line_idx + 1
-          let s:context.matched_index = s:line_idx
+          let s:context.heading_lnum = s:lnum + 1
+          let s:context.matched_lnum = s:lnum
           let heading = outline_info.create_heading('heading-1', next_line, line, s:context)
         else
           let heading = next_line
         endif
         if !empty(heading)
-          call add(headings, s:normalize_heading(heading, next_line, s:line_idx + 1))
-          let s:line_idx += 1
+          call add(headings, s:normalize_heading(heading, next_line, s:lnum + 1))
+          let s:lnum += 1
         endif
-      elseif next_line =~ '\S' && s:line_idx < num_lines - 4
+      elseif next_line =~ '\S' && s:lnum < num_lines - 4
         " see one more next
-        let next_line = lines[s:line_idx + 2]
+        let next_line = lines[s:lnum + 2]
         if next_line =~ '[[:punct:]]\@!\S'
           if has_create_heading_func
-            let s:context.heading_index = s:line_idx + 2
-            let s:context.matched_index = s:line_idx
+            let s:context.heading_lnum = s:lnum + 2
+            let s:context.matched_lnum = s:lnum
             let heading = outline_info.create_heading('heading-1', next_line, line, s:context)
           else
             let heading = next_line
           endif
           if !empty(heading)
-            call add(headings, s:normalize_heading(heading, next_line, s:line_idx + 2))
-            let s:line_idx += 2
+            call add(headings, s:normalize_heading(heading, next_line, s:lnum + 2))
+            let s:lnum += 2
           endif
         endif
       endif
@@ -394,43 +394,43 @@ function! s:extract_headings()
     elseif has_heading_pattern && line =~# outline_info.heading
       " matched: heading
       if has_create_heading_func
-        let s:context.heading_index = s:line_idx
-        let s:context.matched_index = s:line_idx
+        let s:context.heading_lnum = s:lnum
+        let s:context.matched_lnum = s:lnum
         let heading = outline_info.create_heading('heading', line, line, s:context)
       else
         let heading = line
       endif
       if !empty(heading)
-        call add(headings, s:normalize_heading(heading, line, s:line_idx))
+        call add(headings, s:normalize_heading(heading, line, s:lnum))
       endif
 
-    elseif has_heading_next_pattern && line =~# outline_info['heading+1'] && s:line_idx > 0
+    elseif has_heading_next_pattern && line =~# outline_info['heading+1'] && s:lnum > 0
       " matched: heading+1
-      let prev_line = lines[s:line_idx - 1]
+      let prev_line = lines[s:lnum - 1]
       if prev_line =~ '[[:punct:]]\@!\S'
         if has_create_heading_func
-          let s:context.heading_index = s:line_idx - 1
-          let s:context.matched_index = s:line_idx
+          let s:context.heading_lnum = s:lnum - 1
+          let s:context.matched_lnum = s:lnum
           let heading = outline_info.create_heading('heading+1', prev_line, line, s:context)
         else
           let heading = prev_line
         endif
         if !empty(heading)
-          call add(headings, s:normalize_heading(heading, prev_line, s:line_idx - 1))
+          call add(headings, s:normalize_heading(heading, prev_line, s:lnum - 1))
         endif
       endif
     endif
 
-    if s:line_idx % 500 == 0
+    if s:lnum % 500 == 0
       if len(headings) > g:unite_source_outline_max_headings
         call unite#util#print_error("unite-outline: too many headings, discarded the rest")
         break
       else
-        call s:print_progress("Extracting headings..." . s:line_idx * 100 / num_lines . "%")
+        call s:print_progress("Extracting headings..." . s:lnum * 100 / num_lines . "%")
       endif
     endif
 
-    let s:line_idx += 1
+    let s:lnum += 1
   endwhile
   call s:print_progress("Extracting headings...done.")
 
@@ -439,29 +439,29 @@ endfunction
 
 function! s:skip_while(pattern)
   let lines = s:context.lines | let num_lines = len(lines)
-  let s:line_idx += 1
-  while s:line_idx < num_lines
-    let line = lines[s:line_idx]
+  let s:lnum += 1
+  while s:lnum < num_lines
+    let line = lines[s:lnum]
     if line !~# a:pattern
       break
     endif
-    let s:line_idx += 1
+    let s:lnum += 1
   endwhile
 endfunction
 
 function! s:skip_to(pattern)
   let lines = s:context.lines | let num_lines = len(lines)
-  let s:line_idx += 1
-  while s:line_idx < num_lines
-    let line = lines[s:line_idx]
+  let s:lnum += 1
+  while s:lnum < num_lines
+    let line = lines[s:lnum]
     if line =~# a:pattern
       break
     endif
-    let s:line_idx += 1
+    let s:lnum += 1
   endwhile
 endfunction
 
-function! s:normalize_heading(heading, line, line_idx)
+function! s:normalize_heading(heading, line, lnum)
   if type(a:heading) == type("")
     " normalize to a Dictionary
     let level = unite#sources#outline#util#get_indent_level(a:heading, s:context)
@@ -478,7 +478,7 @@ function! s:normalize_heading(heading, line, line_idx)
         \ 'type' : 'generic' }, 'keep')
   let heading.word = s:normalize_heading_word(heading.word)
   let heading.line = a:line
-  let heading.line_idx = a:line_idx
+  let heading.lnum = a:lnum
   return heading
 endfunction
 
@@ -547,11 +547,11 @@ endfunction
 function! s:source.calc_signature(lnum, ...)
   let range = 10 | let precision = 2
   if a:0
-    let lines = a:1 | let idx = a:lnum - 1
-    let from = max([0, idx - range])
-    let to   = min([idx + range, len(lines) - 1])
-    let bwd_lines = lines[from : idx]
-    let fwd_lines = lines[idx  : to]
+    let lines = a:1
+    let from = max([1, a:lnum - range])
+    let to   = min([a:lnum + range, len(lines) - 1])
+    let bwd_lines = lines[from : a:lnum]
+    let fwd_lines = lines[a:lnum  : to]
   else
     let from = max([1, a:lnum - range])
     let to   = min([a:lnum + range, line('$')])

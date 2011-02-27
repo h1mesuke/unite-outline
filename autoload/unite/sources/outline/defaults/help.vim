@@ -65,14 +65,14 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   let lines = a:context.lines
 
   if a:which ==# 'heading-1'
-    let m = a:context.matched_index
+    let m = a:context.matched_lnum
     if a:matched_line =~ '^='
       let heading.level = 1
     elseif a:matched_line =~ '^-' && lines[m-1] !~ '\S'
       let heading.level = 2
     endif
   elseif a:which ==# 'heading'
-    let h = a:context.heading_index
+    let h = a:context.heading_lnum
     if a:heading_line =~ '^' . s:section_number
       if a:heading_line =~ '\~\s*$'
         let heading.level = 3

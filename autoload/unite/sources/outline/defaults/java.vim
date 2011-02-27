@@ -66,7 +66,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
         " interface
       else
         " method
-        let lines = a:context.lines | let h = a:context.heading_index
+        let lines = a:context.lines | let h = a:context.heading_lnum
         let heading.word = unite#sources#outline#util#join_to(lines, h, ')')
         let heading.word = s:normalize_method_heading_word(heading.word)
       endif

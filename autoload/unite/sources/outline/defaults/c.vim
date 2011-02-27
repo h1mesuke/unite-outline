@@ -51,7 +51,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
           \util#get_comment_heading_level(a:matched_line, 5)
   elseif a:which == 'heading'
     let heading.level = 4
-    let lines = a:context.lines | let h = a:context.heading_index
+    let lines = a:context.lines | let h = a:context.heading_lnum
     if a:heading_line =~ '^\s*#\s*define\>'
       " #define ()
       let heading.type = '#define'

@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/cpp.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-02-25
+" Updated : 2011-02-27
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -60,7 +60,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
           \util#get_comment_heading_level(a:matched_line, 6)
   elseif a:which == 'heading'
     let heading.level = 4
-    let lines = a:context.lines | let h = a:context.heading_index
+    let lines = a:context.lines | let h = a:context.heading_lnum
     if a:heading_line =~ '^\s*#\s*define\>'
       " #define ()
       let heading.type = '#define'

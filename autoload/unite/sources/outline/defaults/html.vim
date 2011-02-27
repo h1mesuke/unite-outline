@@ -30,7 +30,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
 endfunction
 
 function! s:get_text_content(level, context)
-  let lines = a:context.lines | let h = a:context.heading_index
+  let lines = a:context.lines | let h = a:context.heading_lnum
   let text = unite#sources#outline#util#join_to(lines, h, '</[hH]' . a:level . '[^>]*>')
   let text = substitute(text, '\n', '', 'g')
   let text = substitute(text, '<[^>]*>', '', 'g')
