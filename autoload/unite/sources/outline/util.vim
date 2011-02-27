@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-02-02
+" Updated : 2011-02-27
 " Version : 0.3.1
 " License : MIT license {{{
 "
@@ -52,18 +52,9 @@ function! unite#sources#outline#util#get_indent_level(line, context)
   return strlen(indent) / sw + 1
 endfunction
 
-" function! unite#sources#outline#util#indent({str}, {level})
-" function! unite#sources#outline#util#indent({level})
-"
-function! unite#sources#outline#util#indent(...)
-  let level = get(a:000, -1, 1)
-  let indent = repeat(' ', (level - 1) * g:unite_source_outline_indent_width)
-  if len(a:000) >= 2
-    return indent . a:000[0]
-  else
-    " for backward compatibility
-    return indent
-  endif
+function! unite#sources#outline#util#indent(str, level)
+  let indent = repeat(' ', (a:level - 1) * g:unite_source_outline_indent_width)
+  return indent . a:str
 endfunction
 
 " unite#sources#outline#util#join_to({lines}, {idx}, {pattern} [, {limit}])
