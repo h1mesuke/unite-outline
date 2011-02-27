@@ -190,7 +190,7 @@ function! s:source.hooks.on_init(args, context)
 endfunction
 
 function! s:source.hooks.on_close(args, context)
-  unlet s:context
+  unlet! s:context
 endfunction
 
 function! s:source.gather_candidates(args, context)
