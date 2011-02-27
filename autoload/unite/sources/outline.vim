@@ -214,7 +214,12 @@ function! s:source.gather_candidates(args, context)
     let filetype = s:context.buffer.filetype
     let outline_info = unite#sources#outline#get_outline_info(filetype)
     if empty(outline_info)
-      call unite#util#print_error("unite-outline: not supported filetype: " . filetype)
+      if empty(filetype)
+        call unite#util#print_error("unite-outline: Please set the filetype.")
+      else
+        call unite#util#print_error(
+              \ "unite-outline: Sorry, " . toupper(filetype) . " is not supported.")
+      endif
       return []
     endif
     call s:normalize_outline_info(outline_info)
@@ -423,7 +428,8 @@ function! s:extract_headings()
 
     if s:lnum % 500 == 0
       if len(headings) > g:unite_source_outline_max_headings
-        call unite#util#print_error("unite-outline: too many headings, discarded the rest")
+        call unite#util#print_error(
+              \ "unite-outline: Too many headings, the extraction was interrupted.")
         break
       else
         call s:print_progress("Extracting headings..." . s:lnum * 100 / num_lines . "%")
@@ -607,7 +613,7 @@ function! s:action_table.preview.func(candidate)
   " all, so prohibit it.
   let bufnr = bufnr(unite#util#escape_file_searching(cand.action__path))
   if getbufvar(bufnr, '&buftype') =~# '\<nofile\>'
-    call unite#util#print_error("unite-outline: can't preview nofile buffer")
+    call unite#util#print_error("unite-outline: Can't preview the nofile buffer.")
     return
   endif
 

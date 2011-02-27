@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-02-25
+" Updated : 2011-02-27
 " Version : 0.3.1
 " License : MIT license {{{
 "
@@ -55,7 +55,7 @@ function! s:check_cache_dir(...)
     try
       call mkdir(g:unite_source_outline_cache_dir, 'p')
     catch
-      call unite#util#print_error("unite-outline: couldn't create the cache directory")
+      call unite#util#print_error("unite-outline: Couldn't create the cache directory.")
     endtry
     return isdirectory(g:unite_source_outline_cache_dir)
   else
@@ -97,8 +97,7 @@ function! s:load_cache_file(path)
     sandbox let data = eval(dumped_data)
     return data
   catch
-    call unite#util#print_error(
-          \ "unite-outline: couldn't load the cache file: " . cache_file)
+    call unite#util#print_error("unite-outline: Couldn't load the cache file: " . cache_file)
     return []
   endtry
 endfunction
@@ -135,8 +134,7 @@ function! s:save_cache_file(path, data)
     call writefile([dumped_data], cache_file)
     call unite#sources#outline#util#print_debug("[SAVED] cache file: " . cache_file)
   catch
-    call unite#util#print_error(
-          \ "unite-outline: couldn't save the cache to: " . cache_file)
+    call unite#util#print_error("unite-outline: Couldn't save the cache to: " . cache_file)
     return
   endtry
   call s:cleanup_old_cache_files()
@@ -161,8 +159,7 @@ function! s:remove_cache_file(path)
     call delete(a:path)
     call unite#sources#outline#util#print_debug("[DELETED] cache {FILE}: " . a:path)
   catch
-    call unite#util#print_error(
-          \ "unite-outline: couldn't delete the cache file: " . a:path)
+    call unite#util#print_error("unite-outline: Couldn't delete the cache file: " . a:path)
   endtry
   call s:remove_empty_dirs(a:path)
 endfunction
@@ -188,8 +185,7 @@ function! s:remove_dir(path)
     call system(s:RMDIR . ' "' . escape(a:path, '"') . '"')
     call unite#sources#outline#util#print_debug("[DELETED] cache {DIR}: " . a:path)
   catch
-    call unite#util#print_error(
-          \ "unite-outline: couldn't delete the cache directory: " . a:path)
+    call unite#util#print_error("unite-outline: Couldn't delete the cache directory: " . a:path)
   endtry
 endfunction
 
@@ -205,7 +201,7 @@ function! s:cache.clear()
     call s:remove_dir(g:unite_source_outline_cache_dir)
     echomsg "unite-outline: deleted the cache"
   else
-    call unite#util#print_error("unite-outline: the cache directory doesn't exist")
+    call unite#util#print_error("unite-outline: Cache directory doesn't exist.")
   endif
 endfunction
 
