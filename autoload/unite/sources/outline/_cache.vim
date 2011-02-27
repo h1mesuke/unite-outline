@@ -176,13 +176,13 @@ function! s:remove_empty_dirs(path)
 endfunction
 
 if unite#util#is_win() && !executable('rm')
-  let s:RMDIR = 'rmdir /Q /S'
+  let s:RMDIR = 'rmdir /Q /S '
 else
-  let s:RMDIR = 'rm -rf'
+  let s:RMDIR = 'rm -rf '
 endif
 function! s:remove_dir(path)
   try
-    call system(s:RMDIR . ' "' . escape(a:path, '"') . '"')
+    call system(s:RMDIR . shellescape(a:path))
     call unite#sources#outline#util#print_debug("[DELETED] cache {DIR}: " . a:path)
   catch
     call unite#util#print_error("unite-outline: Couldn't delete the cache directory: " . a:path)
