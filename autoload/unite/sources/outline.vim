@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-02-28
+" Updated : 2011-03-01
 " Version : 0.3.1
 " License : MIT license {{{
 "
@@ -258,7 +258,7 @@ function! s:source.gather_candidates(args, context)
 
     " headings -> candidates
     let cands = map(headings, '{
-          \ "word": s:indent(v:val["word"], levels[v:key]),
+          \ "word": s:make_indent(levels[v:key]) . v:val["word"],
           \ "source": "outline",
           \ "kind"  : "jump_list",
           \ "action__path": path,
@@ -497,7 +497,7 @@ function! s:normalize_heading(heading, ...)
         \ 'level': 1,
         \ 'type' : 'generic' }, 'keep')
   let heading.word = s:normalize_heading_word(heading.word)
-  if a:0 | let heading.lnum = a:1 |endif
+  if a:0 | let heading.lnum = a:1 | endif
 
   return heading
 endfunction
@@ -564,9 +564,8 @@ function! s:join_list(lists, sep)
   return result
 endfunction
 
-function! s:indent(str, level)
-  let indent = repeat(' ', (a:level - 1) * g:unite_source_outline_indent_width)
-  return indent . a:str
+function! s:make_indent(level)
+  return repeat(' ', (a:level - 1) * g:unite_source_outline_indent_width)
 endfunction
 
 function! s:source.calc_signature(lnum, ...)

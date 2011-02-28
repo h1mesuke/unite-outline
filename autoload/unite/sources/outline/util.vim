@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-02-28
+" Updated : 2011-03-01
 " Version : 0.3.1
 " License : MIT license {{{
 "
@@ -26,7 +26,7 @@
 " }}}
 
 "-----------------------------------------------------------------------------
-" Indent
+" Indentation
 
 function! unite#sources#outline#util#get_indent_level(context, lnum)
   let line = a:context.lines[a:lnum]
@@ -175,7 +175,7 @@ function! unite#sources#outline#util#shared_pattern(filetype, which)
 endfunction
 
 "-----------------------------------------------------------------------------
-" String
+" Strings
 
 " unite#sources#outline#util#capitalize( {str} [, {flag}])
 "
