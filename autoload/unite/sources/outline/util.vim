@@ -26,6 +26,17 @@
 " }}}
 
 "-----------------------------------------------------------------------------
+" Headings
+
+function! unite#sources#outline#util#append_child(parent, child)
+  if !has_key(a:parent, 'children')
+    let a:parent.children = []
+  endif
+  call add(a:parent.children, a:child)
+  let a:child.parent = a:parent
+endfunction
+
+"-----------------------------------------------------------------------------
 " Indentation
 
 function! unite#sources#outline#util#get_indent_level(context, lnum)
