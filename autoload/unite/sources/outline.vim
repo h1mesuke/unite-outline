@@ -315,7 +315,7 @@ function! s:skip_header()
   let lines = s:context.lines | let num_lines = len(lines)
 
   if has_key(outline_info, 'skip_header')
-    let s:lnum = outline_info.skip_header(lines, s:context)
+    let s:lnum = outline_info.skip_header(s:context)
 
   elseif has_key(outline_info, 'skip') && has_key(outline_info.skip, 'header')
     " eval once
