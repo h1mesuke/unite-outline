@@ -268,6 +268,11 @@ function! unite#sources#outline#util#print_debug(msg)
   endif
 endfunction
 
+function! unite#sources#outline#util#print_progress(msg)
+  redraw
+  echon a:msg
+endfunction
+
 function! unite#sources#outline#util#_c_normalize_define_macro_heading_word(heading_word)
   let heading_word = substitute(a:heading_word, '#\s*define', '#define', '')
   let heading_word = substitute(heading_word, ')\zs.*$', '', '')

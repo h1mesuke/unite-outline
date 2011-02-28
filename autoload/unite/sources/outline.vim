@@ -277,7 +277,8 @@ function! s:source.gather_candidates(args, context)
     if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
       let used_time = s:get_time() - start_time
       let used_time_100l = used_time * (str2float("100") / num_lines)
-      call s:print_progress("unite-outline: used=" . string(used_time) . "s, 100l=". string(used_time_100l) . "s")
+      call unite#sources#outline#util#print_progress(
+            \ "unite-outline: used=" . string(used_time) . "s, 100l=". string(used_time_100l) . "s")
     endif
 
     return cands
@@ -445,13 +446,14 @@ function! s:extract_headings()
               \ "unite-outline: Too many headings, the extraction was interrupted.")
         break
       else
-        call s:print_progress("Extracting headings..." . s:lnum * 100 / num_lines . "%")
+        call unite#sources#outline#util#print_progress(
+              \ "Extracting headings..." . s:lnum * 100 / num_lines . "%")
       endif
     endif
 
     let s:lnum += 1
   endwhile
-  call s:print_progress("Extracting headings...done.")
+  call unite#sources#outline#util#print_progress("Extracting headings...done.")
 
   return headings
 endfunction
@@ -607,11 +609,6 @@ else
     return strlen(substitute(a:str, '.', 'c', 'g'))
   endfunction
 endif
-
-function! s:print_progress(msg)
-  redraw
-  echon a:msg
-endfunction
 
 "---------------------------------------
 " Actions
