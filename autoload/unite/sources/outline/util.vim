@@ -243,6 +243,13 @@ function! unite#sources#outline#util#has_exuberant_ctags()
   return executable('ctags') && split(system('ctags --version'), "\<NL>")[0] =~? '\<exuberant\>'
 endfunction
 
+let s:OOP_ACCESS_MARKS = { 'public': '+', 'protected': '#', 'private': '-' }
+
+function! unite#sources#outline#util#get_access_mark(tag)
+  let access = has_key(a:tag, 'access') ? a:tag.access : 'unknown'
+  return get(s:OOP_ACCESS_MARKS, access, '_') . ' '
+endfunction
+
 "-----------------------------------------------------------------------------
 " Misc
 
