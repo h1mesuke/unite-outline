@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-02-27
+" Updated : 2011-02-28
 " Version : 0.3.1
 " License : MIT license {{{
 "
@@ -338,7 +338,7 @@ function! s:skip_header()
 endfunction
 
 function! s:extract_headings()
-  let s:lnum = 0
+  let s:lnum = 1
   call s:skip_header()
 
   let outline_info = s:context.outline_info
