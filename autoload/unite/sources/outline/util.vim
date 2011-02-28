@@ -210,6 +210,40 @@ function! unite#sources#outline#util#nr2roman(nr)
 endfunction
 
 "-----------------------------------------------------------------------------
+" Tags
+
+let s:CTAGS_OPTIONS = '--filter --fields=afiKmnsSzt --sort=no '
+
+function! unite#sources#outline#util#get_tags(ctags_opts, context)
+  let path = unite#util#substitute_path_separator(a:context.buffer.path)
+  let tag_lines = split(system('ctags  ' . s:CTAGS_OPTIONS . a:ctags_opts, path), "\<NL>")
+
+  if v:shell_error
+    call unite#util#print_error("unite-outline: Ctags command failed. [" . v:shell_error . "]")
+    return []
+  else
+    return map(tag_lines, 's:create_tag(v:val, a:context)')
+  endif
+endfunction
+
+function! s:create_tag(tag_line, context)
+  let fields = split(a:tag_line, "\<Tab>")
+  let tag = {}
+  let tag.name = fields[0]
+  for ext_fld in fields[3:-1]
+    let [key, value] = matchlist(ext_fld, '^\([^:]\+\):\(.*\)$')[1:2]
+    let tag[key] = value
+  endfor
+  let tag.lnum = tag.line
+  let tag.line = a:context.lines[tag.lnum]
+  return tag
+endfunction
+
+function! unite#sources#outline#util#has_exuberant_ctags()
+  return executable('ctags') && split(system('ctags --version'), "\<NL>")[0] =~? '\<exuberant\>'
+endfunction
+
+"-----------------------------------------------------------------------------
 " Misc
 
 function! unite#sources#outline#util#print_debug(msg)
