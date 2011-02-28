@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-02-27
+" Updated : 2011-02-28
 " Version : 0.3.1
 " License : MIT license {{{
 "
@@ -24,75 +24,78 @@
 "   TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 "   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 " }}}
-"=============================================================================
 
-" unite#sources#outline#util#capitalize({str} [, {flag}])
-"
-function! unite#sources#outline#util#capitalize(str, ...)
-  let flag = (a:0 ? a:1 : '')
-  return substitute(a:str, '\<\(\u\)\(\u\+\)\>', '\u\1\L\2', flag)
+"-----------------------------------------------------------------------------
+" Indent
+
+function! unite#sources#outline#util#get_indent_level(context, lnum)
+  let line = a:context.lines[a:lnum]
+  let sw = a:context.buffer.shiftwidth
+  let ts = a:context.buffer.tabstop
+  let indent = substitute(matchstr(line, '^\s*'), '\t', repeat(' ', ts), 'g')
+  return strlen(indent) / sw + 1
 endfunction
 
-function! unite#sources#outline#util#get_comment_heading_level(line, context)
-  if a:line =~ '^\s'
-    let level =  (type(a:context) == type({})
-          \ ? unite#sources#outline#util#get_indent_level(a:line, a:context) + 3
-          \ : a:context)
+function! unite#sources#outline#util#get_comment_heading_level(context, lnum, ...)
+  let line = a:context.lines[a:lnum]
+  if line =~ '^\s'
+    let level =  (a:0 ? a:1 : unite#sources#outline#util#get_indent_level(a:context, a:lnum) + 3)
   else
-    let level = (strlen(substitute(a:line, '\s*', '', 'g')) > 40 ? 2 : 3)
-    let level -= (a:line =~ '=')
+    let level = (strlen(substitute(line, '\s*', '', 'g')) > 40 ? 2 : 3)
+    let level -= (line =~ '=')
   endif
   return level
 endfunction
 
-function! unite#sources#outline#util#get_indent_level(line, context)
-  let sw = a:context.buffer.shiftwidth
-  let ts = a:context.buffer.tabstop
-  let indent = substitute(matchstr(a:line, '^\s*'), '\t', repeat(' ', ts), 'g')
-  return strlen(indent) / sw + 1
-endfunction
+"-----------------------------------------------------------------------------
+" Matching
 
-function! unite#sources#outline#util#indent(str, level)
-  let indent = repeat(' ', (a:level - 1) * g:unite_source_outline_indent_width)
-  return indent . a:str
-endfunction
-
-" unite#sources#outline#util#join_to({lines}, {idx}, {pattern} [, {limit}])
+" unite#sources#outline#util#join_to( {context}, {lnum}, {pattern} [, {limit}])
 "
-function! unite#sources#outline#util#join_to(lines, idx, pattern, ...)
+function! unite#sources#outline#util#join_to(context, lnum, pattern, ...)
+  let lines = a:context.lines
   let limit = (a:0 ? a:1 : 3)
   if limit < 0
-    return s:join_to_backward(a:lines, a:idx, a:pattern, limit * -1)
+    return s:join_to_backward(lines, a:lnum, a:pattern, limit * -1)
   endif
-  let idx = a:idx
-  let lim_idx = min([a:idx + limit, len(a:lines) - 1])
-  while idx <= lim_idx
-    let line = a:lines[idx]
-    if line =~ a:pattern
+  let lnum = a:lnum
+  let limit = min([a:lnum + limit, len(lines) - 1])
+  while lnum <= limit
+    let line = lines[lnum]
+    if line =~# a:pattern
       break
     endif
-    let idx += 1
+    let lnum += 1
   endwhile
-  return join(a:lines[a:idx : idx], "\n")
+  return join(lines[a:lnum : lnum], "\n")
 endfunction
 
-function! s:join_to_backward(lines, idx, pattern, limit)
-  let idx = a:idx
-  let lim_idx = max(0, a:idx - a:limit])
-  while idx > 0
-    let line = a:lines[idx]
-    if line =~ a:pattern
+function! s:join_to_backward(context, lnum, pattern, limit)
+  let lines = a:context.lines
+  let limit = max(1, a:lnum - a:limit])
+  while lnum > 0
+    let line = lines[lnum]
+    if line =~# a:pattern
       break
     endif
-    let idx -= 1
+    let lnum -= 1
   endwhile
-  return join(a:lines[idx : a:idx], "\n")
+  return join(lines[lnum : a:lnum], "\n")
+endfunction
+
+function! unite#sources#outline#util#join_to_rparen(context, lnum, ...)
+  let limit = (a:0 ? a:1 : 3)
+  let line = unite#sources#outline#util#join_to(a:context, a:lnum, ')', limit)
+  let line = substitute(line, "\\s*\n\\s*", ' ', 'g')
+  let line = substitute(line, ')\zs.*$', '', '')
+  return line
 endfunction
 
 " unite#sources#outline#util#neighbor_match(
-"   {lines}, {idx}, {pattern} [, {range} [, {exclusive}])
+"   {context}, {lnum}, {pattern} [, {range} [, {exclusive}])
 "
-function! unite#sources#outline#util#neighbor_match(lines, idx, pattern, ...)
+function! unite#sources#outline#util#neighbor_match(context, lnum, pattern, ...)
+  let lines = a:context.lines
   let range = get(a:000, 0, 1)
   let exclusive = !!get(a:000, 1, 0)
   if type(range) == type([])
@@ -100,31 +103,32 @@ function! unite#sources#outline#util#neighbor_match(lines, idx, pattern, ...)
   else
     let [prev, next] = [range, range]
   endif
-  let [bwd_range, fwd_range] = s:neighbor_ranges(a:lines, a:idx, prev, next, exclusive)
-  for idx in bwd_range
-    if a:lines[idx] =~ a:pattern
+  let [bwd_range, fwd_range] = s:neighbor_ranges(a:context, a:lnum, prev, next, exclusive)
+  for lnum in bwd_range
+    if lines[lnum] =~# a:pattern
       return 1
     endif
   endfor
-  for idx in fwd_range
-    if a:lines[idx] =~ a:pattern
+  for lnum in fwd_range
+    if lines[lnum] =~# a:pattern
       return 1
     endif
   endfor
   return 0
 endfunction
 
-function! s:neighbor_ranges(lines, idx, prev, next, exclusive)
-  let max_idx = len(a:lines) - 1
-  let bwd_range = range(max([0, a:idx - a:prev]), max([0, a:idx - a:exclusive]))
-  let fwd_range = range(min([a:idx + a:exclusive, max_idx]), min([a:idx + a:next, max_idx]))
+function! s:neighbor_ranges(context, lnum, prev, next, exclusive)
+  let max_lnum = len(a:context.lines) - 1
+  let bwd_range = range(max([1, a:lnum - a:prev]), max([1, a:lnum - a:exclusive]))
+  let fwd_range = range(min([a:lnum + a:exclusive, max_lnum]), min([a:lnum + a:next, max_lnum]))
   return [bwd_range, fwd_range]
 endfunction
 
 " unite#sources#outline#util#neighbor_matchstr(
-"   {lines}, {idx}, {pattern} [, {range} [, {exclusive}])
+"   {context}, {lnum}, {pattern} [, {range} [, {exclusive}])
 "
-function! unite#sources#outline#util#neighbor_matchstr(lines, idx, pattern, ...)
+function! unite#sources#outline#util#neighbor_matchstr(context, lnum, pattern, ...)
+  let lines = a:context.lines
   let range = get(a:000, 0, 1)
   let exclusive = !!get(a:000, 1, 0)
   if type(range) == type([])
@@ -132,20 +136,52 @@ function! unite#sources#outline#util#neighbor_matchstr(lines, idx, pattern, ...)
   else
     let [prev, next] = [range, range]
   endif
-  let [bwd_range, fwd_range] = s:neighbor_ranges(a:lines, a:idx, prev, next, exclusive)
-  for idx in bwd_range
-    let matched = matchstr(a:lines[idx], a:pattern)
+  let [bwd_range, fwd_range] = s:neighbor_ranges(a:context, a:lnum, prev, next, exclusive)
+  for lnum in bwd_range
+    let matched = matchstr(lines[lnum], a:pattern)
     if matched != ""
       return matched
     endif
   endfor
-  for idx in fwd_range
-    let matched = matchstr(a:lines[idx], a:pattern)
+  for lnum in fwd_range
+    let matched = matchstr(lines[lnum], a:pattern)
     if matched != ""
       return matched
     endif
   endfor
   return ""
+endfunction
+
+let s:shared_patterns = {
+      \ 'c': {
+      \   'heading-1': '^\s*\/\*\s*[-=*]\{10,}\s*$',
+      \   'header'   : ['^/\*', '\*/\s*$'],
+      \ },
+      \ 'cpp': {
+      \   'heading-1': '^\s*/[/*]\s*[-=/*]\{10,}\s*$',
+      \   'header'   : {
+      \     'leading': '^//',
+      \     'block'  : ['^/\*', '\*/\s*$'],
+      \   },
+      \ },
+      \ 'sh': {
+      \   'heading-1': '^\s*#\s*[-=#]\{10,}\s*$',
+      \   'header'   : '^#',
+      \ },
+      \}
+
+function! unite#sources#outline#util#shared_pattern(filetype, which)
+  return s:shared_patterns[a:filetype][a:which]
+endfunction
+
+"-----------------------------------------------------------------------------
+" String
+
+" unite#sources#outline#util#capitalize( {str} [, {flag}])
+"
+function! unite#sources#outline#util#capitalize(str, ...)
+  let flag = (a:0 ? a:1 : '')
+  return substitute(a:str, '\<\(\u\)\(\u\+\)\>', '\u\1\L\2', flag)
 endfunction
 
 " ported from:
@@ -173,26 +209,13 @@ function! unite#sources#outline#util#nr2roman(nr)
   return roman
 endfunction
 
-let s:shared_patterns = {
-      \ 'c': {
-      \   'heading-1': '^\s*\/\*\s*[-=*]\{10,}\s*$',
-      \   'header'   : ['^/\*', '\*/\s*$'],
-      \ },
-      \ 'cpp': {
-      \   'heading-1': '^\s*/[/*]\s*[-=/*]\{10,}\s*$',
-      \   'header'   : {
-      \     'leading': '^//',
-      \     'block'  : ['^/\*', '\*/\s*$'],
-      \   },
-      \ },
-      \ 'sh': {
-      \   'heading-1': '^\s*#\s*[-=#]\{10,}\s*$',
-      \   'header'   : '^#',
-      \ },
-      \}
+"-----------------------------------------------------------------------------
+" Misc
 
-function! unite#sources#outline#util#shared_pattern(filetype, which)
-  return s:shared_patterns[a:filetype][a:which]
+function! unite#sources#outline#util#print_debug(msg)
+  if exists('g:unite_source_outline_debug') && g:unite_source_outline_debug
+    echomsg "unite-outline: " . a:msg
+  endif
 endfunction
 
 function! unite#sources#outline#util#_c_normalize_define_macro_heading_word(heading_word)
@@ -204,12 +227,6 @@ endfunction
 function! unite#sources#outline#util#_cpp_is_in_comment(heading_line, matched_line)
   return ((a:matched_line =~ '^\s*//'  && a:heading_line =~ '^\s*//') ||
         \ (a:matched_line =~ '^\s*/\*' && a:matched_line !~ '\*/\s*$'))
-endfunction
-
-function! unite#sources#outline#util#print_debug(msg)
-  if exists('g:unite_source_outline_debug') && g:unite_source_outline_debug
-    echomsg "unite-outline: " . a:msg
-  endif
 endfunction
 
 " vim: filetype=vim
