@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/html.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-13
+" Updated : 2011-02-28
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -30,8 +30,8 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
 endfunction
 
 function! s:get_text_content(level, context)
-  let lines = a:context.lines | let h = a:context.heading_lnum
-  let text = unite#sources#outline#util#join_to(lines, h, '</[hH]' . a:level . '[^>]*>')
+  let text = unite#sources#outline#
+        \util#join_to(a:context, a:context.heading_lnum, '</[hH]' . a:level . '[^>]*>')
   let text = substitute(text, '\n', '', 'g')
   let text = substitute(text, '<[^>]*>', '', 'g')
   return text

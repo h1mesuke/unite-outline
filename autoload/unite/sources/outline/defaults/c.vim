@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/c.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-02-25
+" Updated : 2011-02-28
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -48,7 +48,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
         \util#_cpp_is_in_comment(a:heading_line, a:matched_line)
     let heading.type = 'comment'
     let heading.level = unite#sources#outline#
-          \util#get_comment_heading_level(a:matched_line, 5)
+          \util#get_comment_heading_level(a:context, a:context.matched_lnum, 5)
   elseif a:which == 'heading'
     let heading.level = 4
     let lines = a:context.lines | let h = a:context.heading_lnum
@@ -63,7 +63,8 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
         let heading.type = 'typedef'
         let indent = matchstr(a:heading_line, '^\s*')
         let closing = unite#sources#outline#
-              \util#neighbor_matchstr(lines, h, '^' . indent . '}.*$', [0, 50])
+              \util#neighbor_matchstr(a:context, a:context.heading_lnum,
+              \ '^' . indent . '}.*$', [0, 50])
         let heading.word = substitute(heading.word, '{\s*$', '{...' . closing, '')
       else
         let heading.level = 0
@@ -73,7 +74,8 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
       if a:heading_line =~ '{\s*$'
         let heading.type = 'enum'
         let first_sym_def = unite#sources#outline#
-              \util#neighbor_matchstr(lines, h, '^\s*\zs\S.\{-},\=\ze\s*\%(/[/*]\|$\)', [0, 3], 1)
+              \util#neighbor_matchstr(a:context, a:context.heading_lnum,
+              \ '^\s*\zs\S.\{-},\=\ze\s*\%(/[/*]\|$\)', [0, 3], 1)
         let closing = (first_sym_def =~ ',$' ? ' ...}' : ' }')
         let heading.word = substitute(heading.word, '{\s*$', '{ ' . first_sym_def . closing, '')
       else

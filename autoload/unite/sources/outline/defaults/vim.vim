@@ -31,7 +31,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   if a:which ==# 'heading-1' && a:heading_line =~ '^\s*"'
     let heading.type = 'comment'
     let heading.level = unite#sources#outline#
-          \util#get_comment_heading_level(a:matched_line, 5)
+          \util#get_comment_heading_level(a:context, a:context.matched_lnum, 5)
   elseif a:which ==# 'heading'
     let heading.level = 4
     let heading.type = 'function'

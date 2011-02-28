@@ -44,7 +44,7 @@ let s:outline_info = {
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
   let level = unite#sources#outline#
-        \util#get_indent_level(a:heading_line, a:context) + 3
+        \util#get_indent_level(a:context, a:context.heading_lnum) + 3
   let heading = {
         \ 'word' : a:heading_line,
         \ 'level': level,
@@ -55,7 +55,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
         \util#_cpp_is_in_comment(a:heading_line, a:matched_line)
     let heading.type = 'comment'
     let heading.level = unite#sources#outline#
-          \util#get_comment_heading_level(a:matched_line, a:context)
+          \util#get_comment_heading_level(a:context, a:context.matched_lnum)
 
   elseif a:which ==# 'heading'
 

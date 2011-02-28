@@ -258,7 +258,7 @@ function! s:source.gather_candidates(args, context)
 
     " headings -> candidates
     let cands = map(headings, '{
-          \ "word": unite#sources#outline#util#indent(v:val["word"], levels[v:key]),
+          \ "word": s:indent(v:val["word"], levels[v:key]),
           \ "source": "outline",
           \ "kind"  : "jump_list",
           \ "action__path": path,
@@ -560,6 +560,11 @@ function! s:join_list(lists, sep)
   endfor
   call remove(result, -1)
   return result
+endfunction
+
+function! s:indent(str, level)
+  let indent = repeat(' ', (a:level - 1) * g:unite_source_outline_indent_width)
+  return indent . a:str
 endfunction
 
 function! s:source.calc_signature(lnum, ...)

@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/tex.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-28
+" Updated : 2011-02-28
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -40,13 +40,12 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
         \ 'type' : 'generic',
         \ }
 
-  let lines = a:context.lines | let h = a:context.heading_lnum
-
   if a:heading_line =~ '^\\begin{thebibliography}{'
     " Bibliography
     let heading.level = s:bib_level
     let bib_label = unite#sources#outline#
-          \util#neighbor_matchstr(lines, h, '\\renewcommand{\\bibname}{\zs.*\ze}\s*$', 3)
+          \util#neighbor_matchstr(a:context, a:context.heading_lnum,
+          \ '\\renewcommand{\\bibname}{\zs.*\ze}\s*$', 3)
     let heading.word = (bib_label == "" ? "Bibliography" : bib_label)
   else
     " Parts, Chapters, Sections, etc
@@ -56,8 +55,8 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     if 1 < heading.level && heading.level < s:bib_level
       let s:bib_level = heading.level
     endif
-    let heading.word = s:normalize_heading_word(
-          \ unite#sources#outline#util#join_to(lines, h, '}\s*$'), unit)
+    let heading.word = s:normalize_heading_word(unite#sources#outline#
+          \util#join_to(a:context, a:context.heading_lnum, '}\s*$'), unit)
   endif
 
   if heading.level > 0

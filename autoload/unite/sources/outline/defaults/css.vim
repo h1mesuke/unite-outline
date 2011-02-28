@@ -35,7 +35,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   if a:which ==# 'heading-1'
     let heading.type = 'comment'
     let heading.level = unite#sources#outline#
-          \util#get_comment_heading_level(a:matched_line, 4)
+          \util#get_comment_heading_level(a:context, a:context.matched_lnum, 4)
   endif
 
   if heading.level > 0

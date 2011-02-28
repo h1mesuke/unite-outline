@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/java.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-02-06
+" Updated : 2011-02-28
 "
 " Contributed by basyura
 "
@@ -40,7 +40,7 @@ endfunction
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
   let level = unite#sources#outline#
-        \util#get_indent_level(a:heading_line, a:context) + 3
+        \util#get_indent_level(a:context, a:context.heading_lnum) + 3
   let heading = {
         \ 'word' : a:heading_line,
         \ 'level': level,
@@ -51,7 +51,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
         \util#_cpp_is_in_comment(a:heading_line, a:matched_line)
     let heading.type = 'comment'
     let heading.level = unite#sources#outline#
-          \util#get_comment_heading_level(a:matched_line, a:context)
+          \util#get_comment_heading_level(a:context, a:context.matched_lnum)
   elseif a:which == 'heading'
     if a:heading_line =~ '\<\%(if\|new\|return\|throw\)\>'
       let heading.level = 0
@@ -66,8 +66,8 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
         " interface
       else
         " method
-        let lines = a:context.lines | let h = a:context.heading_lnum
-        let heading.word = unite#sources#outline#util#join_to(lines, h, ')')
+        let heading.word = unite#sources#outline#
+              \util#join_to_rparen(a:context, a:context.heading_lnum, ')')
         let heading.word = s:normalize_method_heading_word(heading.word)
       endif
       let heading.word = substitute(heading.word, '\s*{.*$', '', '')
