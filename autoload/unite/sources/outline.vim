@@ -249,7 +249,7 @@ function! s:source.gather_candidates(args, context)
           \ "source": "outline",
           \ "kind"  : "jump_list",
           \ "action__path": path,
-          \ "action__pattern"  : "^" . unite#util#escape_pattern(v:val["line"]) . "$",
+          \ "action__pattern"  : "^" . unite#util#escape_pattern(lines[v:val["lnum"]]) . "$",
           \ "action__signature": self.calc_signature(v:val["lnum"], s:context.lines),
           \ }')
 
@@ -375,7 +375,7 @@ function! s:extract_headings()
           let heading = next_line
         endif
         if !empty(heading)
-          call add(headings, s:normalize_heading(heading, next_line, s:lnum + 1))
+          call add(headings, s:normalize_heading(heading, s:lnum + 1))
           let s:lnum += 1
         endif
       elseif next_line =~ '\S' && s:lnum < num_lines - 4
@@ -390,7 +390,7 @@ function! s:extract_headings()
             let heading = next_line
           endif
           if !empty(heading)
-            call add(headings, s:normalize_heading(heading, next_line, s:lnum + 2))
+            call add(headings, s:normalize_heading(heading, s:lnum + 2))
             let s:lnum += 2
           endif
         endif
@@ -406,7 +406,7 @@ function! s:extract_headings()
         let heading = line
       endif
       if !empty(heading)
-        call add(headings, s:normalize_heading(heading, line, s:lnum))
+        call add(headings, s:normalize_heading(heading, s:lnum))
       endif
 
     elseif has_heading_next_pattern && line =~# outline_info['heading+1'] && s:lnum > 0
@@ -421,7 +421,7 @@ function! s:extract_headings()
           let heading = prev_line
         endif
         if !empty(heading)
-          call add(headings, s:normalize_heading(heading, prev_line, s:lnum - 1))
+          call add(headings, s:normalize_heading(heading, s:lnum - 1))
         endif
       endif
     endif
@@ -467,7 +467,7 @@ function! s:skip_to(pattern)
   endwhile
 endfunction
 
-function! s:normalize_heading(heading, line, lnum)
+function! s:normalize_heading(heading, ...)
   if type(a:heading) == type("")
     " normalize to a Dictionary
     let level = unite#sources#outline#util#get_indent_level(a:heading, s:context)
@@ -479,12 +479,11 @@ function! s:normalize_heading(heading, line, lnum)
     let heading = a:heading
   endif
   call extend(heading, {
-        \ 'word' : a:line,
         \ 'level': 1,
         \ 'type' : 'generic' }, 'keep')
   let heading.word = s:normalize_heading_word(heading.word)
-  let heading.line = a:line
-  let heading.lnum = a:lnum
+  if a:0 | let heading.lnum = a:1 |endif
+
   return heading
 endfunction
 
