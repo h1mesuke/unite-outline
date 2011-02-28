@@ -250,6 +250,15 @@ function! unite#sources#outline#util#get_access_mark(tag)
   return get(s:OOP_ACCESS_MARKS, access, '_') . ' '
 endfunction
 
+function! unite#sources#outline#util#sort_by_lnum(dicts)
+  return sort(a:dicts, 's:compare_by_lnum')
+endfunction
+function! s:compare_by_lnum(d1, d2)
+  let n1 = a:d1.lnum
+  let n2 = a:d2.lnum
+  return n1 == n2 ? 0 : n1 > n2 ? 1 : -1
+endfunction
+
 "-----------------------------------------------------------------------------
 " Misc
 
