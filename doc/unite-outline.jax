@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-03-01
+Updated : 2011-03-02
 Version : 0.3.2
 License : MIT license {{{
 
@@ -109,14 +109,14 @@ g:unite_source_outline_info			*g:unite_source_outline_info*
 	初期値は {}
 
 	デフォルトの outline info はオートロード関数によって遅延ロードされる
-	ため、この辞書の初期値は空になっています。outline info については
-	|unite-source-outline-info|を参照して下さい。
+	ため、この辞書の初期値は空になっています。
+
+	outline info については |unite-outline-info|を参照
 
 g:unite_source_outline_indent_width	*g:unite_source_outline_indent_width*
 
 	見出しレベルに応じて設定されるインデントの幅
-	|unite#sources#outline#util#indent()| はこの値にもとづいてインデントの
-	ための空白文字列を生成します。
+	unite-outline はこの値にもとづいて見出し一覧のインデントを生成します。
 
 	初期値は 2
 					*g:unite_source_outline_ignore_heading_types*
@@ -125,11 +125,11 @@ g:unite_source_outline_ignore_heading_types
 	非表示にしたい見出しの種類を設定するための辞書
 	ファイルタイプごとに、見出しの種類を表す文字列のリストを設定します。
 
-	「すべてのファイルタイプ」を意味する特殊なファイルタイプ名として "*"
-	が使用できます。個別の設定がなされていないファイルタイプにはその設定が
-	適用されます。
+	「すべてのファイルタイプ」を意味する特殊なファイルタイプ名として "*" が
+	使用できます。個別の設定がなされていないファイルタイプにはその設定が適
+	用されます。
 
-	各見出しの種類については outline info の定義を参照して下さい。
+	各見出しの種類については outline info の定義を参照
 
 	初期値は {}
 
@@ -151,8 +151,9 @@ g:unite_source_outline_cache_dir	*g:unite_source_outline_cache_dir*
 
 	見出しのキャッシュが保存されるディレクトリ
 	空文字列を設定するとキャッシュはファイルに保存されません。
+
 	見出しのキャッシュがファイルに保存される条件については
-	|g:unite_source_outline_cache_serialize|を参照して下さい。
+	|g:unite_source_outline_cache_serialize|を参照
 
 	初期値は "{install-dir}/autoload/unite/sources/outline/.cache"
 
@@ -234,9 +235,9 @@ outline info の作成				*unite-outline-info-create*
 
 	その関数の返値として、outline info を返します。
 
-	こちらは遅延ロードになるため必要になるまでロードされません。vimrc を肥
-	大化させることもないので outline info を作り込むのであればこちらの方法
-	がおすすめです。
+	こちらは遅延ロードになるため必要になるまでロードされません。 vimrc を
+	肥大化させることもないので、outline info を作り込むのであればこちらの
+	方法がおすすめです。
 
 	$HOME/.vim/autoload/unite/sources/outline/defaults/ にあるデフォルトの
 	outline info がこの方法で定義されており、参考になると思います。
@@ -330,6 +331,7 @@ create_heading		関数（任意） 	*unite-outline-info-create_heading()*
 
 	  * buffer		辞書
 				バッファ情報
+
 				参照可能な属性については
 				autoload/unite/source/outline.vim を参照
 
@@ -378,14 +380,14 @@ skip		辞書（任意）			*unite-outline-info-skip*
 		バッファの先頭にあるヘッダ部分（作者や著作権の表示がある部分）
 		から見出しが抽出されるのを防ぐために設定します。
 
-		(1) 文字列が設定された場合は、それをパターンとみなし、バッファ
+		[1] 文字列が設定された場合は、それをパターンとみなし、バッファ
 		の先頭からそのパターンにマッチする行が続く間をスキップします。
 >
 		\ 'skip': {
 		\   'header': '^#',
 		\ },
 <
-		(2) リストが設定された場合は、それをパターンのペアと見なし、フ
+		[2] リストが設定された場合は、それをパターンのペアと見なし、フ
 		ァイルの先頭が skip.header[0] にマッチする場合に、
 		skip.header[1] にマッチする行までをスキップします。
 >
@@ -393,8 +395,8 @@ skip		辞書（任意）			*unite-outline-info-skip*
 		\   'header': ['^/\*', '\*/\s*$'],
 		\ },
 <
-		(3) 辞書が設定された場合は、leading属性に (1) のパターン、
-		block属性に (2) のリストが設定されているものとし、バッファの先
+		[3] 辞書が設定された場合は、leading属性に [1] のパターン、
+		block属性に [2] のリストが設定されているものとし、バッファの先
 		頭からそれぞれにマッチする部分をスキップします。
 >
 		\ 'skip': {
