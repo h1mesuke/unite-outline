@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/cpp.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-02-27
+" Updated : 2011-03-01
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,117 +9,147 @@
 "=============================================================================
 
 " Default outline info for C++
-" Version: 0.0.6
+" Version: 0.1.0
 
 function! unite#sources#outline#defaults#cpp#outline_info()
   return s:outline_info
 endfunction
 
-"---------------------------------------
-" Sub Patterns
+let s:outline_info = {}
 
-let s:func_macro = '#\s*define\s\+\h\w*('
-let s:typedef = '\%(typedef\|enum\)\>'
+let s:CATEGORY_ORDER = ['namespace', 'macro', 'enum', 'struct', 'union', 'typedef', 'function']
 
-let s:class_def = '\%(template\s*<[^>]*>\s*\)\=class\>'
+" TAG KINDS:
+"
+"  [c] classes
+"  [d] macro definitions
+"   e  enumerators (values inside an enumeration)
+"  [f] function definitions
+"  [g] enumeration names
+"   l  local variables
+"   m  class, struct, and union members
+"  [n] namespaces
+"   p  function prototypes
+"  [s] structure names
+"  [t] typedefs
+"  [u] union names
+"   v  variable definitions
+"   x  external and forward variable declarations
+"
+function! s:outline_info.extract_headings(context)
+  if !unite#sources#outline#util#has_exuberant_ctags()
+    call unite#util#print_error("unite-outline: Sorry, Exuberant Ctags required.")
+    return []
+  endif
 
-let s:ret_type = '\%(\%(<[^>]*>\|\h\w*\)\%(\s\+\|\s*[*&]\s*\)\)*'
-let s:func_def = s:ret_type . '\~\=\h\w*\%(::\%(operator\S\+\|\~\=\h\w*\)\)*\s*('
+  let tags = unite#sources#outline#util#get_tags('--c++-kinds=cdfgnstu', a:context)
 
-"-----------------------------------------------------------------------------
-" Outline Info
+  let categories = {} | let classes = {}
+  let name_counter = {}
 
-let s:outline_info = {
-      \ 'heading-1': unite#sources#outline#util#shared_pattern('cpp', 'heading-1'),
-      \ 'heading'  : '^\(\s*\(' . s:func_macro . '\|' . s:typedef . '\)\|\(' . s:class_def . '\|' . s:func_def . '\)\)',
-      \ 'skip': {
-      \   'header': unite#sources#outline#util#shared_pattern('cpp', 'header'),
-      \ },
-      \}
+  for tag in tags
+    let heading = s:create_heading(tag, a:context)
+    if empty(heading) | continue | endif
 
-" FIXME: This implementation assumes that the source code is properly
-" indented. Therefore, if the source code is not indented at all, function
-" calls will matches as function definitions.
+    if tag.kind ==# 'class'
+      " classes
+      let heading.word .= ' : ' . heading.type
+      let classes[tag.name] = heading
 
-function! s:outline_info.initialize(context)
-  let s:class_names = []
-  let s:class_names_pattern = ''
+    elseif has_key(tag, 'class')
+      " class members
+      if !has_key(classes, tag.class)
+        let classes[tag.class] = unite#sources#outline#
+              \util#create_pseudo_heading('(' . tag.class . ') : class', 'class', tag.lnum)
+      endif
+
+      let heading.word = unite#sources#outline#util#get_access_mark(tag) . heading.word
+      if heading.type !=# 'function'
+        let heading.word .= ' : ' . heading.type
+      endif
+
+      call unite#sources#outline#
+            \util#append_child(classes[tag.class], heading)
+
+    else
+      " other category members
+      if !has_key(categories, heading.type)
+        let cat_name = unite#sources#outline#util#capitalize(heading.type)
+        let categories[heading.type] = unite#sources#outline#
+              \util#create_pseudo_heading(cat_name, heading.type, tag.lnum)
+      endif
+
+      call unite#sources#outline#
+            \util#append_child(categories[heading.type], heading)
+    endif
+
+    let heading.word .= s:get_name_id_suffix(name_counter, tag)
+  endfor
+
+  let headings = []
+  let blank_heading = unite#sources#outline#util#create_blank_heading()
+
+  if has_key(categories, 'macro')
+    let categories.macro.word = '#define'
+  endif
+  for cat_name in s:CATEGORY_ORDER
+    if !has_key(categories, cat_name) | continue | endif
+    let category = categories[cat_name]
+    if len(category.children) > 1 | let category.word .= 's' | endif
+    let headings += [categories[cat_name], blank_heading]
+  endfor
+
+  for class in unite#sources#outline#util#sort_by_lnum(values(classes))
+    let headings += [class, blank_heading]
+  endfor
+
+  return headings
 endfunction
 
-function! s:outline_info.create_heading(which, heading_line, matched_line, context)
+function! s:create_heading(tag, context)
+  let line = a:tag.line
   let heading = {
-        \ 'word' : a:heading_line,
-        \ 'level': 0,
-        \ 'type' : 'generic',
+        \ 'word' : a:tag.name,
+        \ 'type' : a:tag.kind,
+        \ "lnum" : a:tag.lnum,
         \ }
+  let ignore = 0
 
-  if a:which == 'heading-1' && unite#sources#outline#
-        \util#_cpp_is_in_comment(a:heading_line, a:matched_line)
-    let heading.type = 'comment'
-    let heading.level = unite#sources#outline#
-          \util#get_comment_heading_level(a:matched_line, 6)
-  elseif a:which == 'heading'
-    let heading.level = 4
-    let lines = a:context.lines | let h = a:context.heading_lnum
-    if a:heading_line =~ '^\s*#\s*define\>'
-      " #define ()
-      let heading.type = '#define'
-      let heading.word = unite#sources#outline#
-            \util#_c_normalize_define_macro_heading_word(heading.word)
-    elseif a:heading_line =~ '\<typedef\>'
-      " typedef
-      if a:heading_line =~ '{\s*$'
-        let heading.type = 'typedef'
-        let indent = matchstr(a:heading_line, '^\s*')
-        let closing = unite#sources#outline#
-              \util#neighbor_matchstr(lines, h, '^' . indent . '}.*$', [0, 50])
-        let heading.word = substitute(heading.word, '{\s*$', '{...' . closing, '')
-      else
-        let heading.level = 0
-      endif
-    elseif a:heading_line =~ '\<enum\>'
-      " enum
-      if a:heading_line =~ '{\s*$'
-        let heading.type = 'enum'
-        let first_symbol_def = unite#sources#outline#
-              \util#neighbor_matchstr(lines, h, '^\s*\zs\S.\{-},\=\ze\s*\%(/[/*]\|$\)', [0, 3], 1)
-        let closing = (first_symbol_def =~ ',$' ? ' ...}' : ' }')
-        let heading.word = substitute(heading.word, '{\s*$', '{ ' . first_symbol_def . closing, '')
-      else
-        let heading.level = 0
-      endif
-    elseif a:heading_line =~ '^class\>'
-      " class
-      let heading.type = 'class'
-      let class_name = matchstr(a:heading_line, '^class\s\+\zs\h\w*\%(::\h\w*\)*')
-      call s:rebuild_class_names_pattern(class_name)
-      let heading.word = substitute(heading.word, '\s*{.*$', '', '')
+  if heading.type ==# 'function'
+    if a:tag.name =~# '^\u\{2,}$'
+      let ignore = 1
     else
-      " function
-      if a:heading_line =~ ';\s*$' || a:heading_line =~ '\<[[:upper:]_]\+\s*('
-        " this is a function prototype or a functional macro application, not
-        " a function definition
-        let heading.level = 0
-      else
-        let heading.type = 'function'
-        if !empty(s:class_names) && a:heading_line =~ s:class_names_pattern
-          let heading.level += 1
-        endif
-        let heading.word = substitute(heading.word, '\s*{.*$', '', '')
-      endif
+      let heading.word .= a:tag.signature
+    endif
+
+  elseif heading.type ==# 'macro'
+    if line =~# '#undef\>'
+      let ignore = 1
+    elseif line =~# a:tag.name . '\s*('
+      let line = unite#sources#outline#util#join_to_rparen(a:context, a:tag.lnum)
+      let param_list = matchstr(line, '([^)]*)')
+      let heading.word .= param_list
     endif
   endif
 
-  if heading.level > 0
-    return heading
-  else
-    return {}
-  endif
+  return ignore ? {} : heading
 endfunction
 
-function! s:rebuild_class_names_pattern(class_name)
-  call add(s:class_names, a:class_name)
-  let s:class_names_pattern = '\<\%(' . join(s:class_names, '\|') . '\)::'
+function! s:get_name_id_suffix(name_counter, tag)
+  let namespace = has_key(a:tag, 'class') ? a:tag.class : a:tag.kind
+  if !has_key(a:name_counter, namespace)
+    let a:name_counter[namespace] = {}
+  endif
+
+  let counter = a:name_counter[namespace]
+  let name = has_key(a:tag, 'signature') ? a:tag.name . a:tag.signature : a:tag.name
+  if has_key(counter, name)
+    let counter[name] += 1
+    return ' [' . counter[name] . ']'
+  else
+    let counter[name] = 1
+    return ''
+  endif
 endfunction
 
 " vim: filetype=vim
