@@ -314,7 +314,7 @@ create_heading		関数（任意） 	*unite-outline-info-create_heading()*
 	* {matched-line}	文字列
 				マッチした行
 
-	* {context}		辞書		*unite-outline-info-context*
+	* {context}		辞書		*unite-outline-notation-{context}*
 				その他の情報、以下の属性を含む
 
 	  * heading_lnum	整数
@@ -340,7 +340,7 @@ create_heading		関数（任意） 	*unite-outline-info-create_heading()*
 	既存の属性を書き換えないで下さい。
 
 	返値となる辞書には以下の属性を設定します。
-						*unite-outline-info-heading*
+						*unite-outline-notation-{heading}*
 	* word		文字列（必須）
 			見出し一覧に表示される文字列
 
@@ -426,7 +426,7 @@ skip_header	関数（任意）			*unite-outline-info-skip_header()*
 	skip_header()関数に渡される引数は以下の通りです。
 
 	* {context}	辞書
-			詳細は|unite-outline-info-context|を参照
+			詳細は|unite-outline-notation-{context}|を参照
 
 
 extract_headings	関数（任意）		*unite-outline-info-extract_headings()*
@@ -444,11 +444,11 @@ extract_headings	関数（任意）		*unite-outline-info-extract_headings()*
 	extract_headings() に渡される引数は以下の通りです。
 
 	* {context}	辞書
-			詳細は|unite-outline-info-context|を参照
+			詳細は|unite-outline-notation-{context}|を参照
 
 	返値は見出し（辞書）のリストであり、個々の見出しには
-	|unite-outline-info-heading|の属性に加え、以下の属性を設定する必要が
-	あります。
+	|unite-outline-notation-{heading}|の属性に加え、以下の属性を設定する
+	必要があります。
 
 	* lnum		整数  （必須）
 			見出し行の行番号
@@ -469,7 +469,7 @@ initialize	関数（任意） 			*unite-outline-info-initialize()*
 	設定されていると、見出しの抽出に先立って呼ばれ、outline info に初期化
 	の機会を与えます。
 
-	{context} については、|unite-outline-info-context|を参照
+	{context} については、|unite-outline-notation-{context}|を参照
 
 
 finalize	関数（任意） 			*unite-outline-info-finalize()*
@@ -479,7 +479,7 @@ finalize	関数（任意） 			*unite-outline-info-finalize()*
 	設定されていると、見出しの抽出が完了した後に呼ばれ、outline info に後
 	始末の機会を与えます。
 
-	{context} については、|unite-outline-info-context|を参照
+	{context} については、|unite-outline-notation-{context}|を参照
 
 ==============================================================================
 関数						*unite-outline-functions*
@@ -503,7 +503,7 @@ UTILITY FUNCTIONS			*unite-outline-utility-functions*
 	extract_headings() で使用すると便利なユーティリティ関数です。
 
 	{context} には、create_heading() や extract_headings() が引数として
-	受け取った辞書|unite-outline-info-context|を渡します。
+	受け取った辞書|unite-outline-notation-{context}|を渡します。
 
 Indentation ~
 				*unite#sources#outline#util#get_indent_level()*
