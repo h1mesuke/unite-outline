@@ -2,7 +2,7 @@
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
 " Updated : 2011-02-27
-" Version : 0.3.1
+" Version : 0.3.2
 " License : MIT license {{{
 "
 "   Permission is hereby granted, free of charge, to any person obtaining
