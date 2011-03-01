@@ -36,6 +36,15 @@ function! unite#sources#outline#util#append_child(parent, child)
   let a:child.parent = a:parent
 endfunction
 
+function! unite#sources#outline#util#create_blank_heading()
+  return {
+        \ 'word' : '',
+        \ 'level': 1,
+        \ 'type' : 'blank',
+        \ "lnum" : 1,
+        \ }
+endfunction
+
 "-----------------------------------------------------------------------------
 " Indentation
 

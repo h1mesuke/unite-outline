@@ -158,11 +158,10 @@ unlet s:default_alias_map
 " Source
 
 let s:source = {
-      \ 'name'        : 'outline',
-      \ 'description' : 'candidates from heading list',
-      \ 'hooks'       : {},
-      \ 'action_table': {},
-      \ 'is_volatile' : 1,
+      \ 'name'       : 'outline',
+      \ 'description': 'candidates from heading list',
+      \ 'hooks': {}, 'action_table'  : {}, 'alias_table': {}, 'default_action': {},
+      \ 'is_volatile': 1,
       \ }
 
 function! s:source.hooks.on_init(args, context)
@@ -257,19 +256,17 @@ function! s:source.gather_candidates(args, context)
     let levels = s:smooth_levels(headings)
 
     " headings -> candidates
-    let cands = map(headings, '{
-          \ "word": s:make_indent(levels[v:key]) . v:val["word"],
-          \ "source": "outline",
-          \ "kind"  : "jump_list",
-          \ "action__path": path,
-          \ "action__pattern"  : "^" . unite#util#escape_pattern(lines[v:val["lnum"]]) . "$",
-          \ "action__signature": self.calc_signature(v:val["lnum"], s:context.lines),
-          \ }')
+    let candidates = []
+    let idx = 0
+    while idx < len(headings)
+      call add(candidates, s:create_candidate(headings[idx], levels[idx]))
+      let idx += 1
+    endwhile
 
     let is_volatile = has_key(outline_info, 'is_volatile') && outline_info.is_volatile
     if !is_volatile && (num_lines > g:unite_source_outline_cache_limit)
       let should_serialize = (num_lines > g:unite_source_outline_cache_serialize_limit)
-      call cache.set_data(path, cands, should_serialize)
+      call cache.set_data(path, candidates, should_serialize)
     elseif cache.has_data(path)
       call cache.remove_data(path)
     endif
@@ -281,7 +278,7 @@ function! s:source.gather_candidates(args, context)
             \ "unite-outline: used=" . string(used_time) . "s, 100l=". string(used_time_100l) . "s")
     endif
 
-    return cands
+    return candidates
   catch
     call unite#util#print_error(v:throwpoint)
     call unite#util#print_error(v:exception)
@@ -564,8 +561,31 @@ function! s:join_list(lists, sep)
   return result
 endfunction
 
+function! s:create_candidate(heading, level)
+  if a:heading.type ==# 'blank'
+    return {
+          \ 'word': '',
+          \ 'source': 'outline',
+          \ 'kind'  : 'common',
+          \ }
+  else
+    return {
+          \ 'word': s:make_indent(a:level) . a:heading.word,
+          \ 'source': 'outline',
+          \ 'kind'  : 'jump_list',
+          \ 'action__path': s:context.buffer.path,
+          \ 'action__pattern'  : s:make_search_pattern(s:context.lines[a:heading.lnum]),
+          \ 'action__signature': s:source.calc_signature(a:heading.lnum, s:context.lines),
+          \ }
+  endif
+endfunction
+
 function! s:make_indent(level)
   return repeat(' ', (a:level - 1) * g:unite_source_outline_indent_width)
+endfunction
+
+function! s:make_search_pattern(line)
+  return '^' . unite#util#escape_pattern(a:line) . '$'
 endfunction
 
 function! s:source.calc_signature(lnum, ...)
@@ -613,7 +633,6 @@ endif
 " Actions
 
 let s:action_table = {}
-
 let s:action_table.preview = {
       \ 'description'  : 'preview this position',
       \ 'is_selectable': 0,
@@ -701,6 +720,22 @@ function! s:adjust_scroll(best_winline)
 endfunction
 
 let s:source.action_table.jump_list = s:action_table
+
+let s:action_table = {}
+let s:action_table.nop_ = {
+      \ 'description'  : 'do nothing',
+      \ 'is_selectable': 0,
+      \ }
+function! s:action_table.nop_.func(candidate)
+endfunction
+
+let s:source.action_table.common = s:action_table
+let s:source.default_action.common = 'nop_'
 unlet s:action_table
+
+let s:source.alias_table.common = {}
+for action in ['yank', 'yank_escape', 'ex', 'insert']
+  let s:source.alias_table.common[action] = 'nop'
+endfor
 
 " vim: filetype=vim
