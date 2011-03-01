@@ -502,6 +502,18 @@ function! s:normalize_heading_word(heading_word)
   return heading_word
 endfunction
 
+function! s:flatten_tree(tree_headings)
+  let headings = []
+  for node in a:tree_headings
+    let node.level = has_key(node, 'parent') ? node.parent.level + 1 : 1
+    call add(headings, node)
+    if has_key(node, 'children')
+      let headings += s:flatten_tree(node.children)
+    endif
+  endfor
+  return headings
+endfunction
+
 function! s:get_ignore_heading_types(filetype)
   for filetype in [a:filetype, s:resolve_filetype_alias(a:filetype), '*']
     if has_key(g:unite_source_outline_ignore_heading_types, filetype)
