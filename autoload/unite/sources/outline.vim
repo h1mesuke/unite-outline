@@ -233,19 +233,16 @@ function! s:source.gather_candidates(args, context)
       call outline_info.initialize(s:context)
     endif
 
-    let b_headings = [] | " headings from built-in extract_headings()
-    let o_headings = [] | " headings from outline_info's extract_headings()
-
-    if has_key(outline_info, 'heading-1') || has_key(outline_info, 'heading') || has_key(outline_info, 'heading+1')
-      let b_headings = s:extract_headings()
-    endif
     if has_key(outline_info, 'extract_headings')
-      let o_headings = outline_info.extract_headings(lines, s:context)
-      call map(o_headings, 's:normalize_heading(v:val)')
-    endif
-    let headings = b_headings + o_headings
-    if !(empty(b_headings) || empty(o_headings))
-      call unite#sources#outline#util#sort_by_lnum(headings)
+      let headings = outline_info.extract_headings(s:context)
+      if len(filter(copy(headings), 'has_key(v:val, "children")')) > 0
+        let headings = s:flatten_tree(headings)
+      else
+        call map(headings, 's:normalize_heading(v:val)')
+      endif
+    else
+      let headings = s:extract_headings()
+      call s:build_tree(headings)
     endif
 
     if has_key(outline_info, 'finalize')
