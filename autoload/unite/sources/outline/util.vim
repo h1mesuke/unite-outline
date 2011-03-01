@@ -45,6 +45,15 @@ function! unite#sources#outline#util#create_blank_heading()
         \ }
 endfunction
 
+function! unite#sources#outline#util#create_pseudo_heading(word, ...)
+  return {
+        \ 'word' : a:word,
+        \ 'level': 1,
+        \ 'type' : get(a:000, 0, 'pseudo'),
+        \ "lnum" : get(a:000, 1, 1),
+        \ }
+endfunction
+
 "-----------------------------------------------------------------------------
 " Indentation
 
