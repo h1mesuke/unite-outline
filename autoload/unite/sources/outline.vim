@@ -514,6 +514,20 @@ function! s:flatten_tree(tree_headings)
   return headings
 endfunction
 
+function! s:build_tree(headings)
+  let context   = [{ 'level': -1 }] | " stack
+  let prev_node =  a:headings[0]
+  for node in a:headings
+    while context[-1].level >= node.level
+      call remove(context, -1)
+    endwhile
+    if context[-1].level > 0
+      call unite#sources#outline#util#append_child(context[-1], node)
+    endif
+    call add(context, node)
+  endfor
+endfunction
+
 function! s:get_ignore_heading_types(filetype)
   for filetype in [a:filetype, s:resolve_filetype_alias(a:filetype), '*']
     if has_key(g:unite_source_outline_ignore_heading_types, filetype)
