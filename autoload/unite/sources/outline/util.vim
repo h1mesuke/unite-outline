@@ -192,7 +192,7 @@ endfunction
 "
 function! unite#sources#outline#util#capitalize(str, ...)
   let flag = (a:0 ? a:1 : '')
-  return substitute(a:str, '\<\(\u\)\(\u\+\)\>', '\u\1\L\2', flag)
+  return substitute(a:str, '\<\(\h\)\(\w\+\)\>', '\u\1\L\2', flag)
 endfunction
 
 " ported from:
