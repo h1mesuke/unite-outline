@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-01
+" Updated : 2011-03-02
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -35,7 +35,7 @@ function! unite#sources#outline#alias(alias, src_filetype)
 endfunction
 
 function! unite#sources#outline#clear_cache()
-  let cache = unite#sources#outline#_cache#instance()
+  let cache = unite#sources#outline#lib#cache#instance()
   call cache.clear()
 endfunction
 
@@ -204,7 +204,7 @@ function! s:source.gather_candidates(args, context)
     endif
 
     let is_force = ((len(a:args) > 0 && a:args[0] == '!') || a:context.is_redraw)
-    let cache = unite#sources#outline#_cache#instance()
+    let cache = unite#sources#outline#lib#cache#instance()
     let path = s:context.buffer.path
     if cache.has_data(path) && !is_force
       return cache.get_data(path)
