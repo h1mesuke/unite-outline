@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/cpp.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-01
+" Updated : 2011-03-02
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -37,12 +37,12 @@ let s:CATEGORY_ORDER = ['namespace', 'macro', 'enum', 'struct', 'union', 'typede
 "   x  external and forward variable declarations
 "
 function! s:outline_info.extract_headings(context)
-  if !unite#sources#outline#util#has_exuberant_ctags()
+  if !unite#sources#outline#lib#ctags#exists()
     call unite#util#print_error("unite-outline: Sorry, Exuberant Ctags required.")
     return []
   endif
 
-  let tags = unite#sources#outline#util#get_tags('--c++-kinds=cdfgnstu', a:context)
+  let tags = unite#sources#outline#lib#ctags#get_tags('--c++-kinds=cdfgnstu', a:context)
 
   let categories = {} | let classes = {}
   let name_counter = {}
@@ -63,7 +63,7 @@ function! s:outline_info.extract_headings(context)
               \util#create_pseudo_heading('(' . tag.class . ') : class', 'class', tag.lnum)
       endif
 
-      let heading.word = unite#sources#outline#util#get_access_mark(tag) . heading.word
+      let heading.word = unite#sources#outline#lib#ctags#get_access_mark(tag) . heading.word
       if heading.type !=# 'function'
         let heading.word .= ' : ' . heading.type
       endif

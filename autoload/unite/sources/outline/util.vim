@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-01
+" Updated : 2011-03-02
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -239,56 +239,6 @@ function! unite#sources#outline#util#nr2roman(nr)
 endfunction
 
 "-----------------------------------------------------------------------------
-" Tags
-
-let s:CTAGS_OPTIONS = '--filter --fields=afiKmnsSzt --sort=no '
-
-function! unite#sources#outline#util#get_tags(ctags_opts, context)
-  let path = unite#util#substitute_path_separator(a:context.buffer.path)
-  let tag_lines = split(system('ctags  ' . s:CTAGS_OPTIONS . a:ctags_opts, path), "\<NL>")
-
-  if v:shell_error
-    call unite#util#print_error("unite-outline: Ctags command failed. [" . v:shell_error . "]")
-    return []
-  else
-    return map(tag_lines, 's:create_tag(v:val, a:context)')
-  endif
-endfunction
-
-function! s:create_tag(tag_line, context)
-  let fields = split(a:tag_line, "\<Tab>")
-  let tag = {}
-  let tag.name = fields[0]
-  for ext_fld in fields[3:-1]
-    let [key, value] = matchlist(ext_fld, '^\([^:]\+\):\(.*\)$')[1:2]
-    let tag[key] = value
-  endfor
-  let tag.lnum = tag.line
-  let tag.line = a:context.lines[tag.lnum]
-  return tag
-endfunction
-
-function! unite#sources#outline#util#has_exuberant_ctags()
-  return executable('ctags') && split(system('ctags --version'), "\<NL>")[0] =~? '\<exuberant\>'
-endfunction
-
-let s:OOP_ACCESS_MARKS = { 'public': '+', 'protected': '#', 'private': '-' }
-
-function! unite#sources#outline#util#get_access_mark(tag)
-  let access = has_key(a:tag, 'access') ? a:tag.access : 'unknown'
-  return get(s:OOP_ACCESS_MARKS, access, '_') . ' '
-endfunction
-
-function! unite#sources#outline#util#sort_by_lnum(dicts)
-  return sort(a:dicts, 's:compare_by_lnum')
-endfunction
-function! s:compare_by_lnum(d1, d2)
-  let n1 = a:d1.lnum
-  let n2 = a:d2.lnum
-  return n1 == n2 ? 0 : n1 > n2 ? 1 : -1
-endfunction
-
-"-----------------------------------------------------------------------------
 " Misc
 
 function! unite#sources#outline#util#print_debug(msg)
@@ -300,6 +250,15 @@ endfunction
 function! unite#sources#outline#util#print_progress(msg)
   redraw
   echon a:msg
+endfunction
+
+function! unite#sources#outline#util#sort_by_lnum(dicts)
+  return sort(a:dicts, 's:compare_by_lnum')
+endfunction
+function! s:compare_by_lnum(d1, d2)
+  let n1 = a:d1.lnum
+  let n2 = a:d2.lnum
+  return n1 == n2 ? 0 : n1 > n2 ? 1 : -1
 endfunction
 
 function! unite#sources#outline#util#_c_normalize_define_macro_heading_word(heading_word)
