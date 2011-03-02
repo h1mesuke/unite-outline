@@ -522,7 +522,7 @@ function! s:build_tree(headings)
       call remove(context, -1)
     endwhile
     if context[-1].level > 0
-      call unite#sources#outline#util#append_child(context[-1], node)
+      call unite#sources#outline#lib#heading#append_child(context[-1], node)
     endif
     call add(context, node)
   endfor

@@ -60,7 +60,7 @@ function! s:outline_info.extract_headings(context)
       " class members
       if !has_key(classes, tag.class)
         let classes[tag.class] = unite#sources#outline#
-              \util#create_pseudo_heading('(' . tag.class . ') : class', 'class', tag.lnum)
+              \lib#heading#create_pseudo('(' . tag.class . ') : class', 'class', tag.lnum)
       endif
 
       let heading.word = unite#sources#outline#lib#ctags#get_access_mark(tag) . heading.word
@@ -69,25 +69,25 @@ function! s:outline_info.extract_headings(context)
       endif
 
       call unite#sources#outline#
-            \util#append_child(classes[tag.class], heading)
+            \lib#heading#append_child(classes[tag.class], heading)
 
     else
       " other category members
       if !has_key(categories, heading.type)
         let cat_name = unite#sources#outline#util#capitalize(heading.type)
         let categories[heading.type] = unite#sources#outline#
-              \util#create_pseudo_heading(cat_name, heading.type, tag.lnum)
+              \lib#heading#create_pseudo(cat_name, heading.type, tag.lnum)
       endif
 
       call unite#sources#outline#
-            \util#append_child(categories[heading.type], heading)
+            \lib#heading#append_child(categories[heading.type], heading)
     endif
 
     let heading.word .= s:get_name_id_suffix(name_counter, tag)
   endfor
 
   let headings = []
-  let blank_heading = unite#sources#outline#util#create_blank_heading()
+  let blank_heading = unite#sources#outline#lib#heading#create_blank()
 
   if has_key(categories, 'macro')
     let categories.macro.word = '#define'

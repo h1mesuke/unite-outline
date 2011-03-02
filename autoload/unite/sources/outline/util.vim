@@ -26,35 +26,6 @@
 " }}}
 
 "-----------------------------------------------------------------------------
-" Headings
-
-function! unite#sources#outline#util#append_child(parent, child)
-  if !has_key(a:parent, 'children')
-    let a:parent.children = []
-  endif
-  call add(a:parent.children, a:child)
-  let a:child.parent = a:parent
-endfunction
-
-function! unite#sources#outline#util#create_blank_heading()
-  return {
-        \ 'word' : '',
-        \ 'level': 1,
-        \ 'type' : 'blank',
-        \ "lnum" : 1,
-        \ }
-endfunction
-
-function! unite#sources#outline#util#create_pseudo_heading(word, ...)
-  return {
-        \ 'word' : a:word,
-        \ 'level': 1,
-        \ 'type' : get(a:000, 0, 'pseudo'),
-        \ "lnum" : get(a:000, 1, 1),
-        \ }
-endfunction
-
-"-----------------------------------------------------------------------------
 " Indentation
 
 function! unite#sources#outline#util#get_indent_level(context, lnum)
