@@ -30,6 +30,10 @@ function! unite#sources#outline#lib#cache#instance()
   return s:cache
 endfunction
 
+function! unite#sources#outline#lib#cache#clear()
+  call unite#sources#outline#clear_cache()
+endfunction
+
 " singleton
 let s:cache = { 'data': {} }
 
