@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/cpp.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-02
+" Updated : 2011-03-03
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,15 +9,13 @@
 "=============================================================================
 
 " Default outline info for C++
-" Version: 0.1.0
+" Version: 0.1.1
 
 function! unite#sources#outline#defaults#cpp#outline_info()
   return s:outline_info
 endfunction
 
 let s:outline_info = {}
-
-let s:CATEGORY_ORDER = ['namespace', 'macro', 'enum', 'struct', 'union', 'typedef', 'function']
 
 " TAG KINDS:
 "
@@ -37,71 +35,60 @@ let s:CATEGORY_ORDER = ['namespace', 'macro', 'enum', 'struct', 'union', 'typede
 "   x  external and forward variable declarations
 "
 function! s:outline_info.extract_headings(context)
+  let ctags_opts = '--c++-kinds=cdfgnstu'
+  return unite#sources#outline#defaults#cpp#extract_headings(ctags_opts, a:context)
+endfunction
+
+let s:SCOPE_TYPES = ['class', 'struct']
+let s:SCOPE_TYPES_PATTERN = '\%(' . join(s:SCOPE_TYPES, '\|') . '\)'
+
+function! unite#sources#outline#defaults#cpp#extract_headings(ctags_opts, context)
   if !unite#sources#outline#lib#ctags#exists()
     call unite#util#print_error("unite-outline: Sorry, Exuberant Ctags required.")
     return []
   endif
 
-  let tags = unite#sources#outline#lib#ctags#get_tags('--c++-kinds=cdfgnstu', a:context)
+  let tags = unite#sources#outline#lib#ctags#get_tags(a:ctags_opts, a:context)
 
-  let categories = {} | let classes = {}
+  let headings = [] | let class_table = {}
   let name_counter = {}
 
   for tag in tags
     let heading = s:create_heading(tag, a:context)
     if empty(heading) | continue | endif
 
-    if tag.kind ==# 'class'
-      " classes
-      let heading.word .= ' : ' . heading.type
-      let classes[tag.name] = heading
+    let heading.word .= s:get_name_id_suffix(name_counter, tag)
 
-    elseif has_key(tag, 'class')
-      " class members
-      if !has_key(classes, tag.class)
-        let classes[tag.class] = unite#sources#outline#
-              \lib#heading#create_pseudo('(' . tag.class . ') : class', 'class', tag.lnum)
+    if tag.kind =~# s:SCOPE_TYPES_PATTERN
+      " class/struct
+      if has_key(class_table, tag.name)
+        let heading.children = class_table[tag.name].children
       endif
-
-      let heading.word = unite#sources#outline#lib#ctags#get_access_mark(tag) . heading.word
-      if heading.type !=# 'function'
-        let heading.word .= ' : ' . heading.type
-      endif
-
-      call unite#sources#outline#
-            \lib#heading#append_child(classes[tag.class], heading)
+      let class_table[tag.name] = heading
 
     else
-      " other category members
-      if !has_key(categories, heading.type)
-        let cat_name = unite#sources#outline#util#capitalize(heading.type)
-        let categories[heading.type] = unite#sources#outline#
-              \lib#heading#create_pseudo(cat_name, heading.type, tag.lnum)
+      let scope = s:get_scope(tag)
+
+      if scope != 'top'
+        " class/struct members
+        if !has_key(class_table, tag[scope])
+          let class_table[tag[scope]] = unite#sources#outline#
+                \lib#heading#new('(' . tag[scope] . ') : ' . scope, scope, tag.lnum)
+        endif
+
+        let heading.word = unite#sources#outline#lib#ctags#get_access_mark(tag) . heading.word
+
+        call unite#sources#outline#
+              \lib#heading#append_child(class_table[tag[scope]], heading)
+      else
+        " others
+        call add(headings, heading)
       endif
-
-      call unite#sources#outline#
-            \lib#heading#append_child(categories[heading.type], heading)
     endif
-
-    let heading.word .= s:get_name_id_suffix(name_counter, tag)
   endfor
 
-  let headings = []
-  let blank_heading = unite#sources#outline#lib#heading#create_blank()
-
-  if has_key(categories, 'macro')
-    let categories.macro.word = '#define'
-  endif
-  for cat_name in s:CATEGORY_ORDER
-    if !has_key(categories, cat_name) | continue | endif
-    let category = categories[cat_name]
-    if len(category.children) > 1 | let category.word .= 's' | endif
-    let headings += [categories[cat_name], blank_heading]
-  endfor
-
-  for class in unite#sources#outline#util#sort_by_lnum(values(classes))
-    let headings += [class, blank_heading]
-  endfor
+  let headings = unite#sources#outline#util#sort_by_lnum(headings + values(class_table))
+  let headings = s:insert_blanks(headings)
 
   return headings
 endfunction
@@ -118,21 +105,52 @@ function! s:create_heading(tag, context)
   if heading.type ==# 'function'
     if a:tag.name =~# '^\u\{2,}$'
       let ignore = 1
+    elseif has_key(a:tag, 'signature')
+      let heading.word .= ' ' . a:tag.signature
     else
-      let heading.word .= a:tag.signature
+      let heading.word .= ' ' . s:get_param_list(a:context, a:tag.lnum)
     endif
 
-  elseif heading.type ==# 'macro'
-    if line =~# '#undef\>'
-      let ignore = 1
-    elseif line =~# a:tag.name . '\s*('
-      let line = unite#sources#outline#util#join_to_rparen(a:context, a:tag.lnum)
-      let param_list = matchstr(line, '([^)]*)')
-      let heading.word .= param_list
+  else
+    if heading.type ==# 'macro'
+      if line =~# '#undef\>'
+        let ignore = 1
+      elseif line =~# a:tag.name . '\s*('
+        let heading.word .= ' ' . s:get_param_list(a:context, a:tag.lnum)
+      endif
     endif
+    let heading.word .= ' : ' . a:tag.kind
   endif
 
   return ignore ? {} : heading
+endfunction
+
+function! s:insert_blanks(headings)
+  let blank = unite#sources#outline#lib#heading#create_blank()
+  let headings = [] | let prev_heading = blank
+  for heading in a:headings
+    if heading.type =~# s:SCOPE_TYPES_PATTERN
+      if !empty(headings) | call add(headings, blank) | endif
+      call add(headings, heading)
+    else
+      if prev_heading.type =~# s:SCOPE_TYPES_PATTERN | call add(headings, blank) | endif
+      call add(headings, heading)
+    endif
+    let prev_heading = heading
+  endfor
+  return headings
+endfunction
+
+function! s:get_scope(tag)
+  for scope in s:SCOPE_TYPES
+    if has_key(a:tag, scope) | return scope | endif
+  endfor
+  return 'top'
+endfunction
+
+function! s:get_param_list(context, lnum)
+  let line = unite#sources#outline#util#join_to_rparen(a:context, a:lnum)
+  return matchstr(line, '([^)]*)')
 endfunction
 
 function! s:get_name_id_suffix(name_counter, tag)

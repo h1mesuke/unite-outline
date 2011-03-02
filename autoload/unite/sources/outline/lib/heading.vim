@@ -43,7 +43,7 @@ function! unite#sources#outline#lib#heading#create_blank()
         \ }
 endfunction
 
-function! unite#sources#outline#lib#heading#create_pseudo(word, ...)
+function! unite#sources#outline#lib#heading#new(word, ...)
   return {
         \ 'word' : a:word,
         \ 'level': 1,

@@ -232,15 +232,4 @@ function! s:compare_by_lnum(d1, d2)
   return n1 == n2 ? 0 : n1 > n2 ? 1 : -1
 endfunction
 
-function! unite#sources#outline#util#_c_normalize_define_macro_heading_word(heading_word)
-  let heading_word = substitute(a:heading_word, '#\s*define', '#define', '')
-  let heading_word = substitute(heading_word, ')\zs.*$', '', '')
-  return heading_word
-endfunction
-
-function! unite#sources#outline#util#_cpp_is_in_comment(heading_line, matched_line)
-  return ((a:matched_line =~ '^\s*//'  && a:heading_line =~ '^\s*//') ||
-        \ (a:matched_line =~ '^\s*/\*' && a:matched_line !~ '\*/\s*$'))
-endfunction
-
 " vim: filetype=vim
