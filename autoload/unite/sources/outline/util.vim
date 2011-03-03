@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-02
+" Updated : 2011-03-03
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -230,6 +230,11 @@ function! s:compare_by_lnum(d1, d2)
   let n1 = a:d1.lnum
   let n2 = a:d2.lnum
   return n1 == n2 ? 0 : n1 > n2 ? 1 : -1
+endfunction
+
+function! unite#sources#outline#util#_cpp_is_in_comment(heading_line, matched_line)
+  return ((a:matched_line =~ '^\s*//'  && a:heading_line =~ '^\s*//') ||
+        \ (a:matched_line =~ '^\s*/\*' && a:matched_line !~ '\*/\s*$'))
 endfunction
 
 " vim: filetype=vim
