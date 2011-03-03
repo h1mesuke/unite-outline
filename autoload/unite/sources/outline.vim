@@ -42,14 +42,15 @@ let s:OUTLINE_INFO_PATH = [
 
 let s:outline_info_ftime = {}
 
-function! unite#sources#outline#get_outline_info(filetype)
+function! unite#sources#outline#get_outline_info(filetype, ...)
   let filetype = s:resolve_filetype_alias(a:filetype)
+  let default = (a:0 ? a:1 : 0)
 
   if has_key(g:unite_source_outline_info, filetype)
     return g:unite_source_outline_info[filetype]
   endif
 
-  for path in s:OUTLINE_INFO_PATH
+  for path in (default ? s:OUTLINE_INFO_PATH[-1:] : s:OUTLINE_INFO_PATH)
     let load_funcall = substitute(substitute(path, '^autoload/', '', ''), '/', '#', 'g')
     let load_funcall .= filetype . '#outline_info()'
     try
