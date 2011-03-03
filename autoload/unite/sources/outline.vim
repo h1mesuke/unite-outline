@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-02
+" Updated : 2011-03-03
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -375,30 +375,30 @@ function! s:extract_headings()
       " matched: heading-1
       let next_line = lines[s:lnum + 1]
       if next_line =~ '[[:punct:]]\@!\S'
+        let s:context.heading_lnum = s:lnum + 1
+        let s:context.matched_lnum = s:lnum
         if has_create_heading_func
-          let s:context.heading_lnum = s:lnum + 1
-          let s:context.matched_lnum = s:lnum
           let heading = outline_info.create_heading('heading-1', next_line, line, s:context)
         else
           let heading = next_line
         endif
         if !empty(heading)
-          call add(headings, s:normalize_heading(heading, s:lnum + 1))
+          call add(headings, s:normalize_heading(heading))
           let s:lnum += 1
         endif
       elseif next_line =~ '\S' && s:lnum < num_lines - 4
         " see one more next
         let next_line = lines[s:lnum + 2]
         if next_line =~ '[[:punct:]]\@!\S'
+          let s:context.heading_lnum = s:lnum + 2
+          let s:context.matched_lnum = s:lnum
           if has_create_heading_func
-            let s:context.heading_lnum = s:lnum + 2
-            let s:context.matched_lnum = s:lnum
             let heading = outline_info.create_heading('heading-1', next_line, line, s:context)
           else
             let heading = next_line
           endif
           if !empty(heading)
-            call add(headings, s:normalize_heading(heading, s:lnum + 2))
+            call add(headings, s:normalize_heading(heading))
             let s:lnum += 2
           endif
         endif
@@ -406,30 +406,30 @@ function! s:extract_headings()
 
     elseif has_heading_pattern && line =~# outline_info.heading
       " matched: heading
+      let s:context.heading_lnum = s:lnum
+      let s:context.matched_lnum = s:lnum
       if has_create_heading_func
-        let s:context.heading_lnum = s:lnum
-        let s:context.matched_lnum = s:lnum
         let heading = outline_info.create_heading('heading', line, line, s:context)
       else
         let heading = line
       endif
       if !empty(heading)
-        call add(headings, s:normalize_heading(heading, s:lnum))
+        call add(headings, s:normalize_heading(heading))
       endif
 
     elseif has_heading_next_pattern && line =~# outline_info['heading+1'] && s:lnum > 0
       " matched: heading+1
       let prev_line = lines[s:lnum - 1]
       if prev_line =~ '[[:punct:]]\@!\S'
+        let s:context.heading_lnum = s:lnum - 1
+        let s:context.matched_lnum = s:lnum
         if has_create_heading_func
-          let s:context.heading_lnum = s:lnum - 1
-          let s:context.matched_lnum = s:lnum
           let heading = outline_info.create_heading('heading+1', prev_line, line, s:context)
         else
           let heading = prev_line
         endif
         if !empty(heading)
-          call add(headings, s:normalize_heading(heading, s:lnum - 1))
+          call add(headings, s:normalize_heading(heading))
         endif
       endif
     endif
@@ -476,10 +476,11 @@ function! s:skip_to(pattern)
   endwhile
 endfunction
 
-function! s:normalize_heading(heading, ...)
+function! s:normalize_heading(heading)
   if type(a:heading) == type("")
     " normalize to a Dictionary
-    let level = unite#sources#outline#util#get_indent_level(a:heading, s:context)
+    let level = unite#sources#outline#
+          \util#get_indent_level(s:context, s:context.heading_lnum)
     let heading = {
           \ 'word' : a:heading,
           \ 'level': level,
@@ -487,11 +488,13 @@ function! s:normalize_heading(heading, ...)
   else
     let heading = a:heading
   endif
+
+  let heading.word = s:normalize_heading_word(heading.word)
   call extend(heading, {
         \ 'level': 1,
-        \ 'type' : 'generic' }, 'keep')
-  let heading.word = s:normalize_heading_word(heading.word)
-  if a:0 | let heading.lnum = a:1 | endif
+        \ 'type' : 'generic',
+        \ 'lnum' : s:context.heading_lnum,
+        \ }, 'keep')
 
   return heading
 endfunction
