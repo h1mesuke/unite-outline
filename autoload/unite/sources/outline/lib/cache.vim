@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-02
+" Updated : 2011-03-03
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -28,10 +28,6 @@
 
 function! unite#sources#outline#lib#cache#instance()
   return s:cache
-endfunction
-
-function! unite#sources#outline#lib#cache#clear()
-  call unite#sources#outline#clear_cache()
 endfunction
 
 " singleton

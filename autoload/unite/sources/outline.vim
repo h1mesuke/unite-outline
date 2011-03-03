@@ -34,11 +34,6 @@ function! unite#sources#outline#alias(alias, src_filetype)
   let s:filetype_alias_table[a:alias] = a:src_filetype
 endfunction
 
-function! unite#sources#outline#clear_cache()
-  let cache = unite#sources#outline#lib#cache#instance()
-  call cache.clear()
-endfunction
-
 let s:OUTLINE_INFO_PATH = [
       \ 'autoload/outline/',
       \ 'autoload/unite/sources/outline/',
@@ -93,6 +88,11 @@ function! s:find_outline_info(filetype)
     if oinfo_path != "" | return oinfo_path | endif
   endfor
   return ""
+endfunction
+
+function! unite#sources#outline#clear_cache()
+  let cache = unite#sources#outline#lib#cache#instance()
+  call cache.clear()
 endfunction
 
 "-----------------------------------------------------------------------------
