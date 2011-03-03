@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/heading.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-02
+" Updated : 2011-03-04
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -32,15 +32,6 @@ function! unite#sources#outline#lib#heading#append_child(parent, child)
   endif
   call add(a:parent.children, a:child)
   let a:child.parent = a:parent
-endfunction
-
-function! unite#sources#outline#lib#heading#create_blank()
-  return {
-        \ 'word' : '',
-        \ 'level': 1,
-        \ 'type' : 'blank',
-        \ "lnum" : 1,
-        \ }
 endfunction
 
 function! unite#sources#outline#lib#heading#new(word, ...)

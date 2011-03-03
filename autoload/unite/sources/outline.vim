@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-03
+" Updated : 2011-03-04
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -238,9 +238,8 @@ function! s:source.gather_candidates(args, context)
       let headings = outline_info.extract_headings(s:context)
       if len(filter(copy(headings), 'has_key(v:val, "children")')) > 0
         let headings = s:flatten_tree(headings)
-      else
-        call map(headings, 's:normalize_heading(v:val)')
       endif
+      call map(headings, 's:normalize_heading(v:val)')
     else
       let headings = s:extract_headings()
       call s:build_tree(headings)
@@ -250,16 +249,10 @@ function! s:source.gather_candidates(args, context)
       call outline_info.finalize(s:context)
     endif
 
-    call s:filter_headings(headings, s:get_ignore_heading_types(filetype))
-    let levels = s:smooth_levels(headings)
+    call s:filter_headings(headings)
 
     " headings -> candidates
-    let candidates = []
-    let idx = 0
-    while idx < len(headings)
-      call add(candidates, s:create_candidate(headings[idx], levels[idx]))
-      let idx += 1
-    endwhile
+    let candidates = s:convert_headings_to_candidates(headings)
 
     let is_volatile = has_key(outline_info, 'is_volatile') && outline_info.is_volatile
     if !is_volatile && (num_lines > g:unite_source_outline_cache_limit)
@@ -532,6 +525,15 @@ function! s:build_tree(headings)
   endfor
 endfunction
 
+function! s:filter_headings(headings)
+  let ignore_types = s:get_ignore_heading_types(s:context.buffer.filetype)
+  if !empty(ignore_types)
+    let ignore_types = map(copy(ignore_types), 'unite#util#escape_pattern(v:val)')
+    let ignore_types_pattern = '^\%(' . join(ignore_types, '\|') . '\)$'
+    call filter(a:headings, 'v:val.type !~# ignore_types_pattern')
+  endif
+endfunction
+
 function! s:get_ignore_heading_types(filetype)
   for filetype in [a:filetype, s:resolve_filetype_alias(a:filetype), '*']
     if has_key(g:unite_source_outline_ignore_heading_types, filetype)
@@ -541,12 +543,30 @@ function! s:get_ignore_heading_types(filetype)
   return []
 endfunction
 
-function! s:filter_headings(headings, ignore_types)
-  if !empty(a:ignore_types)
-    let ignore_types = map(copy(a:ignore_types), 'unite#util#escape_pattern(v:val)')
-    let ignore_types_pattern = '^\%(' . join(ignore_types, '\|') . '\)$'
-    call filter(a:headings, 'v:val.type !~# ignore_types_pattern')
-  endif
+function! s:convert_headings_to_candidates(headings)
+  if empty(a:headings) | return [] | endif
+
+  let outline_info = s:context.outline_info
+  let use_blanks = has_key(outline_info, 'need_blank')
+
+  let levels = s:smooth_levels(a:headings)
+
+  let candidates = []
+  call add(candidates, s:create_candidate(a:headings[0], levels[0]))
+  let prev_heading = a:headings[0]
+
+  let idx = 1
+  while idx < len(a:headings)
+    let heading = a:headings[idx]
+    if use_blanks && outline_info.need_blank(prev_heading, heading)
+      call add(candidates, s:create_blank())
+    endif
+    call add(candidates, s:create_candidate(a:headings[idx], levels[idx]))
+    let prev_heading = heading
+    let idx += 1
+  endwhile
+
+  return candidates
 endfunction
 
 function! s:smooth_levels(headings)
@@ -589,22 +609,14 @@ function! s:join_list(lists, sep)
 endfunction
 
 function! s:create_candidate(heading, level)
-  if a:heading.type ==# 'blank'
-    return {
-          \ 'word': '',
-          \ 'source': 'outline',
-          \ 'kind'  : 'common',
-          \ }
-  else
-    return {
-          \ 'word': s:make_indent(a:level) . a:heading.word,
-          \ 'source': 'outline',
-          \ 'kind'  : 'jump_list',
-          \ 'action__path': s:context.buffer.path,
-          \ 'action__pattern'  : s:make_search_pattern(s:context.lines[a:heading.lnum]),
-          \ 'action__signature': s:source.calc_signature(a:heading.lnum, s:context.lines),
-          \ }
-  endif
+  return {
+        \ 'word': s:make_indent(a:level) . a:heading.word,
+        \ 'source': 'outline',
+        \ 'kind'  : 'jump_list',
+        \ 'action__path': s:context.buffer.path,
+        \ 'action__pattern'  : s:make_search_pattern(s:context.lines[a:heading.lnum]),
+        \ 'action__signature': s:source.calc_signature(a:heading.lnum, s:context.lines),
+        \ }
 endfunction
 
 function! s:make_indent(level)
@@ -613,6 +625,14 @@ endfunction
 
 function! s:make_search_pattern(line)
   return '^' . unite#util#escape_pattern(a:line) . '$'
+endfunction
+
+function! s:create_blank()
+  return {
+        \ 'word': '',
+        \ 'source': 'outline',
+        \ 'kind'  : 'common',
+        \ }
 endfunction
 
 function! s:source.calc_signature(lnum, ...)
