@@ -117,6 +117,10 @@ function! s:normalize_outline_info(outline_info)
   return a:outline_info
 endfunction
 
+function! unite#sources#outline#get_default_outline_info(filetype)
+  return unite#sources#outline#get_outline_info(a:filetype, 1)
+endfunction
+
 function! unite#sources#outline#clear_cache()
   let cache = unite#sources#outline#lib#cache#instance()
   call cache.clear()
