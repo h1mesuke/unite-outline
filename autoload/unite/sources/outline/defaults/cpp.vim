@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/cpp.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-04
+" Updated : 2011-03-05
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -35,59 +35,84 @@ let s:outline_info = {}
 "   x  external and forward variable declarations
 "
 function! s:outline_info.extract_headings(context)
-  if !unite#sources#outline#lib#ctags#exists('C++')
+  if !unite#sources#outline#lib#ctags#exists()
     call unite#util#print_error("unite-outline: Sorry, Exuberant Ctags required.")
+    return []
+  elseif !unite#sources#outline#lib#ctags#has('C++')
+    call unite#util#print_error(
+          \ "unite-outline: Sorry, your ctags doesn't support C++.")
     return []
   endif
   let ctags_opts = '--c++-kinds=cdfgnstu'
-  return self.extract_cpp_headings(ctags_opts, a:context)
+  return self.extract_headings_by_ctags(ctags_opts, a:context)
 endfunction
 
-let s:SCOPE_TYPES = ['class', 'struct']
-let s:SCOPE_TYPES_PATTERN = '\%(' . join(s:SCOPE_TYPES, '\|') . '\)'
+let s:HEADING_GROUP = { 'SCOPE': 1, 'OTHERS': 0 }
+let s:HEADING_GROUP_MAP = {
+      \ 'class' : s:HEADING_GROUP.SCOPE,
+      \ 'struct': s:HEADING_GROUP.SCOPE,
+      \ }
+let s:SCOPE_TYPES = filter(keys(s:HEADING_GROUP_MAP),
+      \ 's:HEADING_GROUP_MAP[v:val] == s:HEADING_GROUP.SCOPE')
 
-function! s:outline_info.extract_cpp_headings(ctags_opts, context)
+function! s:outline_info.extract_headings_by_ctags(ctags_opts, context)
   let tags = unite#sources#outline#lib#ctags#get_tags(a:ctags_opts, a:context)
+  let num_tags = len(tags)
 
-  let headings = [] | let class_table = {}
+  let headings = [] | let scope_table = {}
   let name_counter = {}
-
-  for tag in tags
+  
+  let idx = 0
+  while idx < num_tags
+    let tag = tags[idx]
     let heading = s:create_heading(tag, a:context)
-    if empty(heading) | continue | endif
+    if empty(heading) | let idx += 1 | continue | endif
 
-    let heading.word .= s:get_name_id_suffix(name_counter, tag)
+    let heading.word .= s:get_tag_name_id_suffix(tag, name_counter)
 
-    if tag.kind =~# s:SCOPE_TYPES_PATTERN
+    if s:get_heading_group(heading) == s:HEADING_GROUP.SCOPE
       " class/struct
-      if has_key(class_table, tag.name)
-        let heading.children = class_table[tag.name].children
+      if has_key(scope_table, tag.name)
+        let heading.children = scope_table[tag.name].children
       endif
-      let class_table[tag.name] = heading
-
-    else
-      let scope = s:get_scope(tag)
-
-      if scope != 'top'
-        " class/struct members
-        if !has_key(class_table, tag[scope])
-          let class_table[tag[scope]] = unite#sources#outline#
-                \lib#heading#new('(' . tag[scope] . ') : ' . scope, scope, tag.lnum)
-        endif
-
-        let heading.word = unite#sources#outline#
-              \lib#ctags#get_access_mark(tag) . heading.word
-
-        call unite#sources#outline#
-              \lib#heading#append_child(class_table[tag[scope]], heading)
-      else
-        " others
-        call add(headings, heading)
-      endif
+      let scope_table[tag.name] = heading
     endif
-  endfor
 
-  let headings = unite#sources#outline#util#sort_by_lnum(headings + values(class_table))
+    let scope = s:get_tag_scope(tag)
+    if scope !=# 'top'
+      " a child of something
+      if !has_key(scope_table, tag[scope])
+        let pseudo_heading = {
+              \ 'word' : '(' . tag[scope] . ') : ' . scope,
+              \ 'level': 1,
+              \ 'type' : scope,
+              \ 'lnum' : tag.lnum,
+              \ }
+        let scope_table[tag[scope]] = pseudo_heading
+      endif
+
+      let heading.word = unite#sources#outline#
+            \lib#ctags#get_access_mark(tag) . heading.word
+
+      call unite#sources#outline#
+            \lib#heading#append_child(scope_table[tag[scope]], heading)
+
+    elseif !has_key(scope_table, tag.name)
+      " others
+      call add(headings, heading)
+    endif
+
+    if idx % 50 == 0
+      call unite#sources#outline#util#print_progress(
+            \ "Extracting headings..." . idx * 100 / num_tags . "%")
+    endif
+
+    let idx += 1
+  endwhile
+  call unite#sources#outline#util#print_progress("Extracting headings...done.")
+
+  let headings += filter(values(scope_table), '!has_key(v:val, "parent")')
+  call unite#sources#outline#util#sort_by_lnum(headings)
 
   return headings
 endfunction
@@ -124,19 +149,16 @@ function! s:create_heading(tag, context)
   return ignore ? {} : heading
 endfunction
 
-function! s:get_scope(tag)
-  for scope in s:SCOPE_TYPES
-    if has_key(a:tag, scope) | return scope | endif
-  endfor
-  return 'top'
-endfunction
-
 function! s:get_param_list(context, lnum)
   let line = unite#sources#outline#util#join_to_rparen(a:context, a:lnum)
   return matchstr(line, '([^)]*)')
 endfunction
 
-function! s:get_name_id_suffix(name_counter, tag)
+function! s:get_heading_group(heading)
+  return  get(s:HEADING_GROUP_MAP, a:heading.type, s:HEADING_GROUP.OTHERS)
+endfunction
+
+function! s:get_tag_name_id_suffix(tag, name_counter)
   let namespace = has_key(a:tag, 'class') ? a:tag.class : a:tag.kind
   if !has_key(a:name_counter, namespace)
     let a:name_counter[namespace] = {}
@@ -153,13 +175,19 @@ function! s:get_name_id_suffix(name_counter, tag)
   endif
 endfunction
 
-let s:HEADING_GROUP_MAP = { 'class': 1, 'struct': 1 }
+function! s:get_tag_scope(tag)
+  for scope in s:SCOPE_TYPES
+    if has_key(a:tag, scope) | return scope | endif
+  endfor
+  return 'top'
+endfunction
 
 function! s:outline_info.need_blank(head1, head2)
   if a:head1.level < a:head2.level
     return 0
   elseif a:head1.level == a:head2.level
-    return (a:head1.type != a:head2.type || get(s:HEADING_GROUP_MAP, a:head2.type, 0))
+    return (a:head1.type != a:head2.type ||
+          \ s:get_heading_group(a:head2) == s:HEADING_GROUP.SCOPE)
   else
     return 1
   endif

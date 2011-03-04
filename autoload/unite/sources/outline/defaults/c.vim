@@ -15,7 +15,7 @@ function! unite#sources#outline#defaults#c#outline_info()
   return s:outline_info
 endfunction
 
-let s:outline_info = copy(unite#sources#outline#get_outline_info('cpp', 1))
+let s:outline_info = copy(unite#sources#outline#get_default_outline_info('cpp'))
 
 " TAG KINDS:
 "
@@ -35,16 +35,16 @@ let s:outline_info = copy(unite#sources#outline#get_outline_info('cpp', 1))
 "   x  external and forward variable declarations
 "
 function! s:outline_info.extract_headings(context)
-  if !unite#sources#outline#lib#ctags#exists('C')
+  if !unite#sources#outline#lib#ctags#exists()
     call unite#util#print_error("unite-outline: Sorry, Exuberant Ctags required.")
+    return []
+  elseif !unite#sources#outline#lib#ctags#has('C')
+    call unite#util#print_error(
+          \ "unite-outline: Sorry, your ctags doesn't support C.")
     return []
   endif
   let ctags_opts = '--c-kinds=cdfgnstu'
-  return self.extract_cpp_headings(ctags_opts, a:context)
-endfunction
-
-function! s:outline_info.need_blank(head1, head2)
-  return a:head1.type !=# a:head2.type
+  return self.extract_headings_by_ctags(ctags_opts, a:context)
 endfunction
 
 " vim: filetype=vim

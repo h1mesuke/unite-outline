@@ -34,13 +34,4 @@ function! unite#sources#outline#lib#heading#append_child(parent, child)
   let a:child.parent = a:parent
 endfunction
 
-function! unite#sources#outline#lib#heading#new(word, ...)
-  return {
-        \ 'word' : a:word,
-        \ 'level': 1,
-        \ 'type' : get(a:000, 0, 'pseudo'),
-        \ "lnum" : get(a:000, 1, 1),
-        \ }
-endfunction
-
 " vim: filetype=vim
