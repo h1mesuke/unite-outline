@@ -266,7 +266,7 @@ function! s:source.gather_candidates(args, context)
       endif
       call map(headings, 's:normalize_heading(v:val)')
     else
-      let headings = s:extract_headings()
+      let headings = unite#sources#outline#extract_headings()
       call s:build_tree(headings)
     endif
 
@@ -340,7 +340,7 @@ function! s:skip_header()
   return s:lnum
 endfunction
 
-function! s:extract_headings()
+function! unite#sources#outline#extract_headings()
   let s:lnum = 1
   call s:skip_header()
 
