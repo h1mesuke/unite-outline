@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-02
+" Updated : 2011-03-04
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -53,11 +53,14 @@ function! s:create_tag(tag_line, context)
   return tag
 endfunction
 
-function! unite#sources#outline#lib#ctags#exists(...)
+function! unite#sources#outline#lib#ctags#exists()
   let lang = (a:0 ? a:1 : 'C')
   return executable('ctags') &&
-        \ split(system('ctags --version'), "\<NL>")[0] =~? '\<Exuberant Ctags\>' &&
-        \ match(split(system('ctags --list-languages'), "\<NL>"), '\c' . lang) >= 0
+        \ split(system('ctags --version'), "\<NL>")[0] =~? '\<Exuberant Ctags\>'
+endfunction
+
+function! unite#sources#outline#lib#ctags#has(lang)
+  return match(split(system('ctags --list-languages'), "\<NL>"), '\c' . a:lang) >= 0
 endfunction
 
 let s:OOP_ACCESS_MARKS = { 'public': '+', 'protected': '#', 'private': '-' }
