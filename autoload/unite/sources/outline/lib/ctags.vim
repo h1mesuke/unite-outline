@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-04
+" Updated : 2011-03-05
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -48,7 +48,7 @@ function! s:create_tag(tag_line, context)
     let [key, value] = matchlist(ext_fld, '^\([^:]\+\):\(.*\)$')[1:2]
     let tag[key] = value
   endfor
-  let tag.lnum = tag.line
+  let tag.lnum = str2nr(tag.line)
   let tag.line = a:context.lines[tag.lnum]
   return tag
 endfunction
