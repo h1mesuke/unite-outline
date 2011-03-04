@@ -70,6 +70,7 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
       endif
       let s:outline_info_ftime[oinfo_file] = ftime
     endif
+    call s:normalize_outline_info(outline_info)
     return outline_info
   endfor
   return {}
@@ -89,6 +90,31 @@ function! s:find_outline_info(filetype)
     if oinfo_path != "" | return oinfo_path | endif
   endfor
   return ""
+endfunction
+
+function! s:normalize_outline_info(outline_info)
+  if has_key(a:outline_info, 'skip') && has_key(a:outline_info.skip, 'header')
+    let value_type = type(a:outline_info.skip.header)
+    if value_type == type("")
+      let a:outline_info.skip.header = { 'leading': a:outline_info.skip.header }
+    elseif value_type == type([])
+      let a:outline_info.skip.header =
+            \ { 'block': s:normalize_block_patterns(a:outline_info.skip.header) }
+    elseif value_type == type({})
+      if has_key(a:outline_info.skip.header, 'block') &&
+            \ type(a:outline_info.skip.header.block) == type([])
+        let a:outline_info.skip.header.block =
+              \ s:normalize_block_patterns(a:outline_info.skip.header.block)
+      endif
+    endif
+  endif
+  if has_key(a:outline_info, 'skip') && has_key(a:outline_info.skip, 'block')
+    let value_type = type(a:outline_info.skip.block)
+    if value_type == type([])
+      let a:outline_info.skip.block = s:normalize_block_patterns(a:outline_info.skip.block)
+    endif
+  endif
+  return a:outline_info
 endfunction
 
 function! unite#sources#outline#clear_cache()
@@ -222,7 +248,6 @@ function! s:source.gather_candidates(args, context)
       endif
       return []
     endif
-    call s:normalize_outline_info(outline_info)
 
     let lines = [""] + getbufline(s:context.buffer.nr, 1, '$')
     let num_lines = len(lines) - 1
@@ -282,30 +307,6 @@ endfunction
 
 function! s:get_time()
   return str2float(reltimestr(reltime()))
-endfunction
-
-function! s:normalize_outline_info(outline_info)
-  if has_key(a:outline_info, 'skip') && has_key(a:outline_info.skip, 'header')
-    let value_type = type(a:outline_info.skip.header)
-    if value_type == type("")
-      let a:outline_info.skip.header = { 'leading': a:outline_info.skip.header }
-    elseif value_type == type([])
-      let a:outline_info.skip.header =
-            \ { 'block': s:normalize_block_patterns(a:outline_info.skip.header) }
-    elseif value_type == type({})
-      if has_key(a:outline_info.skip.header, 'block') &&
-            \ type(a:outline_info.skip.header.block) == type([])
-        let a:outline_info.skip.header.block =
-              \ s:normalize_block_patterns(a:outline_info.skip.header.block)
-      endif
-    endif
-  endif
-  if has_key(a:outline_info, 'skip') && has_key(a:outline_info.skip, 'block')
-    let value_type = type(a:outline_info.skip.block)
-    if value_type == type([])
-      let a:outline_info.skip.block = s:normalize_block_patterns(a:outline_info.skip.block)
-    endif
-  endif
 endfunction
 
 function! s:normalize_block_patterns(patterns)
