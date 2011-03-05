@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for C++
-" Version: 0.1.2
+" Version: 0.1.3
 
 function! unite#sources#outline#defaults#cpp#outline_info()
   return s:outline_info
@@ -47,13 +47,25 @@ function! s:outline_info.extract_headings(context)
   return self.extract_headings_by_ctags(ctags_opts, a:context)
 endfunction
 
-let s:HEADING_GROUP = { 'SCOPE': 1, 'OTHERS': 0 }
-let s:HEADING_GROUP_MAP = {
-      \ 'class' : s:HEADING_GROUP.SCOPE,
-      \ 'struct': s:HEADING_GROUP.SCOPE,
-      \ }
-let s:SCOPE_TYPES = filter(keys(s:HEADING_GROUP_MAP),
-      \ 's:HEADING_GROUP_MAP[v:val] == s:HEADING_GROUP.SCOPE')
+function! s:init_heading_group_map(spec_dict)
+  let s:HEADING_GROUP = { 'UNKNOWN': 0 }
+  let s:HEADING_GROUP_MAP = {}
+  let group_id = 1
+  for group_name in keys(a:spec_dict)
+    let s:HEADING_GROUP[group_name] = group_id
+    for heading_type in a:spec_dict[group_name]
+      let s:HEADING_GROUP_MAP[heading_type] = group_id
+    endfor
+    let group_id += 1
+  endfor
+  echomsg "s:HEADING_GROUP = " . string(s:HEADING_GROUP)
+  echomsg "s:HEADING_GROUP_MAP = " . string(s:HEADING_GROUP_MAP)
+endfunction
+call s:init_heading_group_map({
+      \ 'MACRO': ['macro'],
+      \ 'TYPE' : ['class', 'enum', 'struct', 'typedef'],
+      \ 'PROC' : ['function'],
+      \ })
 
 function! s:outline_info.extract_headings_by_ctags(ctags_opts, context)
   let tags = unite#sources#outline#lib#ctags#get_tags(a:ctags_opts, a:context)
@@ -70,12 +82,14 @@ function! s:outline_info.extract_headings_by_ctags(ctags_opts, context)
 
     let heading.word .= s:get_tag_name_id_suffix(tag, name_counter)
 
-    if s:get_heading_group(heading) == s:HEADING_GROUP.SCOPE
+    if heading.type =~# '^\%(class\|struct\)$'
       " class/struct
-      if has_key(scope_table, tag.name)
+      if !has_key(scope_table, tag.name)
+        let scope_table[tag.name] = heading
+      elseif scope_table[tag.name].word =~ '^('
         let heading.children = scope_table[tag.name].children
+        let scope_table[tag.name] = heading
       endif
-      let scope_table[tag.name] = heading
     endif
 
     let scope = s:get_tag_scope(tag)
@@ -127,7 +141,7 @@ function! s:create_heading(tag, context)
   let ignore = 0
 
   if heading.type ==# 'function'
-    if a:tag.name =~# '^\u\{2,}$'
+    if a:tag.name =~# '^[[:upper:]_]\{3,}$'
       let ignore = 1
     elseif has_key(a:tag, 'signature')
       let heading.word .= ' ' . a:tag.signature
@@ -155,7 +169,7 @@ function! s:get_param_list(context, lnum)
 endfunction
 
 function! s:get_heading_group(heading)
-  return  get(s:HEADING_GROUP_MAP, a:heading.type, s:HEADING_GROUP.OTHERS)
+  return  get(s:HEADING_GROUP_MAP, a:heading.type, s:HEADING_GROUP.UNKNOWN)
 endfunction
 
 function! s:get_tag_name_id_suffix(tag, name_counter)
@@ -176,7 +190,7 @@ function! s:get_tag_name_id_suffix(tag, name_counter)
 endfunction
 
 function! s:get_tag_scope(tag)
-  for scope in s:SCOPE_TYPES
+  for scope in ['class', 'struct']
     if has_key(a:tag, scope) | return scope | endif
   endfor
   return 'top'
@@ -186,8 +200,8 @@ function! s:outline_info.need_blank(head1, head2)
   if a:head1.level < a:head2.level
     return 0
   elseif a:head1.level == a:head2.level
-    return (a:head1.type != a:head2.type ||
-          \ s:get_heading_group(a:head2) == s:HEADING_GROUP.SCOPE)
+    return (s:get_heading_group(a:head1) != s:get_heading_group(a:head2) ||
+          \ has_key(a:head1, 'children') || has_key(a:head2, 'children'))
   else
     return 1
   endif
