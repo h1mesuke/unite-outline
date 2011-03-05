@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/cpp.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-05
+" Updated : 2011-03-06
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -58,8 +58,6 @@ function! s:init_heading_group_map(spec_dict)
     endfor
     let group_id += 1
   endfor
-  echomsg "s:HEADING_GROUP = " . string(s:HEADING_GROUP)
-  echomsg "s:HEADING_GROUP_MAP = " . string(s:HEADING_GROUP_MAP)
 endfunction
 call s:init_heading_group_map({
       \ 'MACRO': ['macro'],
