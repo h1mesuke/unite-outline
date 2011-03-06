@@ -266,8 +266,11 @@ function! s:source.gather_candidates(args, context)
 
     if has_key(outline_info, 'extract_headings')
       let headings = outline_info.extract_headings(s:context)
-      if len(filter(copy(headings), 'has_key(v:val, "children")')) > 0
-        let headings = s:flatten_tree(headings)
+      if type(headings) == type({})
+        let tree_root = headings | unlet headings
+        let headings = s:flatten_tree(tree_root)
+      else
+        call s:build_tree(headings)
       endif
       call map(headings, 's:normalize_heading(v:val)')
     else
@@ -505,13 +508,13 @@ function! s:normalize_heading_word(heading_word)
   return heading_word
 endfunction
 
-function! s:flatten_tree(tree_headings)
+function! s:flatten_tree(tree)
   let headings = []
-  for node in a:tree_headings
+  for node in a:tree.children
     let node.level = has_key(node, 'parent') ? node.parent.level + 1 : 1
     call add(headings, node)
     if has_key(node, 'children')
-      let headings += s:flatten_tree(node.children)
+      let headings += s:flatten_tree(node)
     endif
   endfor
   return headings
