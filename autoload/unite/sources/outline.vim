@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-04
+" Updated : 2011-03-07
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -168,6 +168,7 @@ endif
 let s:filetype_alias_table = {}
 
 let s:default_alias_map = [
+      \ ['c',        'cpp'     ],
       \ ['cfg',      'dosini'  ],
       \ ['mkd',      'markdown'],
       \ ['plaintex', 'tex'     ],
