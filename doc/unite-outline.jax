@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-03-02
+Updated : 2011-03-07
 Version : 0.3.2
 License : MIT license {{{
 
@@ -147,36 +147,19 @@ g:unite_source_outline_max_headings	*g:unite_source_outline_max_headings*
 
 	初期値は 1000
 
-g:unite_source_outline_cache_dir	*g:unite_source_outline_cache_dir*
-
-	見出しのキャッシュが保存されるディレクトリ
-	空文字列を設定するとキャッシュはファイルに保存されません。
-
-	見出しのキャッシュがファイルに保存される条件については
-	|g:unite_source_outline_cache_serialize|を参照
-
-	初期値は "{install-dir}/autoload/unite/sources/outline/.cache"
-
 g:unite_source_outline_cache_buffers	*g:unite_source_outline_cache_buffers*
 
 	見出しをキャッシュするバッファ数の上限
 	これを超えた分は参照時刻の古いものから削除されます。
 
-	初期値は 50
+	初期値は 100
 
 g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
 
 	見出しをキャッシュするバッファの行数しきい値
-	見出し抽出の対象バッファの行数がこの値より大きい場合、抽出した見出しを
-	キャッシュします。
+	見出し抽出の対象バッファの行数がこの値より大きい場合、抽出した見出しの
+	キャッシュをファイルに保存します。
 
-	初期値は 100
-				*g:unite_source_outline_cache_serialize_limit*
-g:unite_source_outline_cache_serialize_limit
-
-	見出しをキャッシュするバッファの行数しきい値
-	見出し抽出の対象バッファの行数がこの値より大きい場合、抽出した見出しを
-	キャッシュするとともに、ファイルに保存します。
 	キャッシュがファイルに保存されると、Vim の再起動後もそのファイルから見
 	出しを読み込むため、見出し一覧の表示が初回から高速になります。
 
@@ -294,7 +277,7 @@ heading+1	文字列（任意）			*unite-outline-info-heading+1*
 
 create_heading		関数（任意） 	*unite-outline-info-create_heading()*
 
-	create_heading({which}, {heading-line}, {matched-line}, {context})
+	create_heading( {which}, {heading-line}, {matched-line}, {context})
 
 	設定されていると、heading-1, heading, heading+1 によるマッチが成功する
 	たびに呼び出されます。
@@ -418,7 +401,7 @@ skip		辞書（任意）			*unite-outline-info-skip*
 
 skip_header	関数（任意）			*unite-outline-info-skip_header()*
 
-	skip_header({context})
+	skip_header( {context})
 
 	設定されていると、見出しの抽出に先立って（initialize の後に）呼ばれ、
 	その返値（整数）を行番号とする行の直前までをヘッダとしてスキップします。
@@ -433,9 +416,9 @@ skip_header	関数（任意）			*unite-outline-info-skip_header()*
 
 extract_headings	関数（任意）		*unite-outline-info-extract_headings()*
 
-	extract_headings({context})
+	extract_headings( {context})
 
-	設定されていると、見出しを抽出するために呼び出されます。
+	設定されていると、見出しを抽出するために呼ばれます。
 	返値として見出し（辞書）のリストを返します。
 
 	この関数を定義することで、outline info に独自の見出し抽出ロジックを実
@@ -466,7 +449,7 @@ HOOKS ~
 
 initialize	関数（任意） 			*unite-outline-info-initialize()*
 
-	initialize({context})
+	initialize( {context})
 
 	設定されていると、見出しの抽出に先立って呼ばれ、outline info に初期化
 	の機会を与えます。
@@ -476,7 +459,7 @@ initialize	関数（任意） 			*unite-outline-info-initialize()*
 
 finalize	関数（任意） 			*unite-outline-info-finalize()*
 
-	finalize({context})
+	finalize( {context})
 
 	設定されていると、見出しの抽出が完了した後に呼ばれ、outline info に後
 	始末の機会を与えます。
@@ -487,15 +470,27 @@ finalize	関数（任意） 			*unite-outline-info-finalize()*
 関数						*unite-outline-functions*
 
 						*unite#sources#outline#alias()*
-unite#sources#outline#alias({alias}, {src-filetype})
+unite#sources#outline#alias( {alias}, {source})
 
-	ファイルタイプの別名を設定します。{src-filetype} の outline-info を別
-	のファイルタイプでも利用したい場合に使用します。
+	ファイルタイプの別名を設定します。{source} の outline-info を別の
+	ファイルタイプでも利用したい場合に使用します。
 >
 	call unite#sources#outline#alias('xhtml', 'html')
 	call unite#sources#outline#alias('zsh',   'sh')
 <
-unite#sources#outline#clear_cache()	 *unite#sources#outline#clear_cache()*
+					*unite#sources#outline#get_outline_info()*
+unite#sources#outline#get_outline_info( {filetype})
+
+	{filetype} の outline info を返します。
+	outline info が見つからない場合は空の辞書 {} を返します。
+
+				*unite#sources#outline#get_default_outline_info()*
+unite#sources#outline#get_default_outline_info( {filetype})
+
+	{filetype} のデフォルトの outline info を返します。
+	outline info が見つからない場合は空の辞書 {} を返します。
+
+unite#sources#outline#clear_cache()	*unite#sources#outline#clear_cache()*
 
 	ファイルに保存した見出しのキャッシュを削除します。
 
@@ -509,13 +504,13 @@ UTILITY FUNCTIONS			*unite-outline-utility-functions*
 
 Indentation ~
 				*unite#sources#outline#util#get_indent_level()*
-unite#sources#outline#util#get_indent_level({context}, {lnum})
+unite#sources#outline#util#get_indent_level( {context}, {lnum})
 
 	行番号が {lnum} である行のインデントレベルを返します。
 
 Matching ~
 					*unite#sources#outline#util#join_to()*
-unite#sources#outline#util#join_to({context}, {lnum}, {pattern} [, {limit}])
+unite#sources#outline#util#join_to( {context}, {lnum}, {pattern} [, {limit}])
 
 	行番号が {lnum} の行から {pattern} にマッチする行までを連結した文字列
 	を返します。連結される行と行の間には "\n" が挿入されます。
@@ -544,13 +539,13 @@ unite#sources#outline#util#neighbor_matchstr(
 
 Strings ~
 					*unite#sources#outline#util#capitalize()*
-unite#sources#outline#util#capitalize({str} [, {flag}])
+unite#sources#outline#util#capitalize( {str} [, {flag}])
 
 	{str} の先頭の文字を大文字に、残りを小文字に変換した文字列を返します。
 	{flag} に "g" を指定すると、すべての単語を同様に処理します。
 
 					*unite#sources#outline#util#nr2roman()*
-unite#sources#outline#util#nr2roman({nr})
+unite#sources#outline#util#nr2roman( {nr})
 
 	{nr} をローマ数字へと変換します。
 	ローマ数字として表現可能な範囲は 1以上 4999以下の範囲で、{nr} がその範
@@ -559,10 +554,21 @@ unite#sources#outline#util#nr2roman({nr})
 ==============================================================================
 TODO						*unite-outline-todo*
 
+	* ctags対応版 outline info への置き換え
+
+		プログラミング言語用の outline info については、見出し抽出に
+		ctags またはそれに類する外部の構文解析プログラムを利用する方向で
+		改修を予定しています。
+
 	* Erlang, Go, Haskell などの outline info
 
 		作者にとって未知の言語なため対応が遅れています。
 		なんとかしなければ。
+
+	* 親子関係に配慮した matcher の実装
+
+		現在、候補の絞り込みに際して、見出しの親子関係が考慮されないの
+		で、これに配慮した matcher を実装したいと考えています。
 
 	* ヘルプの英訳
 
@@ -601,37 +607,53 @@ https://github.com/h1mesuke/unite-outline/commits/master
 
 抜粋
 
+0.3.x	2011-03-xx
+
+	* キャッシュの保存ディレクトリを g:unite_data_directory以下に固定し、
+	  以下の変数を削除
+
+	  - g:unite_source_outline_cache_dir
+
+	* キャッシュに関するオプション変数を整理
+
+	  - g:unite_source_outline_cache_serialize_limit を
+	   |g:unite_source_outline_cache_limit|に変更
+
+	  - 従来の g:unite_source_outline_cache_limit は削除
+
 0.3.2	2011-03-01
-	- extract_headings() による、outline info独自の見出し抽出に対応
-	- outline info の探索パスに "autoload/outline" を追加
 
-	- ユーティリティ関数のインターフェースを変更
+	* outline info の探索パスに "autoload/outline" を追加
 
-	- 以下の関数を追加
-	  -|unite#sources#outline#util#get_tags()|
-	  -|unite#sources#outline#util#has_exuberant_ctags()|
+	* outline_info.extract_headings() による、outline info独自の見出し
+	  抽出に対応
+
+	* {context} の仕様を変更
+	  context.lines の先頭にダミーの空行を付加し、リストの添字と行番号が
+	  一致するように修正し、以下の属性名を変更
+
+	  - heading_index -> heading_lnum
+	  - matched_index -> matched_lnum
+
+	* ユーティリティ関数のインターフェースを変更
+	  引数として、{lines} ではなく {context} を、{idx} ではなく {lnum} を
+	  受け取るように修正
 
 0.3.1	2011-01-29
-	- 特定の種類の見出しを非表示にする機能を実装
-	- 以下の変数を追加
+
+	* 特定の種類の見出しを非表示にする機能を追加し、以下の変数を追加
+
 	  -|g:unite_source_outline_ignore_heading_types|
 
 0.3.0	2011-01-10
-	- outline info の仕様を拡張
-	  - create_heading() から辞書を返せるようにした
-	  - 添付のデフォルト outline info を新仕様にあわせ刷新
 
-	- 以下の関数を追加
-	  -|unite#sources#outline#clear_cache()|
-	  -|unite#sources#outline#util#get_indent_level()|
-
-	- 以下の関数を仕様変更
-	  -|unite#sources#outline#util#indent()|
-	    - 後方互換性は維持
+	* create_heading() から見出しのメタ情報をもった辞書を返せるように
+	  outline info の仕様を拡張
 
 0.2.1	2011-01-04
-	- キャッシュの一部永続化を実装
-	- 以下の変数を追加
+
+	* キャッシュの一部永続化を実装し、以下の変数を追加
+
 	  -|g:unite_source_outline_cache_dir|
 	  -|g:unite_source_outline_cache_serialize_limit|
 
