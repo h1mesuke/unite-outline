@@ -150,11 +150,7 @@ if !exists('g:unite_source_outline_cache_buffers')
 endif
 
 if !exists('g:unite_source_outline_cache_limit')
-  let g:unite_source_outline_cache_limit = 100
-endif
-
-if !exists('g:unite_source_outline_cache_serialize_limit')
-  let g:unite_source_outline_cache_serialize_limit = 1000
+  let g:unite_source_outline_cache_limit = 1000
 endif
 
 "-----------------------------------------------------------------------------
@@ -283,8 +279,8 @@ function! s:source.gather_candidates(args, context)
     let candidates = s:convert_headings_to_candidates(headings)
 
     let is_volatile = has_key(outline_info, 'is_volatile') && outline_info.is_volatile
-    if !is_volatile && (num_lines > g:unite_source_outline_cache_limit)
-      let should_serialize = (num_lines > g:unite_source_outline_cache_serialize_limit)
+    if !is_volatile && (num_lines > 100)
+      let should_serialize = (num_lines > g:unite_source_outline_cache_limit)
       call cache.set(path, candidates, should_serialize)
     elseif cache.has(path)
       call cache.remove(path)
