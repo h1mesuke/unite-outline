@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-03
+" Updated : 2011-03-07
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -30,10 +30,12 @@ function! unite#sources#outline#lib#cache#instance()
   return s:cache
 endfunction
 
+let s:CACHE_DIR = g:unite_data_directory . '/.outline'
+
 " singleton
 let s:cache = { 'data': {} }
 
-function! s:cache.has_data(path)
+function! s:cache.has(path)
   return (has_key(self.data, a:path) || s:exists_cache_file(a:path))
 endfunction
 
@@ -41,43 +43,43 @@ function! s:exists_cache_file(path)
   return (s:check_cache_dir() && filereadable(s:cache_file_path(a:path)))
 endfunction
 
-function! s:check_cache_dir(...)
-  let create_flag = (a:0 ? a:1 : 1)
-  if g:unite_source_outline_cache_dir == '' || !exists('*mkdir')
-    return 0
-  endif
-  let g:unite_source_outline_cache_dir = unite#util#substitute_path_separator(
-        \ substitute(g:unite_source_outline_cache_dir, '/$', '', ''))
-
-  if isdirectory(g:unite_source_outline_cache_dir)
+function! s:check_cache_dir()
+  if isdirectory(s:CACHE_DIR)
     return 1
-  elseif create_flag
+  else
     try
-      call mkdir(g:unite_source_outline_cache_dir, 'p')
+      call mkdir(s:CACHE_DIR, 'p')
     catch
       call unite#util#print_error("unite-outline: Couldn't create the cache directory.")
     endtry
-    return isdirectory(g:unite_source_outline_cache_dir)
+    return isdirectory(s:CACHE_DIR)
   else
     return 0
   endif
 endfunction
 
 function! s:cache_file_path(path)
-  try
-    let path = substitute(a:path, '/\.', '/__dot__', 'g')
-    " NOTE: globpath() can't collect dotted names, so substitute initial dots
-    let path = g:unite_source_outline_cache_dir . '/' . substitute(path, '^/', '', '')
-    if path !~ '^[\x00-\x7f]*$' && &termencoding != &encoding
-      let path = iconv(path, &encoding, &termencoding)
-    endif
-    return path
-  catch
-    return ''
-  endtry
+    return s:CACHE_DIR . '/' . s:encode_file_path(a:path)
 endfunction
 
-function! s:cache.get_data(path)
+" borrowed from Shougo' neocomplcache
+" https://github.com/Shougo/neocomplcache
+"
+function! s:encode_file_path(path)
+  if len(s:CACHE_DIR) + len(a:path) < 150
+    " encode the path to a base name
+    return substitute(substitute(a:path, ':', '=-', 'g'), '[/\\]', '=+', 'g')
+  else
+    " simple hash
+    let sum = 0
+    for idx in range(len(a:path))
+      let sum += char2nr(a:path[idx]) * (idx + 1)
+    endfor
+    return printf('%X', sum)
+  endif
+endfunction
+
+function! s:cache.get(path)
   if !has_key(self.data, a:path) && s:exists_cache_file(a:path)
     let self.data[a:path] = s:load_cache_file(a:path)
   endif
@@ -102,7 +104,7 @@ function! s:load_cache_file(path)
   endtry
 endfunction
 
-function! s:cache.set_data(path, cands, should_serialize)
+function! s:cache.set(path, cands, should_serialize)
   let self.data[a:path] = {
         \ 'candidates': a:cands,
         \ 'touched'   : localtime(),
@@ -120,16 +122,13 @@ function! s:cache.set_data(path, cands, should_serialize)
   if a:should_serialize && s:check_cache_dir()
     call s:save_cache_file(a:path, self.data[a:path])
   elseif s:exists_cache_file(a:path)
-    call s:remove_cache_file(s:cache_file_path(a:path))
+    call s:remove_file(s:cache_file_path(a:path))
   endif
 endfunction
 
 function! s:save_cache_file(path, data)
   try
     let cache_file = s:cache_file_path(a:path)
-    if empty(cache_file) | return | endif | " fallback silently
-    let dir = unite#util#path2directory(cache_file)
-    if !isdirectory(dir) | call mkdir(dir, 'p') | endif
     let dumped_data = string(a:data)
     call writefile([dumped_data], cache_file)
     call unite#sources#outline#util#print_debug("[SAVED] cache file: " . cache_file)
@@ -140,69 +139,52 @@ function! s:save_cache_file(path, data)
   call s:cleanup_old_cache_files()
 endfunction
 
-function! s:cleanup_old_cache_files()
-  let cache_files = split(globpath(g:unite_source_outline_cache_dir, '**/*'), "\<NL>")
-  call filter(cache_files, 'filereadable(v:val)')
-  let num_deletes = len(cache_files) - g:unite_source_outline_cache_buffers
-  if num_deletes > 0
-    call map(cache_files, '[v:val, getftime(v:val)]')
-    call sort(cache_files, 's:compare_timestamp')
-    let delete_files = map(cache_files[0 : num_deletes - 1], 'v:val[0]')
-    for path in delete_files
-      call s:remove_cache_file(path)
-    endfor
+function! s:cache.remove(path)
+  call remove(self.data, a:path)
+  if s:exists_cache_file(a:path)
+    call s:remove_file(s:cache_file_path(a:path))
   endif
 endfunction
 
-function! s:remove_cache_file(path)
+function! s:remove_file(path)
   try
     call delete(a:path)
-    call unite#sources#outline#util#print_debug("[DELETED] cache {FILE}: " . a:path)
+    call unite#sources#outline#util#print_debug("[DELETED] cache file: " . a:path)
   catch
     call unite#util#print_error("unite-outline: Couldn't delete the cache file: " . a:path)
   endtry
-  call s:remove_empty_dirs(a:path)
-endfunction
-
-function! s:remove_empty_dirs(path)
-  let dir = unite#util#path2directory(a:path)
-  while 1
-    if dir ==# g:unite_source_outline_cache_dir || len(globpath(dir, '*')) > 0
-      break
-    endif
-    call s:remove_dir(dir)
-    let dir = fnamemodify(dir, ':p:h')
-  endwhile
-endfunction
-
-if unite#util#is_win() && !executable('rm')
-  let s:RMDIR = 'rmdir /Q /S '
-else
-  let s:RMDIR = 'rm -rf '
-endif
-function! s:remove_dir(path)
-  try
-    call system(s:RMDIR . shellescape(a:path))
-    call unite#sources#outline#util#print_debug("[DELETED] cache {DIR}: " . a:path)
-  catch
-    call unite#util#print_error("unite-outline: Couldn't delete the cache directory: " . a:path)
-  endtry
-endfunction
-
-function! s:cache.remove_data(path)
-  call remove(self.data, a:path)
-  if s:exists_cache_file(a:path)
-    call s:remove_cache_file(s:cache_file_path(a:path))
-  endif
 endfunction
 
 function! s:cache.clear()
-  if s:check_cache_dir(0)
-    call s:remove_dir(g:unite_source_outline_cache_dir)
-    echomsg "unite-outline: deleted the cache"
+  if s:check_cache_dir()
+    call s:cleanup_all_cache_files()
+    echomsg "unite-outline: Deleted all cache files."
   else
     call unite#util#print_error("unite-outline: Cache directory doesn't exist.")
   endif
+endfunction
+
+function! s:cleanup_old_cache_files(...)
+  let delete_all = (a:0 ? a:1 : 0)
+  let cache_files = split(globpath(s:CACHE_DIR, '*'), "\<NL>")
+
+  if delete_all
+    let delete_files = cache_files
+  else
+    let num_deletes = len(cache_files) - g:unite_source_outline_cache_buffers
+    if num_deletes > 0
+      call map(cache_files, '[v:val, getftime(v:val)]')
+      call sort(cache_files, 's:compare_timestamp')
+      let delete_files = map(cache_files[0 : num_deletes - 1], 'v:val[0]')
+    endif
+  endif
+  for path in delete_files
+    call s:remove_file(path)
+  endfor
+endfunction
+
+function! s:cleanup_all_cache_files()
+  call s:cleanup_old_cache_files(1)
 endfunction
 
 function! s:compare_timestamp(pair1, pair2)

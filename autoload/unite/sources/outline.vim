@@ -145,11 +145,6 @@ if !exists('g:unite_source_outline_max_headings')
   let g:unite_source_outline_max_headings = 1000
 endif
 
-if !exists('g:unite_source_outline_cache_dir')
-  let here = expand('<sfile>:p:h')
-  let g:unite_source_outline_cache_dir = here . '/outline/.cache'
-endif
-
 if !exists('g:unite_source_outline_cache_buffers')
   let g:unite_source_outline_cache_buffers = 50
 endif
@@ -238,8 +233,8 @@ function! s:source.gather_candidates(args, context)
     let is_force = ((len(a:args) > 0 && a:args[0] == '!') || a:context.is_redraw)
     let cache = unite#sources#outline#lib#cache#instance()
     let path = s:context.buffer.path
-    if cache.has_data(path) && !is_force
-      return cache.get_data(path)
+    if cache.has(path) && !is_force
+      return cache.get(path)
     endif
 
     let filetype = s:context.buffer.filetype
@@ -290,9 +285,9 @@ function! s:source.gather_candidates(args, context)
     let is_volatile = has_key(outline_info, 'is_volatile') && outline_info.is_volatile
     if !is_volatile && (num_lines > g:unite_source_outline_cache_limit)
       let should_serialize = (num_lines > g:unite_source_outline_cache_serialize_limit)
-      call cache.set_data(path, candidates, should_serialize)
-    elseif cache.has_data(path)
-      call cache.remove_data(path)
+      call cache.set(path, candidates, should_serialize)
+    elseif cache.has(path)
+      call cache.remove(path)
     endif
 
     if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
