@@ -164,29 +164,24 @@ function! s:cache.clear()
   endif
 endfunction
 
-function! s:cleanup_old_cache_files(...)
-  let delete_all = (a:0 ? a:1 : 0)
+function! s:cleanup_old_cache_files()
   let cache_files = split(globpath(s:CACHE_DIR, '*'), "\<NL>")
-
-  if delete_all
-    let delete_files = cache_files
-  else
-    let num_deletes = len(cache_files) - g:unite_source_outline_cache_buffers
-    if num_deletes > 0
-      call map(cache_files, '[v:val, getftime(v:val)]')
-      call sort(cache_files, 's:compare_timestamp')
-      let delete_files = map(cache_files[0 : num_deletes - 1], 'v:val[0]')
-    else
-      let delete_files = []
-    endif
+  let num_deletes = len(cache_files) - g:unite_source_outline_cache_buffers
+  if num_deletes > 0
+    call map(cache_files, '[v:val, getftime(v:val)]')
+    call sort(cache_files, 's:compare_timestamp')
+    let old_files = map(cache_files[0 : num_deletes - 1], 'v:val[0]')
+    for path in old_files
+      call s:remove_file(path)
+    endfor
   endif
-  for path in delete_files
-    call s:remove_file(path)
-  endfor
 endfunction
 
 function! s:cleanup_all_cache_files()
-  call s:cleanup_old_cache_files(1)
+  let cache_files = split(globpath(s:CACHE_DIR, '*'), "\<NL>")
+  for path in cache_files
+    call s:remove_file(path)
+  endfor
 endfunction
 
 function! s:compare_timestamp(pair1, pair2)
