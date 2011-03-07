@@ -176,6 +176,8 @@ function! s:cleanup_old_cache_files(...)
       call map(cache_files, '[v:val, getftime(v:val)]')
       call sort(cache_files, 's:compare_timestamp')
       let delete_files = map(cache_files[0 : num_deletes - 1], 'v:val[0]')
+    else
+      let delete_files = []
     endif
   endif
   for path in delete_files
