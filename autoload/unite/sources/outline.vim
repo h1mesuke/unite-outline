@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-07
+" Updated : 2011-03-09
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -512,6 +512,7 @@ function! s:flatten_tree(tree)
 endfunction
 
 function! s:build_tree(headings)
+  if empty(a:headings) | return | endif
   let context   = [{ 'level': -1 }] | " stack
   let prev_node =  a:headings[0]
   for node in a:headings
