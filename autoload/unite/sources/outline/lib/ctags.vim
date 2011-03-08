@@ -37,9 +37,11 @@ function! s:find_exuberant_ctags()
     call add(ctags_bin_names, g:neocomplcache_ctags_program)
   endif
   for ctags in ctags_bin_names
-    if executable(ctags) &&
-          \ split(system(ctags . ' --version'), "\<NL>")[0] =~? '\<Exuberant Ctags\>'
-      return ctags
+    if executable(ctags)
+      let ctags_out = unite#util#system(ctags . ' --version')
+      if split(ctags_out, "\<NL>")[0] =~? '\<Exuberant Ctags\>'
+        return ctags
+      endif
     endif
   endfor
   return ''
@@ -106,8 +108,6 @@ unlet lang_cpp
 let s:CTAGS_LANGS.c = copy(s:CTAGS_LANGS.cpp)
 call extend(s:CTAGS_LANGS.c, { 'name': 'C', 'ctags_options': ' --c-kinds=cdfgnstu ' }, 'force')
 
-let s:CTAGS_BASE_OPTIONS = ' --filter --excmd=number --fields=afiKmsSzt --sort=no '
-
 function! s:ctags_exists()
   return !empty(s:CTAGS)
 endfunction
@@ -117,23 +117,31 @@ function! s:ctags_has(filetype)
     return 0
   else
     let lang = s:CTAGS_LANGS[a:filetype]
-    let ctags_out = system(s:CTAGS . ' --list-languages')
+    let ctags_out = unite#util#system(s:CTAGS . ' --list-languages')
     return index(split(ctags_out, "\<NL>"), lang.name, 1) >= 0
   endif
 endfunction
 
 function! s:get_tags(context)
   let lang = s:CTAGS_LANGS[a:context.buffer.filetype]
-  let path = unite#util#substitute_path_separator(a:context.buffer.path)
+  let path = fnamemodify(a:context.buffer.path, ':p:.')
 
-  let ctags_opts = s:CTAGS_BASE_OPTIONS
-  let ctags_opts .= '--language-force=' . lang.name
-  let ctags_opts .= lang.ctags_options
+  let opts  = ' --excmd=number --fields=afiKmsSzt --sort=no '
+  let opts .= ' --language-force=' . lang.name
+  let opts .= lang.ctags_options
+  let opts .= ' -f - '
 
-  let ctags_out = system(s:CTAGS . ctags_opts, path)
+  if unite#util#is_win()
+    let path = unite#util#substitute_path_separator(path)
+  endif
 
-  if v:shell_error
-    call unite#util#print_error("unite-outline: Ctags command failed. [" . v:shell_error . "]")
+  let ctags_cmd = printf('%s %s %s', s:CTAGS, opts, shellescape(path))
+  let ctags_out = unite#util#system(ctags_cmd)
+  let status = unite#util#get_last_status()
+
+  if status
+    call unite#util#print_error(
+          \ "unite-outline: Ctags command failed with status " . status . ".")
     return []
   else
     let tag_lines = split(ctags_out, "\<NL>")
