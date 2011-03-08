@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-07
+" Updated : 2011-03-09
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -31,7 +31,6 @@ function! s:find_exuberant_ctags()
         \ 'ctags-exuberant',
         \ 'exctags',
         \ 'ctags',
-        \ 'ctags.exe',
         \ 'tags',
         \ ]
   if exists('g:neocomplcache_ctags_program')
@@ -144,8 +143,11 @@ endfunction
 
 " TAG FILE FORMAT:
 "
-"   tag_name<Tab>file_name<Tab>ex_cmd;"<Tab>extension_fields
-"   extension fields := key:value<Tab>key:value<Tab>...
+"   tag_line
+"     := tag_name<Tab>file_name<Tab>ex_cmd;"<Tab>{extension_fields}
+"
+"   extension_fields
+"     := key:value<Tab>key:value<Tab>...
 "
 function! s:create_tag(tag_line, lang)
   let fields = split(a:tag_line, "\<Tab>")
@@ -157,13 +159,13 @@ function! s:create_tag(tag_line, lang)
     let tag[key] = value
   endfor
 
-  " resolve full-qualified name
   for scope_kind in a:lang.scope_kinds
     if has_key(tag, scope_kind)
       let tag.scope_kind = scope_kind
       let tag.scope = tag[scope_kind]
     endif
   endfor
+
   if has_key(tag, 'scope')
     let tag.qualified_name = tag.scope . a:lang.scope_delim . tag.name
   else
@@ -232,7 +234,7 @@ function! unite#sources#outline#lib#ctags#extract_headings(context)
       call unite#sources#outline#lib#heading#append_child(scope_table[tag.scope], heading)
 
     elseif !has_key(scope_table, tag.qualified_name)
-      " the heading belongs to the toplevel
+      " the heading belongs to the toplevel (and doesn't have its scope)
       call unite#sources#outline#lib#heading#append_child(tree_root, heading)
     endif
 
@@ -245,7 +247,9 @@ function! unite#sources#outline#lib#ctags#extract_headings(context)
   endwhile
   call unite#sources#outline#util#print_progress("Extracting headings...done.")
 
-  let tree_root.children += filter(values(scope_table), '!has_key(v:val, "parent")')
+  let is_toplevel = '!has_key(v:val, "parent")'
+  let tree_root.children += filter(values(scope_table), is_toplevel)
+
   call unite#sources#outline#util#sort_by_lnum(tree_root.children)
 
   return tree_root
