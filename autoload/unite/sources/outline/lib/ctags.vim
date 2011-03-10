@@ -124,28 +124,28 @@ endfunction
 
 function! s:get_tags(context)
   let lang = s:CTAGS_LANGS[a:context.buffer.filetype]
-  let path = fnamemodify(a:context.buffer.path, ':p:.')
+  let path = a:context.buffer.path
 
-  let opts  = ' --excmd=number --fields=afiKmsSzt --sort=no '
+  let opts  = ' --filter --excmd=number --fields=afiKmsSzt --sort=no '
   let opts .= ' --language-force=' . lang.name
   let opts .= lang.ctags_options
-  let opts .= ' -f - '
 
-  if unite#util#is_win()
-    let path = unite#util#substitute_path_separator(path)
-  endif
+  let path = unite#sources#outline#util#normalize_path(path)
 
-  let ctags_cmd = printf('%s %s %s', s:CTAGS, opts, shellescape(path))
-  let ctags_out = unite#util#system(ctags_cmd)
+  let ctags_out = unite#util#system(s:CTAGS . opts, path)
   let status = unite#util#get_last_status()
 
   if status
     call unite#util#print_error(
-          \ "unite-outline: Ctags command failed with status " . status . ".")
+          \ "unite-outline: ctags failed with status " . status . ".")
     return []
   else
     let tag_lines = split(ctags_out, "\<NL>")
-    return map(tag_lines, 's:create_tag(v:val, lang)')
+    try
+      return map(tag_lines, 's:create_tag(v:val, lang)')
+    catch
+      throw tag_lines[0]
+    endtry
   endif
 endfunction
 
