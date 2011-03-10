@@ -175,7 +175,40 @@ function! unite#sources#outline#util#shared_pattern(filetype, which)
 endfunction
 
 "-----------------------------------------------------------------------------
-" Strings
+" Path
+
+function! unite#sources#outline#util#normalize_path(path, ...)
+  let path = a:path
+  let sep = '/' | let do_iconv = 0
+
+  for opt in a:000
+    if opt =~ '^:'
+      let mods = opt
+      let path = fnamemodify(path, mods)
+    elseif opt =~# '^shell\%[escape]$'
+      let path = unite#sources#outline#util#shellescape(path)
+    elseif opt =~# '^term\%[encoding]$'
+      let do_iconv = 1
+    elseif opt == '\'
+      let sep = '\'
+    endif
+  endfor
+
+  let path = substitute(path, '[/\\]', sep, 'g')
+
+  if do_iconv && &termencoding != '' && &termencoding != &encoding
+    let path = iconv(path, &encoding, &termencoding)
+    if empty(path)
+      throw "unite-outline: iconv() from " . &encoding . " to " . &termencoding .
+            \ " failed for " . string(path)
+    endif
+  endif
+
+  return path
+endfunction
+
+"-----------------------------------------------------------------------------
+" String
 
 " unite#sources#outline#util#capitalize( {str} [, {flag}])
 "
