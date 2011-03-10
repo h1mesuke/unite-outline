@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-09
+" Updated : 2011-03-10
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -34,7 +34,7 @@ function! s:find_exuberant_ctags()
         \ 'tags',
         \ ]
   if exists('g:neocomplcache_ctags_program')
-    call add(ctags_bin_names, g:neocomplcache_ctags_program)
+    let ctags_bin_names = [g:neocomplcache_ctags_program] + ctags_bin_names
   endif
   for ctags in ctags_bin_names
     if executable(ctags)
