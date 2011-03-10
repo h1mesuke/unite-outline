@@ -209,6 +209,14 @@ function! unite#sources#outline#util#nr2roman(nr)
   return roman
 endfunction
 
+function! unite#sources#outline#util#shellescape(str)
+  if &shell =~? '^\%(cmd\%(\.exe\)\=\|command\.com\)\%(\s\|$\)'
+    return '"' . substitute(a:str, '"', '""', 'g') . '"'
+  else
+    return "'" . substitute(a:str, "'", "'\\\\''", 'g') . "'"
+  endif
+endfunction
+
 "-----------------------------------------------------------------------------
 " Misc
 
