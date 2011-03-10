@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-03
+" Updated : 2011-03-10
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -152,7 +152,7 @@ function! unite#sources#outline#util#neighbor_matchstr(context, lnum, pattern, .
   return ""
 endfunction
 
-let s:shared_patterns = {
+let s:SHARED_PATTERNS = {
       \ 'c': {
       \   'heading-1': '^\s*\/\*\s*[-=*]\{10,}\s*$',
       \   'header'   : ['^/\*', '\*/\s*$'],
@@ -171,7 +171,7 @@ let s:shared_patterns = {
       \}
 
 function! unite#sources#outline#util#shared_pattern(filetype, which)
-  return s:shared_patterns[a:filetype][a:which]
+  return s:SHARED_PATTERNS[a:filetype][a:which]
 endfunction
 
 "-----------------------------------------------------------------------------
