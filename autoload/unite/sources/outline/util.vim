@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-10
+" Updated : 2011-03-12
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -26,7 +26,15 @@
 " }}}
 
 "-----------------------------------------------------------------------------
-" Indentation
+" Heading
+
+function! unite#sources#outline#util#append_child(parent, child)
+  if !has_key(a:parent, 'children')
+    let a:parent.children = []
+  endif
+  call add(a:parent.children, a:child)
+  let a:child.parent = a:parent
+endfunction
 
 function! unite#sources#outline#util#get_indent_level(context, lnum)
   let line = a:context.lines[a:lnum]

@@ -239,11 +239,11 @@ function! unite#sources#outline#lib#ctags#extract_headings(context)
         let scope_table[tag.scope] = pseudo_heading
       endif
       let heading.word = s:get_tag_access_mark(tag) . heading.word
-      call unite#sources#outline#lib#heading#append_child(scope_table[tag.scope], heading)
+      call unite#sources#outline#util#append_child(scope_table[tag.scope], heading)
 
     elseif !has_key(scope_table, tag.qualified_name)
       " the heading belongs to the toplevel (and doesn't have its scope)
-      call unite#sources#outline#lib#heading#append_child(tree_root, heading)
+      call unite#sources#outline#util#append_child(tree_root, heading)
     endif
 
     if idx % 50 == 0
