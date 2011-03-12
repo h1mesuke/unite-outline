@@ -93,7 +93,7 @@ function! lang_cpp.create_heading(tag, context)
     if heading.type ==# 'macro'
       if line =~# '#undef\>'
         let ignore = 1
-      elseif line =~# a:tag.name . '\s*('
+      elseif line =~# a:tag.name . '('
         let heading.word .= ' ' . s:get_param_list(a:context, a:tag.lnum)
       endif
     endif
