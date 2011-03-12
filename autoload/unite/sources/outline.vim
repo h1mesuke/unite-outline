@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-09
+" Updated : 2011-03-12
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -316,10 +316,7 @@ function! s:skip_header()
   let outline_info = s:context.outline_info
   let lines = s:context.lines | let num_lines = len(lines)
 
-  if has_key(outline_info, 'skip_header')
-    let s:lnum = outline_info.skip_header(s:context)
-
-  elseif has_key(outline_info, 'skip') && has_key(outline_info.skip, 'header')
+  if has_key(outline_info, 'skip') && has_key(outline_info.skip, 'header')
     " eval once
     let skip_header_leading = has_key(outline_info.skip.header, 'leading')
     let skip_header_block   = has_key(outline_info.skip.header, 'block')

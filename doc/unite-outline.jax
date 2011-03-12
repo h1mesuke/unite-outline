@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-03-07
+Updated : 2011-03-12
 Version : 0.3.2
 License : MIT license {{{
 
@@ -398,21 +398,6 @@ skip		辞書（任意）			*unite-outline-info-skip*
 		\   'block': ['^=begin', '^=end'],
 		\ },
 <
-
-skip_header	関数（任意）			*unite-outline-info-skip_header()*
-
-	skip_header( {context})
-
-	設定されていると、見出しの抽出に先立って（initialize の後に）呼ばれ、
-	その返値（整数）を行番号とする行の直前までをヘッダとしてスキップします。
-	この関数を定義することによって、skip.header属性では指定が難しいタイプ
-	のヘッダのスキップを実装できます。
-
-	skip_header()関数に渡される引数は以下の通りです。
-
-	* {context}	辞書
-			詳細は|unite-outline-notation-{context}|を参照
-
 
 extract_headings	関数（任意）		*unite-outline-info-extract_headings()*
 
