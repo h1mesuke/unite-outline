@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-12
+" Updated : 2011-03-14
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -147,13 +147,13 @@ function! unite#sources#outline#util#neighbor_matchstr(context, lnum, pattern, .
   let [bwd_range, fwd_range] = s:neighbor_ranges(a:context, a:lnum, prev, next, exclusive)
   for lnum in bwd_range
     let matched = matchstr(lines[lnum], a:pattern)
-    if matched != ""
+    if !empty(matched)
       return matched
     endif
   endfor
   for lnum in fwd_range
     let matched = matchstr(lines[lnum], a:pattern)
-    if matched != ""
+    if !empty(matched)
       return matched
     endif
   endfor

@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-13
+" Updated : 2011-03-14
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -62,7 +62,7 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
     " if the outline info has been updated since the last time it was
     " sourced, re-source and update it
     let oinfo_file = s:find_outline_info(filetype)
-    if oinfo_file != ""
+    if !empty(oinfo_file)
       let ftime = getftime(oinfo_file)
       if has_key(s:outline_info_ftime, oinfo_file) && ftime > s:outline_info_ftime[oinfo_file]
         source `=oinfo_file`
@@ -87,7 +87,7 @@ endfunction
 function! s:find_outline_info(filetype)
   for path in s:OUTLINE_INFO_PATH
     let oinfo_path = findfile(path . a:filetype . '.vim', &runtimepath)
-    if oinfo_path != "" | return oinfo_path | endif
+    if !empty(oinfo_path) | return oinfo_path | endif
   endfor
   return ""
 endfunction
@@ -196,7 +196,7 @@ let s:default_alias_map = [
 for [alias, src_filetype] in s:default_alias_map
   " NOTE: If the user has his/her own outline info for {alias} filetype, not
   " define it as an alias of the other filetype by default.
-  if s:find_outline_info(alias) == ""
+  if empty(s:find_outline_info(alias))
     call unite#sources#outline#alias(alias, src_filetype)
   endif
 endfor
@@ -218,7 +218,7 @@ function! s:source.hooks.on_init(args, context)
   " NOTE: The filetype of the buffer may be a "compound filetype", a set of
   " filetypes separated by periods.
   let filetype = getbufvar('%', '&filetype')
-  if filetype != ""
+  if !empty(filetype)
     " if the filetype is a compound one, use the left most
     let filetype = split(filetype, '\.')[0]
   endif
@@ -622,7 +622,7 @@ function! s:get_heading_group(heading)
 endfunction
 
 function! s:smooth_levels(headings)
-  let levels = map(copy(a:headings), 'v:val["level"]')
+  let levels = map(copy(a:headings), 'v:val.level')
   return s:_smooth_levels(levels, 0)
 endfunction
 function! s:_smooth_levels(levels, base_level)
@@ -701,8 +701,9 @@ function! s:source.calc_signature(lnum, ...)
     let bwd_lines = getline(from, a:lnum)
     let fwd_lines = getline(a:lnum, to)
   endif
-  let bwd_lines = filter(bwd_lines, 'v:val =~ "\\S"')[-precision-1 : -2]
-  let fwd_lines = filter(fwd_lines, 'v:val =~ "\\S"')[1 : precision]
+  let is_not_blank = 'v:val =~ "\\S"'
+  let bwd_lines = filter(bwd_lines, is_not_blank)[-precision-1 : -2]
+  let fwd_lines = filter(fwd_lines, is_not_blank)[1 : precision]
   return join(map(bwd_lines + fwd_lines, 's:digest_line(v:val)'), '')
 endfunction
 

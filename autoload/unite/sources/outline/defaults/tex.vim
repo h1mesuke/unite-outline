@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/tex.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-02-28
+" Updated : 2011-03-14
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -46,7 +46,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     let bib_label = unite#sources#outline#
           \util#neighbor_matchstr(a:context, a:context.heading_lnum,
           \ '\\renewcommand{\\bibname}{\zs.*\ze}\s*$', 3)
-    let heading.word = (bib_label == "" ? "Bibliography" : bib_label)
+    let heading.word = (empty(bib_label) ? "Bibliography" : bib_label)
   else
     " Parts, Chapters, Sections, etc
     let unit = matchstr(a:heading_line, '^\\\zs\w\+\ze{')
@@ -101,7 +101,7 @@ function! s:unit_seqnr_prefix(unit)
     endif
   endif
   let prefix = join(seqnr, '.')
-  let prefix .= (prefix != "" ? " " : "")
+  let prefix .= (!empty(prefix) ? " " : "")
   return prefix
 endfunction
 
