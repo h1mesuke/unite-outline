@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-10
+" Updated : 2011-03-13
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -296,7 +296,7 @@ function! s:get_tag_name_id_suffix(tag, counter)
 
   if has_key(a:counter, name)
     let a:counter[name] += 1
-    return ' [' . a:counter[name] . ']'
+    return ' #' . a:counter[name]
   else
     let a:counter[name] = 1
     return ''
