@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for C++
-" Version: 0.1.3
+" Version: 0.1.4
 
 function! unite#sources#outline#defaults#cpp#outline_info()
   return s:outline_info
@@ -25,6 +25,17 @@ let s:outline_info = {
 
 function! s:outline_info.extract_headings(context)
   return unite#sources#outline#lib#ctags#extract_headings(a:context)
+endfunction
+
+function! s:outline_info.get_heading_group(heading)
+  let GROUP = self.heading_group_map
+  let group = get(GROUP, a:heading.type, GROUP.UNKNOWN)
+  if group == GROUP.MACRO
+    if matchstr(a:heading.word, '^\zs\h\w*\ze') =~# '\l'
+      return GROUP.PROC
+    endif
+  endif
+  return group
 endfunction
 
 " vim: filetype=vim
