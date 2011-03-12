@@ -61,7 +61,7 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
     endtry
     " if the outline info has been updated since the last time it was
     " sourced, re-source and update it
-    let oinfo_file = s:find_outline_info(a:filetype)
+    let oinfo_file = s:find_outline_info(filetype)
     if oinfo_file != ""
       let ftime = getftime(oinfo_file)
       if has_key(s:outline_info_ftime, oinfo_file) && ftime > s:outline_info_ftime[oinfo_file]
