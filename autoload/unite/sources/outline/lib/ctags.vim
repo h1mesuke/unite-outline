@@ -214,6 +214,7 @@ function! unite#sources#outline#lib#ctags#extract_headings(context)
     endif
     if empty(heading) | let idx += 1 | continue | endif
 
+    let heading.word = substitute(substitute(heading.word, '(\s*', '(', ''), '\s*)', ')', '')
     let heading.word .= s:get_tag_name_id_suffix(tag, tag_name_counter)
 
     if tag.kind =~# scope_kinds_pattern
