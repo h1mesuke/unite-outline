@@ -285,7 +285,7 @@ function! s:source.gather_candidates(args, context)
       let headings = outline_info.extract_headings(s:context)
       if type(headings) == type({})
         let tree_root = headings | unlet headings
-        let headings = s:flatten_tree(tree_root)
+        let headings = s:flatten_tree(tree_root, 0)
       else
         call s:build_tree(headings)
       endif
@@ -518,7 +518,8 @@ function! s:normalize_heading_word(heading_word)
   return heading_word
 endfunction
 
-function! s:flatten_tree(tree)
+function! s:flatten_tree(tree, ...)
+  if a:0 | let a:tree.level = a:1 | endif
   let headings = []
   for node in a:tree.children
     let node.level = has_key(node, 'parent') ? node.parent.level + 1 : 1

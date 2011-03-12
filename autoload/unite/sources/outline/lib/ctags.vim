@@ -203,7 +203,7 @@ function! unite#sources#outline#lib#ctags#extract_headings(context)
   let tags = s:get_tags(a:context)
   let num_tags = len(tags)
 
-  let tree_root = { 'level': 0 } | let scope_table = {}
+  let tree_root = {} | let scope_table = {}
   let tag_name_counter = {}
 
   let idx = 0
