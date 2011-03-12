@@ -99,6 +99,9 @@ function! lang_cpp.create_heading(tag, context)
     endif
     let heading.word .= ' : ' . a:tag.kind
   endif
+  if has_key(a:tag, 'implementation')
+    let heading.word .= ' <' . a:tag.implementation . '>'
+  endif
   return ignore ? {} : heading
 endfunction
 
@@ -275,6 +278,9 @@ function! s:create_heading(tag, context)
     let heading.word .= ' ' . a:tag.signature
   else
     let heading.word .= ' : ' . a:tag.kind
+  endif
+  if has_key(a:tag, 'implementation')
+    let heading.word .= ' <' . a:tag.implementation . '>'
   endif
   return heading
 endfunction
