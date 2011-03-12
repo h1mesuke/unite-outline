@@ -543,6 +543,10 @@ function! s:build_tree(headings)
     endif
     call add(context, node)
   endfor
+  let is_toplevel = '!has_key(v:val, "parent")'
+  let tree_root = {}
+  let tree_root.children = filter(copy(a:headings), is_toplevel)
+  return tree_root
 endfunction
 
 function! s:filter_headings(headings)
