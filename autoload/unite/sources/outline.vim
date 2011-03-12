@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-12
+" Updated : 2011-03-13
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -70,7 +70,7 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
       endif
       let s:outline_info_ftime[oinfo_file] = ftime
     endif
-    call s:normalize_outline_info(outline_info)
+    call s:init_outline_info(outline_info)
     return outline_info
   endfor
   return {}
@@ -92,8 +92,18 @@ function! s:find_outline_info(filetype)
   return ""
 endfunction
 
-function! s:normalize_outline_info(outline_info)
-  if has_key(a:outline_info, 'skip') && has_key(a:outline_info.skip, 'header')
+function! s:init_outline_info(outline_info)
+  if has_key(a:outline_info, 'skip')
+    call s:normalize_skip_info(a:outline_info)
+  endif
+  if has_key(a:outline_info, 'heading_groups')
+    call s:init_heading_group_map(a:outline_info)
+  endif
+  return a:outline_info
+endfunction
+
+function! s:normalize_skip_info(outline_info)
+  if has_key(a:outline_info.skip, 'header')
     let value_type = type(a:outline_info.skip.header)
     if value_type == type("")
       let a:outline_info.skip.header = { 'leading': a:outline_info.skip.header }
@@ -108,13 +118,29 @@ function! s:normalize_outline_info(outline_info)
       endif
     endif
   endif
-  if has_key(a:outline_info, 'skip') && has_key(a:outline_info.skip, 'block')
+  if has_key(a:outline_info.skip, 'block')
     let value_type = type(a:outline_info.skip.block)
     if value_type == type([])
       let a:outline_info.skip.block = s:normalize_block_patterns(a:outline_info.skip.block)
     endif
   endif
-  return a:outline_info
+endfunction
+
+function! s:normalize_block_patterns(patterns)
+  return { 'begin': a:patterns[0], 'end': a:patterns[1] }
+endfunction
+
+function! s:init_heading_group_map(outline_info)
+  let groups = a:outline_info.heading_groups
+  let group_map = { 'UNKNOWN': 0 } | let group_id = 1
+  for group_name in keys(groups)
+    let group_map[group_name] = group_id
+    for heading_type in groups[group_name]
+      let group_map[heading_type] = group_id
+    endfor
+    let group_id += 1
+  endfor
+  let a:outline_info.heading_group_map = group_map
 endfunction
 
 function! unite#sources#outline#get_default_outline_info(filetype)
@@ -306,10 +332,6 @@ endfunction
 
 function! s:get_time()
   return str2float(reltimestr(reltime()))
-endfunction
-
-function! s:normalize_block_patterns(patterns)
-  return { 'begin': a:patterns[0], 'end': a:patterns[1] }
 endfunction
 
 function! s:skip_header()
@@ -545,7 +567,9 @@ function! s:convert_headings_to_candidates(headings)
   if empty(a:headings) | return [] | endif
 
   let outline_info = s:context.outline_info
-  let use_blanks = has_key(outline_info, 'need_blank')
+  let use_blanks = has_key(outline_info, 'heading_groups')    ||
+        \          has_key(outline_info, 'get_heading_group') ||
+        \          has_key(outline_info, 'need_blank_between')
 
   let levels = s:smooth_levels(a:headings)
 
@@ -556,7 +580,7 @@ function! s:convert_headings_to_candidates(headings)
   let idx = 1
   while idx < len(a:headings)
     let heading = a:headings[idx]
-    if use_blanks && outline_info.need_blank(prev_heading, heading)
+    if use_blanks && s:need_blank_between(prev_heading, heading)
       call add(candidates, s:create_blank())
     endif
     call add(candidates, s:create_candidate(a:headings[idx], levels[idx]))
@@ -565,6 +589,31 @@ function! s:convert_headings_to_candidates(headings)
   endwhile
 
   return candidates
+endfunction
+
+function! s:need_blank_between(head1, head2)
+  let outline_info = s:context.outline_info
+
+  if has_key(outline_info, 'need_blank_between')
+    return outline_info.need_blank_between(a:head1, a:head2)
+  elseif a:head1.level < a:head2.level
+    return 0
+  elseif a:head1.level == a:head2.level
+    if has_key(outline_info, 'get_heading_group')
+      return (outline_info.get_heading_group(a:head1) != outline_info.get_heading_group(a:head2) ||
+            \ has_key(a:head1, 'children') || has_key(a:head2, 'children'))
+    else
+      return (s:get_heading_group(a:head1) != s:get_heading_group(a:head2) ||
+            \ has_key(a:head1, 'children') || has_key(a:head2, 'children'))
+    endif
+  else
+    return 1
+  endif
+endfunction
+
+function! s:get_heading_group(heading)
+  let group_map = s:context.outline_info.heading_group_map
+  return  get(group_map, a:heading.type, group_map.UNKNOWN)
 endfunction
 
 function! s:smooth_levels(headings)
