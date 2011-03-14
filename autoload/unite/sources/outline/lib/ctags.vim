@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-13
+" Updated : 2011-03-14
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -110,6 +110,24 @@ unlet lang_cpp
 
 let s:CTAGS_LANGS.c = copy(s:CTAGS_LANGS.cpp)
 call extend(s:CTAGS_LANGS.c, { 'name': 'C', 'ctags_options': ' --c-kinds=cdfgnstu ' }, 'force')
+
+" Java
+"
+"  [c] classes
+"   e  enum constants
+"   f  fields
+"  [g] enum types
+"  [i] interfaces
+"   l  local variables
+"  [m] methods
+"  [p] packages
+"
+let s:CTAGS_LANGS.java = {
+      \ 'name': 'Java',
+      \ 'ctags_options': ' --java-kinds=cgimp ',
+      \ 'scope_kinds'  : ['interface', 'class'],
+      \ 'scope_delim'  : '.',
+      \ }
 
 function! s:ctags_exists()
   return !empty(s:CTAGS)
