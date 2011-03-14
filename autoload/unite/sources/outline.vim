@@ -660,7 +660,7 @@ function! s:join_list(lists, sep)
 endfunction
 
 function! s:create_candidate(heading, level)
-  return {
+  let cand = {
         \ 'word': s:make_indent(a:level) . a:heading.word,
         \ 'source': 'outline',
         \ 'kind'  : 'jump_list',
@@ -668,6 +668,10 @@ function! s:create_candidate(heading, level)
         \ 'action__pattern'  : s:make_search_pattern(s:context.lines[a:heading.lnum]),
         \ 'action__signature': s:source.calc_signature(a:heading.lnum, s:context.lines),
         \ }
+  if has_key(a:heading, 'abbr')
+    let cand.abbr = a:heading.abbr
+  endif
+  return cand
 endfunction
 
 function! s:make_indent(level)
