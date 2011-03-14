@@ -18,6 +18,7 @@ endfunction
 let s:outline_info = {
       \ 'heading_groups': [
       \   ['macro'],
+      \   ['namespace'],
       \   ['class', 'enum', 'struct', 'typedef'],
       \   ['function'],
       \ ]
