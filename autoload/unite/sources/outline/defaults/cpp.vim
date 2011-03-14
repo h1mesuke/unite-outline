@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/cpp.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-13
+" Updated : 2011-03-14
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -16,11 +16,11 @@ function! unite#sources#outline#defaults#cpp#outline_info()
 endfunction
 
 let s:outline_info = {
-      \ 'heading_groups': {
-      \   'MACRO': ['macro'],
-      \   'TYPE' : ['class', 'enum', 'struct', 'typedef'],
-      \   'PROC' : ['function'],
-      \ }
+      \ 'heading_groups': [
+      \   ['macro'],
+      \   ['class', 'enum', 'struct', 'typedef'],
+      \   ['function'],
+      \ ]
       \}
 
 function! s:outline_info.extract_headings(context)
@@ -28,11 +28,11 @@ function! s:outline_info.extract_headings(context)
 endfunction
 
 function! s:outline_info.get_heading_group(heading)
-  let GROUP = self.heading_group_map
-  let group = get(GROUP, a:heading.type, GROUP.UNKNOWN)
-  if group == GROUP.MACRO
+  let group_of = self.heading_group_map
+  let group = get(group_of, a:heading.type, 0)
+  if group == group_of.macro
     if matchstr(a:heading.word, '^\zs\h\w*\ze') =~# '\l'
-      return GROUP.PROC
+      return group_of.function
     endif
   endif
   return group

@@ -132,10 +132,9 @@ endfunction
 
 function! s:init_heading_group_map(outline_info)
   let groups = a:outline_info.heading_groups
-  let group_map = { 'UNKNOWN': 0 } | let group_id = 1
-  for group_name in keys(groups)
-    let group_map[group_name] = group_id
-    for heading_type in groups[group_name]
+  let group_map = {} | let group_id = 1
+  for group_types in groups
+    for heading_type in group_types
       let group_map[heading_type] = group_id
     endfor
     let group_id += 1
@@ -618,7 +617,7 @@ endfunction
 
 function! s:get_heading_group(heading)
   let group_map = s:context.outline_info.heading_group_map
-  return  get(group_map, a:heading.type, group_map.UNKNOWN)
+  return  get(group_map, a:heading.type, 0)
 endfunction
 
 function! s:smooth_levels(headings)
