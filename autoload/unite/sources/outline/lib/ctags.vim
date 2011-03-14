@@ -78,7 +78,7 @@ function! lang_cpp.create_heading(tag, context)
   let heading = {
         \ 'word' : a:tag.name,
         \ 'type' : a:tag.kind,
-        \ "lnum" : a:tag.lnum,
+        \ 'lnum' : a:tag.lnum,
         \ }
   let ignore = 0
   if heading.type ==# 'function'
@@ -128,6 +128,41 @@ let s:CTAGS_LANGS.java = {
       \ 'scope_kinds'  : ['interface', 'class'],
       \ 'scope_delim'  : '.',
       \ }
+
+" Python
+"
+"  [c] classes
+"  [f] functions
+"  [m] class members
+"   v  variables
+"   i  imports
+"
+let lang_python = {
+      \ 'name': 'Python',
+      \ 'ctags_options': ' --python-kinds=cfm ',
+      \ 'scope_kinds'  : ['function', 'class', 'member'],
+      \ 'scope_delim'  : '.',
+      \ }
+function! lang_python.create_heading(tag, context)
+  let heading = {
+        \ 'word' : a:tag.name,
+        \ 'type' : a:tag.kind,
+        \ 'lnum' : a:tag.lnum,
+        \ }
+  let ignore = 0
+  if heading.type =~# '^\%(function\|member\)'
+    let heading.word .= ' ' . s:get_param_list(a:context, a:tag.lnum)
+  elseif heading.type ==# 'variable'
+    " NOTE: ctags always generates tags for variables.
+    let ignore = 1
+  else
+    let heading.word .= ' : ' . a:tag.kind
+  endif
+  return ignore ? {} : heading
+endfunction
+
+let s:CTAGS_LANGS.python = lang_python
+unlet lang_python
 
 function! s:ctags_exists()
   return !empty(s:CTAGS)
