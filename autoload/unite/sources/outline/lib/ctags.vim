@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-14
+" Updated : 2011-03-15
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -278,6 +278,7 @@ function! unite#sources#outline#lib#ctags#extract_headings(context)
   call unite#sources#outline#util#print_progress("Extracting headings...done.")
 
   let is_toplevel = '!has_key(v:val, "parent")'
+  let tree_root.children = get(tree_root, 'children', [])
   let tree_root.children += filter(values(scope_table), is_toplevel)
 
   call unite#sources#outline#util#sort_by_lnum(tree_root.children)
