@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-15
+" Updated : 2011-03-16
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -163,6 +163,8 @@ endfunction
 
 let s:CTAGS_LANGS.python = lang_python
 unlet lang_python
+
+"-----------------------------------------------------------------------------
 
 function! s:ctags_exists()
   return !empty(s:CTAGS)
@@ -344,8 +346,11 @@ function! s:get_param_list(context, lnum)
   return matchstr(line, '([^)]*)')
 endfunction
 
-let s:OOP_ACCESS_MARKS = { 'public': '+', 'protected': '#', 'private': '-' }
-
+let s:OOP_ACCESS_MARKS = {
+      \ 'public'   : '+',
+      \ 'protected': '#',
+      \ 'private'  : '-'
+      \ }
 function! s:get_tag_access_mark(tag)
   let access = has_key(a:tag, 'access') ? a:tag.access : 'unknown'
   return get(s:OOP_ACCESS_MARKS, access, '_') . ' '
