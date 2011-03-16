@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-16
+" Updated : 2011-03-17
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -184,13 +184,13 @@ function! s:get_tags(context)
   let lang = s:CTAGS_LANGS[a:context.buffer.filetype]
   let path = a:context.buffer.path
 
-  let opts  = ' --filter --excmd=number --fields=afiKmsSzt --sort=no '
+  let opts  = ' -f - --excmd=number --fields=afiKmsSzt --sort=no '
   let opts .= ' --language-force=' . lang.name
   let opts .= lang.ctags_options
 
-  let path = unite#sources#outline#util#normalize_path(path)
+  let path = unite#sources#outline#util#normalize_path(path, 'shell')
 
-  let ctags_out = unite#util#system(s:CTAGS . opts, path)
+  let ctags_out = unite#util#system(s:CTAGS . opts . path)
   let status = unite#util#get_last_status()
 
   if status
