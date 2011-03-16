@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-14
+" Updated : 2011-03-17
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -186,15 +186,15 @@ endfunction
 " Path
 
 function! unite#sources#outline#util#normalize_path(path, ...)
-  let path = a:path
-  let sep = '/' | let do_iconv = 0
+  let path = a:path | let sep = '/'
+  let do_shellescape = 0 | let do_iconv = 0
 
   for opt in a:000
     if opt =~ '^:'
       let mods = opt
       let path = fnamemodify(path, mods)
     elseif opt =~# '^shell\%[escape]$'
-      let path = unite#sources#outline#util#shellescape(path)
+      let do_shellescape = 1
     elseif opt =~# '^term\%[encoding]$'
       let do_iconv = 1
     elseif opt == '\'
@@ -203,6 +203,10 @@ function! unite#sources#outline#util#normalize_path(path, ...)
   endfor
 
   let path = substitute(path, '[/\\]', sep, 'g')
+
+  if do_shellescape
+    let path = unite#sources#outline#util#shellescape(path)
+  endif
 
   if do_iconv && &termencoding != '' && &termencoding != &encoding
     let path = iconv(path, &encoding, &termencoding)
