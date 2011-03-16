@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-14
+" Updated : 2011-03-17
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -43,14 +43,36 @@ let s:OUTLINE_INFO_PATH = [
 let s:outline_info_ftime = {}
 
 function! unite#sources#outline#get_outline_info(filetype, ...)
+  let is_default = (a:0 ? a:1 : 0)
+
+  " NOTE: The filetype of the buffer may be a "compound filetype", a set of
+  " filetypes separated by periods.
+  let try_filetypes = [substitute(a:filetype, '\.', '_', 'g')]
+  if a:filetype =~ '\.'
+    " if the filetype is a compound one and has no outline info, fallback its
+    " major filetype which is the left most
+    call add(try_filetypes, split(a:filetype, '\.')[0])
+  endif
+
+  for filetype in try_filetypes
+    let outline_info = s:get_outline_info(filetype, is_default)
+    if !empty(outline_info) | return outline_info | endif
+  endfor
+  return {}
+endfunction
+
+function! unite#sources#outline#get_default_outline_info(filetype)
+  return unite#sources#outline#get_outline_info(a:filetype, 1)
+endfunction
+
+function! s:get_outline_info(filetype, is_default)
   let filetype = s:resolve_filetype_alias(a:filetype)
-  let default = (a:0 ? a:1 : 0)
 
   if has_key(g:unite_source_outline_info, filetype)
     return g:unite_source_outline_info[filetype]
   endif
 
-  for path in (default ? s:OUTLINE_INFO_PATH[-1:] : s:OUTLINE_INFO_PATH)
+  for path in (a:is_default ? s:OUTLINE_INFO_PATH[-1:] : s:OUTLINE_INFO_PATH)
     let load_funcall = substitute(substitute(path, '^autoload/', '', ''), '/', '#', 'g')
     let load_funcall .= filetype . '#outline_info()'
     try
@@ -142,10 +164,6 @@ function! s:init_heading_group_map(outline_info)
   let a:outline_info.heading_group_map = group_map
 endfunction
 
-function! unite#sources#outline#get_default_outline_info(filetype)
-  return unite#sources#outline#get_outline_info(a:filetype, 1)
-endfunction
-
 function! unite#sources#outline#clear_cache()
   let cache = unite#sources#outline#lib#cache#instance()
   call cache.clear()
@@ -213,15 +231,6 @@ let s:source = {
       \ }
 
 function! s:source.hooks.on_init(args, context)
-
-  " NOTE: The filetype of the buffer may be a "compound filetype", a set of
-  " filetypes separated by periods.
-  let filetype = getbufvar('%', '&filetype')
-  if !empty(filetype)
-    " if the filetype is a compound one, use the left most
-    let filetype = split(filetype, '\.')[0]
-  endif
-
   " initialize the shared context dictionary
   let s:context = {
         \ 'heading_lnum': 0,
@@ -230,7 +239,7 @@ function! s:source.hooks.on_init(args, context)
   let s:context.buffer = {
         \ 'nr'        : bufnr('%'),
         \ 'path'      : expand('%:p'),
-        \ 'filetype'  : filetype,
+        \ 'filetype'  : getbufvar('%', '&filetype'),
         \ 'shiftwidth': getbufvar('%', '&shiftwidth'),
         \ 'tabstop'   : getbufvar('%', '&tabstop'),
         \ }
