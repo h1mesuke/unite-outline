@@ -47,10 +47,10 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
 
   " NOTE: The filetype of the buffer may be a "compound filetype", a set of
   " filetypes separated by periods.
-  let try_filetypes = [substitute(a:filetype, '\.', '_', 'g')]
+  let try_filetypes = [a:filetype]
   if a:filetype =~ '\.'
-    " if the filetype is a compound one and has no outline info, fallback its
-    " major filetype which is the left most
+    " If the filetype is a compound one and has no outline info, fallback its
+    " major filetype which is the left most.
     call add(try_filetypes, split(a:filetype, '\.')[0])
   endif
 
@@ -74,15 +74,15 @@ function! s:get_outline_info(filetype, is_default)
 
   for path in (a:is_default ? s:OUTLINE_INFO_PATH[-1:] : s:OUTLINE_INFO_PATH)
     let load_funcall = substitute(substitute(path, '^autoload/', '', ''), '/', '#', 'g')
-    let load_funcall .= filetype . '#outline_info()'
+    let load_funcall .= substitute(filetype, '\.', '_', 'g') . '#outline_info()'
     try
       execute 'let outline_info = ' . load_funcall
     catch /^Vim\%((\a\+)\)\=:E117:/
       " E117: Unknown function:
       continue
     endtry
-    " if the outline info has been updated since the last time it was
-    " sourced, re-source and update it
+    " If the outline info has been updated since the last time it was sourced,
+    " re-source and update it.
     let oinfo_path = s:find_outline_info(filetype)
     if !empty(oinfo_path)
       let ftime = getftime(oinfo_path)
