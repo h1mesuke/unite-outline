@@ -243,6 +243,7 @@ function! s:source.hooks.on_init(args, context)
         \ 'shiftwidth': getbufvar('%', '&shiftwidth'),
         \ 'tabstop'   : getbufvar('%', '&tabstop'),
         \ }
+  let a:context.source__filetype = s:context.buffer.filetype
 endfunction
 
 function! s:source.hooks.on_close(args, context)
