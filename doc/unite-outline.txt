@@ -1,0 +1,189 @@
+*unite-outline.txt*	outline source for unite.vim
+
+Author  : h1mesuke <himesuke@gmail.com>
+Updated : 2011-03-19
+Version : 0.3.2
+License : MIT license {{{
+
+	Permission is hereby granted, free of charge, to any person obtaining
+	a copy of this software and associated documentation files (the
+	"Software"), to deal in the Software without restriction, including
+	without limitation the rights to use, copy, modify, merge, publish,
+	distribute, sublicense, and/or sell copies of the Software, and to
+	permit persons to whom the Software is furnished to do so, subject to
+	the following conditions:
+	The above copyright notice and this permission notice shall be
+	included in all copies or substantial portions of the Software.
+	
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+	EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+	MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+	IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+	CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+	TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+	SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+}}}
+
+CONTENTS					*unite-outline-contents*
+
+	Introduction		|unite-outline-introduction|
+	Install			|unite-outline-install|
+	Usage			|unite-outline-usage|
+	Settings		|unite-outline-settings|
+	  Variables		  |unite-outline-variables|
+	Outline Info		|unite-outline-info|
+	  Create Outline Info	  |unite-outline-info-create|
+	  Attributes		  |unite-outline-info-attributes|
+	Functions		|unite-outline-functions|
+	  Utility Functions	  |unite-outline-utility-functions|
+	ToDo			|unite-outline-todo|
+	Bugs			|unite-outline-bugs|
+	ChanheLog		|unite-outline-changelog|
+
+==============================================================================
+INTRODUCTION					*unite-outline-introduction*
+
+	*unite-outline* is a source of |unite| which parses the buffer's
+	content and extracts headings and then show the list of the headings
+	using the UI of unite.vim. When you select a heading from the list,
+	you can jump to the corresponding location of the buffer.
+
+	The methods for extracting headings have been implemented for each
+	individual filetypes. You can customize them as you like and can also
+	create new ones.
+
+==============================================================================
+INSTALL						*unite-outline-install*
+
+	Install the distributed files into your Vim script directory which is
+	usually ~/.vim/, or $HOME/vimfiles on Windows.
+
+	You can show the heading list of the current buffer with ":Unite
+	outline" command if you succeeded the installation (and unite-outline
+	supports its filetype).
+
+==============================================================================
+USAGE						*unite-outline-usage*
+
+	To show the heading list of the current buffer, execute |:Unite|
+	command with "outline" as a source parameter.
+>
+	:Unite outline
+<
+	unite-outline parses the buffer's content and extracts headings and
+	then shows the list of the headings using the UI of unite.vim. When
+	you select a heading from the list that appears, you can jump to the
+	corresponding location of the buffer.
+
+	In most cases, extracted headings are cached. Because unite-outline
+	reuses the cached data as possible, subsequent executions for the
+	buffer will get much faster than the first time.
+
+	If you want to forcefully update the heading list discarding the
+	cached data, execute ":Unite outline" command with "!" as an outline
+	source's parameter.
+>
+	:Unite outline:!
+<
+	Or, do |<Plug>(unite_redraw)|, which is mapped to <C-l> by default, at
+	the heading list in Normal mode.
+
+==============================================================================
+SETTINGS					*unite-outline-settings*
+
+------------------------------------------------------------------------------
+VARIABLES					*unite-outline-variables*
+
+g:unite_source_outline_info			*g:unite_source_outline_info*
+
+	Dictionary of outline infos.
+
+	Default value is {}.
+
+	Because all of the default outline infos, which have been included the
+	distributed archive, will be loaded by autoload functions later, the
+	initial value of this dictionary is empty.
+
+	See |unite-outline-info|
+
+g:unite_source_outline_indent_width	*g:unite_source_outline_indent_width*
+
+	Indent width used in heading lists.
+
+	Default value is 2.
+					*g:unite_source_outline_ignore_heading_types*
+g:unite_source_outline_ignore_heading_types
+
+	TODO
+
+	Default value is {}.
+
+	Example: >
+	let ignore_heading_types = {}
+	let ignore_heading_types['*'] = ['comment']
+	let ignore_heading_types.cpp  = ['macro', 'typedef', 'enum']
+	let g:unite_source_outline_ignore_heading_types = ignore_heading_types
+	unlet ignore_heading_types
+<
+g:unite_source_outline_max_headings	*g:unite_source_outline_max_headings*
+
+	Maximum number of headings.
+	unite-outline aborts the extraction if the number of extracted
+	headings reaches the value of this variable.
+
+	Default value is 1000.
+
+g:unite_source_outline_cache_buffers	*g:unite_source_outline_cache_buffers*
+
+	Maximum number of buffers whose extracted headings are cached.
+	The caching algorithm is LRU.
+
+	Default value is 100.
+
+g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
+
+	Threshold of cache serialization.
+	If the number of lines of the buffer is greater than the value of this
+	variable, the cache of the extracted headings are serialized to
+	a file.
+
+	Once the cache is stored in a file, unite-outline loads the headings
+	from the file at the first time of its execution for the buffer after
+	a reboot of Vim.
+
+	Default value is 1000.
+
+==============================================================================
+OUTLINE INFO					*unite-outline-info*
+
+	TODO
+
+------------------------------------------------------------------------------
+CREATE OUTLINE INFO				*unite-outline-info-create*
+
+	TODO
+
+------------------------------------------------------------------------------
+ATTRIBUTES					*unite-outline-info-attributes*
+
+	TODO
+
+==============================================================================
+FUNCTIONS					*unite-outline-functions*
+
+	TODO
+
+==============================================================================
+TODO						*unite-outline-todo*
+
+	* Complete this help.
+
+==============================================================================
+BUGS						*unite-outline-bugs*
+
+==============================================================================
+CHANHELOG					*unite-outline-changelog*
+
+	https://github.com/h1mesuke/unite-outline/commits/master
+
+vim:tw=78:ts=8:ft=help:norl:noet:ai
