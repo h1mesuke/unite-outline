@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-17
+" Updated : 2011-03-18
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -26,7 +26,7 @@
 " }}}
 
 "-----------------------------------------------------------------------------
-" Heading
+" Headings
 
 function! unite#sources#outline#util#append_child(parent, child)
   if !has_key(a:parent, 'children')
@@ -220,7 +220,7 @@ function! unite#sources#outline#util#normalize_path(path, ...)
 endfunction
 
 "-----------------------------------------------------------------------------
-" String
+" Strings
 
 " unite#sources#outline#util#capitalize( {str} [, {flag}])
 "
