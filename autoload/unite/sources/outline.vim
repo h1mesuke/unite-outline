@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-17
+" Updated : 2011-03-19
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -73,10 +73,10 @@ function! s:get_outline_info(filetype, is_default)
   endif
 
   for path in (a:is_default ? s:OUTLINE_INFO_PATH[-1:] : s:OUTLINE_INFO_PATH)
-    let load_funcall = substitute(substitute(path, '^autoload/', '', ''), '/', '#', 'g')
-    let load_funcall .= substitute(filetype, '\.', '_', 'g') . '#outline_info()'
+    let load_func  = substitute(substitute(path, '^autoload/', '', ''), '/', '#', 'g')
+    let load_func .= substitute(filetype, '\.', '_', 'g') . '#outline_info'
     try
-      execute 'let outline_info = ' . load_funcall
+      let outline_info = {load_func}()
     catch /^Vim\%((\a\+)\)\=:E117:/
       " E117: Unknown function:
       continue
