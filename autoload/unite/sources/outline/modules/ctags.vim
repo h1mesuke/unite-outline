@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-19
+" Updated : 2011-03-20
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -122,6 +122,8 @@ function! s:Ctags_extract_headings(context)
   let tags = s:get_tags(a:context)
   let num_tags = len(tags)
 
+  let Tree = unite#sources#outline#get_module('Tree')
+
   let tree_root = {} | let scope_table = {}
   let tag_name_counter = {}
 
@@ -162,11 +164,11 @@ function! s:Ctags_extract_headings(context)
         let scope_table[tag.scope] = pseudo_heading
       endif
       let heading.word = s:get_tag_access_mark(tag) . heading.word
-      call unite#sources#outline#util#append_child(scope_table[tag.scope], heading)
+      call Tree.append_child(scope_table[tag.scope], heading)
 
     elseif !has_key(scope_table, tag.qualified_name)
       " the heading belongs to the toplevel (and doesn't have its scope)
-      call unite#sources#outline#util#append_child(tree_root, heading)
+      call Tree.append_child(tree_root, heading)
     endif
 
     if idx % 50 == 0
@@ -181,7 +183,7 @@ function! s:Ctags_extract_headings(context)
   " merge
   let is_toplevel = '!has_key(v:val, "parent")'
   for heading in filter(values(scope_table), is_toplevel)
-    call unite#sources#outline#util#append_child(tree_root, heading)
+    call Tree.append_child(tree_root, heading)
   endfor
   call unite#sources#outline#util#sort_by_lnum(get(tree_root, 'children', []))
 
