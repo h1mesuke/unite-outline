@@ -316,18 +316,20 @@ function! s:source.gather_candidates(args, context)
       call outline_info.initialize(s:context)
     endif
 
+    let Tree = unite#sources#outline#get_module('Tree')
+
     if has_key(outline_info, 'extract_headings')
       let headings = outline_info.extract_headings(s:context)
       if type(headings) == type({})
-        let tree_root = headings | unlet headings
-        let headings = s:flatten_tree(tree_root, 0)
+        let tree_root = Tree.normalize(headings) | unlet headings
+        let headings = Tree.flatten(tree_root)
       else
-        call s:build_tree(headings)
+        call Tree.build(headings)
       endif
       call map(headings, 's:normalize_heading(v:val)')
     else
       let headings = unite#sources#outline#extract_headings()
-      call s:build_tree(headings)
+      call Tree.build(headings)
     endif
 
     if has_key(outline_info, 'finalize')
@@ -553,38 +555,6 @@ function! s:normalize_heading_word(heading_word)
   let heading_word = substitute(substitute(a:heading_word, '^\s*', '', ''), '\s*$', '', '')
   let heading_word = substitute(heading_word, '\s\+', ' ', 'g')
   return heading_word
-endfunction
-
-function! s:flatten_tree(tree, ...)
-  if a:0 | let a:tree.level = a:1 | endif
-  let headings = []
-  for node in a:tree.children
-    let node.level = has_key(node, 'parent') ? node.parent.level + 1 : 1
-    call add(headings, node)
-    if has_key(node, 'children')
-      let headings += s:flatten_tree(node)
-    endif
-  endfor
-  return headings
-endfunction
-
-function! s:build_tree(headings)
-  if empty(a:headings) | return | endif
-  let context   = [{ 'level': -1 }] | " stack
-  let prev_node =  a:headings[0]
-  for node in a:headings
-    while context[-1].level >= node.level
-      call remove(context, -1)
-    endwhile
-    if context[-1].level > 0
-      call unite#sources#outline#util#append_child(context[-1], node)
-    endif
-    call add(context, node)
-  endfor
-  let is_toplevel = '!has_key(v:val, "parent")'
-  let tree_root = {}
-  let tree_root.children = filter(copy(a:headings), is_toplevel)
-  return tree_root
 endfunction
 
 function! s:filter_headings(headings)
