@@ -164,6 +164,31 @@ function! s:init_heading_group_map(outline_info)
   let a:outline_info.heading_group_map = group_map
 endfunction
 
+function! unite#sources#outline#define_module(sid, name)
+
+  " Original source from vital.vim
+  " https://github.com/ujihisa/vital.vim
+  "
+  let prefix = '<SNR>' . a:sid . '_' . a:name . '_'
+  redir => funcs
+    silent! function
+  redir END
+  let is_module_func = 'v:val =~# "^function " . prefix'
+  let remove_prefix = 'matchstr(v:val, prefix . "\\zs\\w\\+")'
+  let module_funcs = map(filter(split(funcs, "\<NL>"), is_module_func), remove_prefix)
+
+  let module = {}
+  for func in module_funcs
+    let module[func] = function(prefix . func)
+  endfor
+
+  return module
+endfunction
+
+function! unite#sources#outline#get_module(name)
+  return unite#sources#outline#modules#{tolower(a:name)}#module()
+endfunction
+
 function! unite#sources#outline#clear_cache()
   let cache = unite#sources#outline#lib#cache#instance()
   call cache.clear()
