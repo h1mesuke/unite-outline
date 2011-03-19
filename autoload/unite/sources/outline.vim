@@ -190,8 +190,8 @@ function! unite#sources#outline#get_module(name)
 endfunction
 
 function! unite#sources#outline#clear_cache()
-  let cache = unite#sources#outline#lib#cache#instance()
-  call cache.clear()
+  let Cache = unite#sources#outline#get_module('Cache')
+  call Cache.clear()
 endfunction
 
 "-----------------------------------------------------------------------------
@@ -288,10 +288,11 @@ function! s:source.gather_candidates(args, context)
     endif
 
     let is_force = ((len(a:args) > 0 && a:args[0] == '!') || a:context.is_redraw)
-    let cache = unite#sources#outline#lib#cache#instance()
+
+    let Cache = unite#sources#outline#get_module('Cache')
     let path = s:context.buffer.path
-    if cache.has(path) && !is_force
-      return cache.get(path)
+    if Cache.has(path) && !is_force
+      return Cache.get(path)
     endif
 
     let filetype = s:context.buffer.filetype
@@ -344,9 +345,9 @@ function! s:source.gather_candidates(args, context)
     let is_volatile = has_key(outline_info, 'is_volatile') && outline_info.is_volatile
     if !is_volatile && (num_lines > 100)
       let should_serialize = (num_lines > g:unite_source_outline_cache_limit)
-      call cache.set(path, candidates, should_serialize)
-    elseif cache.has(path)
-      call cache.remove(path)
+      call Cache.set(path, candidates, should_serialize)
+    elseif Cache.has(path)
+      call Cache.remove(path)
     endif
 
     if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
