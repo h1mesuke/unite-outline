@@ -251,6 +251,7 @@ unlet s:default_alias_map
 let s:source = {
       \ 'name'       : 'outline',
       \ 'description': 'candidates from heading list',
+      \
       \ 'hooks': {}, 'action_table'  : {}, 'alias_table': {}, 'default_action': {},
       \ 'is_volatile': 1,
       \ }
@@ -787,7 +788,7 @@ function! s:action_table.preview.func(candidate)
     return
   endif
 
-  " work around `cursor-goes-to-top' problem on :pedit %
+  " workaround for `cursor-goes-to-top' problem on :pedit %
   let save_cursors = s:save_window_cursors(bufnr)
   let n_wins = winnr('$')
   call unite#take_action('preview', cand)
