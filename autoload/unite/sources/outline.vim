@@ -257,7 +257,7 @@ let s:source = {
       \ }
 
 function! s:source.hooks.on_init(args, context)
-  " initialize the shared context dictionary
+  let s:heading_id = 1
   let s:context = {
         \ 'heading_lnum': 0,
         \ 'matched_lnum': 0,
@@ -539,10 +539,12 @@ function! s:normalize_heading(heading)
 
   let heading.word = s:normalize_heading_word(heading.word)
   call extend(heading, {
+        \ 'id'   : s:heading_id,
         \ 'level': 1,
         \ 'type' : 'generic',
         \ 'lnum' : s:context.heading_lnum,
         \ }, 'keep')
+  let s:heading_id += 1
 
   return heading
 endfunction
