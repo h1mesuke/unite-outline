@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/cpp.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-14
+" Updated : 2011-03-19
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -25,7 +25,8 @@ let s:outline_info = {
       \}
 
 function! s:outline_info.extract_headings(context)
-  return unite#sources#outline#lib#ctags#extract_headings(a:context)
+  let Ctags = unite#sources#outline#get_module('Ctags')
+  return Ctags.extract_headings(a:context)
 endfunction
 
 function! s:outline_info.get_heading_group(heading)
