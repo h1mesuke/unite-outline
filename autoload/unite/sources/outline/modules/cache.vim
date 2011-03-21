@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-19
+" Updated : 2011-03-22
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -55,7 +55,7 @@ function! s:cache_file_path(path)
     return s:Cache.dir . '/' . s:encode_file_path(a:path)
 endfunction
 
-" borrowed from Shougo' neocomplcache
+" Original source from Shougo' neocomplcache
 " https://github.com/Shougo/neocomplcache
 "
 function! s:encode_file_path(path)

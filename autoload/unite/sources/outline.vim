@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-19
+" Updated : 2011-03-22
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -49,8 +49,8 @@ function! unite#sources#outline#get_outline_info(filetype, ...)
   " filetypes separated by periods.
   let try_filetypes = [a:filetype]
   if a:filetype =~ '\.'
-    " If the filetype is a compound one and has no outline info, fallback its
-    " major filetype which is the left most.
+    " If the filetype is a compound one and has no outline info, fallback to
+    " its major filetype which is the left most.
     call add(try_filetypes, split(a:filetype, '\.')[0])
   endif
 
@@ -291,6 +291,7 @@ function! s:source.gather_candidates(args, context)
 
     let Cache = unite#sources#outline#get_module('Cache')
     let path = s:context.buffer.path
+
     if Cache.has(path) && !is_force
       return Cache.get(path)
     endif
@@ -323,7 +324,7 @@ function! s:source.gather_candidates(args, context)
       let headings = outline_info.extract_headings(s:context)
       if type(headings) == type({})
         let tree_root = Tree.normalize(headings) | unlet headings
-        let headings = Tree.flatten(tree_root)
+        let headings  = Tree.flatten(tree_root)
       else
         call Tree.build(headings)
       endif
@@ -392,14 +393,12 @@ function! s:skip_header()
       endif
     endwhile
   endif
-
-  return s:lnum
 endfunction
 
 function! unite#sources#outline#extract_headings()
   let s:lnum = 1
-  call s:skip_header()
 
+  call s:skip_header()
   let outline_info = s:context.outline_info
 
   " eval once

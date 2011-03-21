@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-19
+" Updated : 2011-03-20
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -39,7 +39,9 @@ function! s:Tree_append_child(parent, child)
 endfunction
 
 function! s:Tree_build(headings)
-  if empty(a:headings) | return | endif
+  let root = { 'children': [] }
+  if empty(a:headings) | return root | endif
+
   let context   = [{ 'level': -1 }] | " stack
   let prev_node =  a:headings[0]
   for node in a:headings
@@ -51,9 +53,10 @@ function! s:Tree_build(headings)
     endif
     call add(context, node)
   endfor
+
   let is_toplevel = '!has_key(v:val, "parent")'
-  let root = {}
   let root.children = filter(copy(a:headings), is_toplevel)
+
   return root
 endfunction
 
