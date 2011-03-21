@@ -269,7 +269,13 @@ function! s:source.hooks.on_init(args, context)
         \ 'shiftwidth': getbufvar('%', '&shiftwidth'),
         \ 'tabstop'   : getbufvar('%', '&tabstop'),
         \ }
-  let a:context.source__filetype = s:context.buffer.filetype
+  let compound_filetypes = split(s:context.buffer.filetype, '\.')
+  call extend(s:context.buffer, {
+        \ 'major_filetype': get(compound_filetypes, 0, ''),
+        \ 'minor_filetype': get(compound_filetypes, 1, ''),
+        \ 'compound_filetypes': compound_filetypes,
+        \ })
+  let a:context.source__buffer = s:context.buffer
 endfunction
 
 function! s:source.hooks.on_close(args, context)

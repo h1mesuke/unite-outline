@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-20
+" Updated : 2011-03-22
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -45,7 +45,7 @@ function! s:Ctags_has(filetype)
 endfunction
 
 function! s:get_tags(context)
-  let lang = s:Ctags.langs[a:context.buffer.filetype]
+  let lang = s:Ctags.langs[a:context.buffer.major_filetype]
   let path = a:context.buffer.path
 
   let opts  = ' -f - --excmd=number --fields=afiKmsSzt --sort=no '
