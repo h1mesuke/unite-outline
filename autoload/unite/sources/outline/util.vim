@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-20
+" Updated : 2011-03-24
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -24,262 +24,87 @@
 "   TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 "   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 " }}}
+"=============================================================================
+
+let s:Util = unite#sources#outline#get_module('Util')
+
+" NOTE: All of the functions in this file are obsolete now. If you need to use
+" any of them, please import Util module and call them via the module as
+" Dictionary functions.
 
 "-----------------------------------------------------------------------------
 " Headings
 
-function! unite#sources#outline#util#get_indent_level(context, lnum)
-  let line = a:context.lines[a:lnum]
-  let sw = a:context.buffer.shiftwidth
-  let ts = a:context.buffer.tabstop
-  let indent = substitute(matchstr(line, '^\s*'), '\t', repeat(' ', ts), 'g')
-  return strlen(indent) / sw + 1
+function! unite#sources#outline#util#get_indent_level(...)
+  return call(s:Util.get_indent_level, a:000)
 endfunction
 
-function! unite#sources#outline#util#get_comment_heading_level(context, lnum, ...)
-  let line = a:context.lines[a:lnum]
-  if line =~ '^\s'
-    let level =  (a:0 ? a:1 : unite#sources#outline#util#get_indent_level(a:context, a:lnum) + 3)
-  else
-    let level = (strlen(substitute(line, '\s*', '', 'g')) > 40 ? 2 : 3)
-    let level -= (line =~ '=')
-  endif
-  return level
+function! unite#sources#outline#util#get_comment_heading_level(...)
+  return call(s:Util.get_comment_heading_level, a:000)
 endfunction
 
 "-----------------------------------------------------------------------------
 " Matching
 
-" unite#sources#outline#util#join_to( {context}, {lnum}, {pattern} [, {limit}])
-"
-function! unite#sources#outline#util#join_to(context, lnum, pattern, ...)
-  let lines = a:context.lines
-  let limit = (a:0 ? a:1 : 3)
-  if limit < 0
-    return s:join_to_backward(lines, a:lnum, a:pattern, limit * -1)
-  endif
-  let lnum = a:lnum
-  let limit = min([a:lnum + limit, len(lines) - 1])
-  while lnum <= limit
-    let line = lines[lnum]
-    if line =~# a:pattern
-      break
-    endif
-    let lnum += 1
-  endwhile
-  return join(lines[a:lnum : lnum], "\n")
+function! unite#sources#outline#util#join_to(...)
+  return call(s:Util.join_to, a:000)
 endfunction
 
-function! s:join_to_backward(context, lnum, pattern, limit)
-  let lines = a:context.lines
-  let limit = max(1, a:lnum - a:limit])
-  while lnum > 0
-    let line = lines[lnum]
-    if line =~# a:pattern
-      break
-    endif
-    let lnum -= 1
-  endwhile
-  return join(lines[lnum : a:lnum], "\n")
+function! unite#sources#outline#util#join_to_rparen(...)
+  return call(s:Util.join_to_rparen, a:000)
 endfunction
 
-function! unite#sources#outline#util#join_to_rparen(context, lnum, ...)
-  let limit = (a:0 ? a:1 : 3)
-  let line = unite#sources#outline#util#join_to(a:context, a:lnum, ')', limit)
-  let line = substitute(line, "\\s*\n\\s*", ' ', 'g')
-  let line = substitute(line, ')\zs.*$', '', '')
-  return line
+function! unite#sources#outline#util#neighbor_match(...)
+  return call(s:Util.neighbor_match, a:000)
 endfunction
 
-" unite#sources#outline#util#neighbor_match(
-"   {context}, {lnum}, {pattern} [, {range} [, {exclusive}])
-"
-function! unite#sources#outline#util#neighbor_match(context, lnum, pattern, ...)
-  let lines = a:context.lines
-  let range = get(a:000, 0, 1)
-  let exclusive = !!get(a:000, 1, 0)
-  if type(range) == type([])
-    let [prev, next] = range
-  else
-    let [prev, next] = [range, range]
-  endif
-  let [bwd_range, fwd_range] = s:neighbor_ranges(a:context, a:lnum, prev, next, exclusive)
-  for lnum in bwd_range
-    if lines[lnum] =~# a:pattern
-      return 1
-    endif
-  endfor
-  for lnum in fwd_range
-    if lines[lnum] =~# a:pattern
-      return 1
-    endif
-  endfor
-  return 0
+function! unite#sources#outline#util#neighbor_matchstr(...)
+  return call(s:Util.neighbor_matchstr, a:000)
 endfunction
 
-function! s:neighbor_ranges(context, lnum, prev, next, exclusive)
-  let max_lnum = len(a:context.lines) - 1
-  let bwd_range = range(max([1, a:lnum - a:prev]), max([1, a:lnum - a:exclusive]))
-  let fwd_range = range(min([a:lnum + a:exclusive, max_lnum]), min([a:lnum + a:next, max_lnum]))
-  return [bwd_range, fwd_range]
-endfunction
-
-" unite#sources#outline#util#neighbor_matchstr(
-"   {context}, {lnum}, {pattern} [, {range} [, {exclusive}])
-"
-function! unite#sources#outline#util#neighbor_matchstr(context, lnum, pattern, ...)
-  let lines = a:context.lines
-  let range = get(a:000, 0, 1)
-  let exclusive = !!get(a:000, 1, 0)
-  if type(range) == type([])
-    let [prev, next] = range
-  else
-    let [prev, next] = [range, range]
-  endif
-  let [bwd_range, fwd_range] = s:neighbor_ranges(a:context, a:lnum, prev, next, exclusive)
-  for lnum in bwd_range
-    let matched = matchstr(lines[lnum], a:pattern)
-    if !empty(matched)
-      return matched
-    endif
-  endfor
-  for lnum in fwd_range
-    let matched = matchstr(lines[lnum], a:pattern)
-    if !empty(matched)
-      return matched
-    endif
-  endfor
-  return ""
-endfunction
-
-let s:SHARED_PATTERNS = {
-      \ 'c': {
-      \   'heading-1': '^\s*\/\*\s*[-=*]\{10,}\s*$',
-      \   'header'   : ['^/\*', '\*/\s*$'],
-      \ },
-      \ 'cpp': {
-      \   'heading-1': '^\s*/[/*]\s*[-=/*]\{10,}\s*$',
-      \   'header'   : {
-      \     'leading': '^//',
-      \     'block'  : ['^/\*', '\*/\s*$'],
-      \   },
-      \ },
-      \ 'sh': {
-      \   'heading-1': '^\s*#\s*[-=#]\{10,}\s*$',
-      \   'header'   : '^#',
-      \ },
-      \}
-
-function! unite#sources#outline#util#shared_pattern(filetype, which)
-  return s:SHARED_PATTERNS[a:filetype][a:which]
+function! unite#sources#outline#util#shared_pattern(...)
+  return call(s:Util.shared_pattern, a:000)
 endfunction
 
 "-----------------------------------------------------------------------------
 " Path
 
-function! unite#sources#outline#util#normalize_path(path, ...)
-  let path = a:path | let sep = '/'
-  let do_shellescape = 0 | let do_iconv = 0
-
-  for opt in a:000
-    if opt =~ '^:'
-      let mods = opt
-      let path = fnamemodify(path, mods)
-    elseif opt =~# '^shell\%[escape]$'
-      let do_shellescape = 1
-    elseif opt =~# '^term\%[encoding]$'
-      let do_iconv = 1
-    elseif opt == '\'
-      let sep = '\'
-    endif
-  endfor
-
-  let path = substitute(path, '[/\\]', sep, 'g')
-
-  if do_shellescape
-    let path = unite#sources#outline#util#shellescape(path)
-  endif
-
-  if do_iconv && &termencoding != '' && &termencoding != &encoding
-    let path = iconv(path, &encoding, &termencoding)
-    if empty(path)
-      throw "unite-outline: iconv() from " . &encoding . " to " . &termencoding .
-            \ " failed for " . string(path)
-    endif
-  endif
-
-  return path
+function! unite#sources#outline#util#normalize_path(...)
+  return call(s:Util.normalize_path, a:000)
 endfunction
 
 "-----------------------------------------------------------------------------
 " Strings
 
-" unite#sources#outline#util#capitalize( {str} [, {flag}])
-"
-function! unite#sources#outline#util#capitalize(str, ...)
-  let flag = (a:0 ? a:1 : '')
-  return substitute(a:str, '\<\(\h\)\(\w\+\)\>', '\u\1\L\2', flag)
+function! unite#sources#outline#util#capitalize(...)
+  return call(s:Util.capitalize, a:000)
 endfunction
 
-" ported from:
-" Sample code from Programing Ruby, page 145
-"
-function! unite#sources#outline#util#nr2roman(nr)
-  if a:nr <= 0 || 4999 < a:nr
-    return string(a:nr)
-  endif
-  let factors = [
-        \ ["M", 1000], ["CM", 900], ["D",  500], ["CD", 400],
-        \ ["C",  100], ["XC",  90], ["L",   50], ["XL",  40],
-        \ ["X",   10], ["IX",   9], ["V",    5], ["IV",   4],
-        \ ["I",    1],
-        \]
-  let nr = a:nr
-  let roman = ""
-  for [code, factor] in factors
-    let cnt = nr / factor
-    let nr  = nr % factor
-    if cnt > 0
-      let roman .= repeat(code, cnt)
-    endif
-  endfor
-  return roman
+function! unite#sources#outline#util#nr2roman(...)
+  return call(s:Util.nr2roman, a:000)
 endfunction
 
-function! unite#sources#outline#util#shellescape(str)
-  if &shell =~? '^\%(cmd\%(\.exe\)\=\|command\.com\)\%(\s\|$\)'
-    return '"' . substitute(a:str, '"', '""', 'g') . '"'
-  else
-    return "'" . substitute(a:str, "'", "'\\\\''", 'g') . "'"
-  endif
+function! unite#sources#outline#util#shellescape(...)
+  return call(s:Util.shellescape, a:000)
 endfunction
 
 "-----------------------------------------------------------------------------
 " Misc
 
-function! unite#sources#outline#util#print_debug(msg)
-  if exists('g:unite_source_outline_debug') && g:unite_source_outline_debug
-    echomsg "unite-outline: " . a:msg
-  endif
+function! unite#sources#outline#util#print_debug(...)
+  return call(s:Util.print_debug, a:000)
 endfunction
 
-function! unite#sources#outline#util#print_progress(msg)
-  redraw
-  echon a:msg
+function! unite#sources#outline#util#print_progress(...)
+  return call(s:Util.print_progress, a:000)
 endfunction
 
-function! unite#sources#outline#util#sort_by_lnum(dicts)
-  return sort(a:dicts, 's:compare_by_lnum')
-endfunction
-function! s:compare_by_lnum(d1, d2)
-  let n1 = a:d1.lnum
-  let n2 = a:d2.lnum
-  return n1 == n2 ? 0 : n1 > n2 ? 1 : -1
+function! unite#sources#outline#util#sort_by_lnum(...)
+  return call(s:Util.sort_by_lnum, a:000)
 endfunction
 
-function! unite#sources#outline#util#_cpp_is_in_comment(heading_line, matched_line)
-  return ((a:matched_line =~ '^\s*//'  && a:heading_line =~ '^\s*//') ||
-        \ (a:matched_line =~ '^\s*/\*' && a:matched_line !~ '\*/\s*$'))
+function! unite#sources#outline#util#_cpp_is_in_comment(...)
+  return call(s:Util._cpp_is_in_comment, a:000)
 endfunction
 
 " vim: filetype=vim
