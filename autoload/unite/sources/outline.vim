@@ -40,8 +40,6 @@ let s:OUTLINE_INFO_PATH = [
       \ 'autoload/unite/sources/outline/defaults/',
       \ ]
 
-let s:outline_info_ftime = {}
-
 function! unite#sources#outline#get_outline_info(filetype, ...)
   let is_default = (a:0 ? a:1 : 0)
 
@@ -76,24 +74,13 @@ function! s:get_outline_info(filetype, is_default)
     let load_func  = substitute(substitute(path, '^autoload/', '', ''), '/', '#', 'g')
     let load_func .= substitute(filetype, '\.', '_', 'g') . '#outline_info'
     try
-      let outline_info = {load_func}()
+      call {load_func}()
     catch /^Vim\%((\a\+)\)\=:E117:/
       " E117: Unknown function:
       continue
     endtry
-    " If the outline info has been updated since the last time it was sourced,
-    " re-source and update it.
-    let oinfo_path = s:find_outline_info(filetype)
-    if !empty(oinfo_path)
-      let ftime = getftime(oinfo_path)
-      if has_key(s:outline_info_ftime, oinfo_path) && ftime > s:outline_info_ftime[oinfo_path]
-        source `=oinfo_path`
-        execute 'let outline_info = ' . load_funcall
-      endif
-      let s:outline_info_ftime[oinfo_path] = ftime
-    endif
-    call s:init_outline_info(outline_info)
-    return outline_info
+    call s:check_update(s:find_autoload_script(load_func))
+    return s:init_outline_info({load_func}())
   endfor
   return {}
 endfunction
@@ -106,12 +93,17 @@ function! s:resolve_filetype_alias(filetype)
   return a:filetype
 endfunction
 
-function! s:find_outline_info(filetype)
-  for path in s:OUTLINE_INFO_PATH
-    let oinfo_path = findfile(path . a:filetype . '.vim', &runtimepath)
-    if !empty(oinfo_path) | return oinfo_path | endif
-  endfor
-  return ""
+let s:ftime_table = {}
+
+function! s:check_update(path)
+  let path = fnamemodify(a:path, ':p')
+  let old_ftime = get(s:ftime_table, path, 0)
+  let new_ftime = getftime(path)
+  if new_ftime > old_ftime
+    source `=path`
+  endif
+  let s:ftime_table[path] = new_ftime
+  return (new_ftime > old_ftime)
 endfunction
 
 function! s:init_outline_info(outline_info)
@@ -164,6 +156,16 @@ function! s:init_heading_group_map(outline_info)
   let a:outline_info.heading_group_map = group_map
 endfunction
 
+function! s:find_outline_info(filetype, ...)
+  let filetype = substitute(a:filetype, '\.', '_', 'g')
+  let is_default = (a:0 ? a:1 : 0)
+  for path in (is_default ? s:OUTLINE_INFO_PATH[-1:] : s:OUTLINE_INFO_PATH)
+    let oinfo_path = findfile(path . filetype . '.vim', &runtimepath)
+    if !empty(oinfo_path) | return oinfo_path | endif
+  endfor
+  return ""
+endfunction
+
 function! unite#sources#outline#define_module(sid, name)
 
   " Original source from vital.vim
@@ -186,7 +188,13 @@ function! unite#sources#outline#define_module(sid, name)
 endfunction
 
 function! unite#sources#outline#get_module(name)
-  return unite#sources#outline#modules#{tolower(a:name)}#module()
+  let load_func = 'unite#sources#outline#modules#' . tolower(a:name) . '#module'
+  call s:check_update(s:find_autoload_script(load_func))
+  return {load_func}()
+endfunction
+
+function! s:find_autoload_script(funcname)
+  return findfile('autoload/' . join(split(a:funcname, '#')[:-2], '/') . '.vim', &runtimepath)
 endfunction
 
 function! unite#sources#outline#clear_cache()
