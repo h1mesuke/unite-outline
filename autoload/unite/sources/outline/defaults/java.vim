@@ -24,7 +24,7 @@ let s:outline_info = {
       \}
 
 function! s:outline_info.extract_headings(context)
-  let Ctags = unite#sources#outline#get_module('Ctags')
+  let Ctags = unite#sources#outline#import('Ctags')
   return Ctags.extract_headings(a:context)
 endfunction
 

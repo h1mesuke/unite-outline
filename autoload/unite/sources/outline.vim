@@ -187,8 +187,9 @@ function! unite#sources#outline#define_module(sid, name)
   return module
 endfunction
 
-function! unite#sources#outline#get_module(name)
-  let load_func = 'unite#sources#outline#modules#' . tolower(a:name) . '#module'
+function! unite#sources#outline#import(name)
+  let name = tolower(substitute(a:name, '\(\l\)\(\u\)', '\1_\2', 'g'))
+  let load_func = 'unite#sources#outline#modules#' . name . '#module'
   call s:check_update(s:find_autoload_script(load_func))
   return {load_func}()
 endfunction
@@ -198,7 +199,7 @@ function! s:find_autoload_script(funcname)
 endfunction
 
 function! unite#sources#outline#clear_cache()
-  let s:Cache = unite#sources#outline#get_module('s:Cache')
+  let s:Cache = unite#sources#outline#import('s:Cache')
   call s:Cache.clear()
 endfunction
 
@@ -265,8 +266,8 @@ let s:source = {
       \ }
 
 function! s:source.hooks.on_init(args, context)
-  let s:Cache = unite#sources#outline#get_module('Cache')
-  let s:Util  = unite#sources#outline#get_module('Util')
+  let s:Cache = unite#sources#outline#import('Cache')
+  let s:Util  = unite#sources#outline#import('Util')
 
   let s:heading_id = 1
   let s:context = {

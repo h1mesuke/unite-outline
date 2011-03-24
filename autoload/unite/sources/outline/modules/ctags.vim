@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-22
+" Updated : 2011-03-24
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -122,7 +122,7 @@ function! s:Ctags_extract_headings(context)
   let tags = s:get_tags(a:context)
   let num_tags = len(tags)
 
-  let Tree = unite#sources#outline#get_module('Tree')
+  let Tree = unite#sources#outline#import('Tree')
 
   let tree_root = {} | let scope_table = {}
   let tag_name_counter = {}
@@ -239,7 +239,7 @@ endfunction
 "-----------------------------------------------------------------------------
 
 function! s:get_SID()
-  return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_') - 0
+  return str2nr(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_'))
 endfunction
 
 function! s:find_exuberant_ctags()

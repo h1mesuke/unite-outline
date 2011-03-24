@@ -26,7 +26,7 @@
 " }}}
 "=============================================================================
 
-let s:Util = unite#sources#outline#get_module('Util')
+let s:Util = unite#sources#outline#import('Util')
 
 " NOTE: All of the functions in this file are obsolete now. If you need to use
 " any of them, please import Util module and call them via the module as

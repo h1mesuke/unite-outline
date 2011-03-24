@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-22
+" Updated : 2011-03-24
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -186,7 +186,7 @@ endfunction
 "-----------------------------------------------------------------------------
 
 function! s:get_SID()
-  return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_') - 0
+  return str2nr(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_'))
 endfunction
 
 let s:Cache = unite#sources#outline#define_module(s:get_SID(), 'Cache')
