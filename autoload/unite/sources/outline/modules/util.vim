@@ -44,7 +44,7 @@ endfunction
 function! s:Util_get_comment_heading_level(context, lnum, ...)
   let line = a:context.lines[a:lnum]
   if line =~ '^\s'
-    let level =  (a:0 ? a:1 : Util_get_indent_level(a:context, a:lnum) + 3)
+    let level =  (a:0 ? a:1 : s:Util_get_indent_level(a:context, a:lnum) + 3)
   else
     let level = (strlen(substitute(line, '\s*', '', 'g')) > 40 ? 2 : 3)
     let level -= (line =~ '=')
@@ -90,7 +90,7 @@ endfunction
 
 function! s:Util_join_to_rparen(context, lnum, ...)
   let limit = (a:0 ? a:1 : 3)
-  let line = Util_join_to(a:context, a:lnum, ')', limit)
+  let line = s:Util_join_to(a:context, a:lnum, ')', limit)
   let line = substitute(line, "\\s*\n\\s*", ' ', 'g')
   let line = substitute(line, ')\zs.*$', '', '')
   return line
@@ -200,7 +200,7 @@ function! s:Util_normalize_path(path, ...)
   let path = substitute(path, '[/\\]', sep, 'g')
 
   if do_shellescape
-    let path = Util_shellescape(path)
+    let path = s:Util_shellescape(path)
   endif
 
   if do_iconv && &termencoding != '' && &termencoding != &encoding
