@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-24
+" Updated : 2011-03-26
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -27,25 +27,25 @@
 "=============================================================================
 
 function! unite#sources#outline#modules#ctags#module()
-  return s:Ctags
+  return s:ctags
 endfunction
 
 function! s:Ctags_exists()
-  return !empty(s:Ctags.bin)
+  return !empty(s:ctags.bin)
 endfunction
 
 function! s:Ctags_has(filetype)
-  if !has_key(s:Ctags.langs, a:filetype)
+  if !has_key(s:ctags.langs, a:filetype)
     return 0
   else
-    let lang = s:Ctags.langs[a:filetype]
-    let ctags_out = unite#util#system(s:Ctags.bin . ' --list-languages')
+    let lang = s:ctags.langs[a:filetype]
+    let ctags_out = unite#util#system(s:ctags.bin . ' --list-languages')
     return index(split(ctags_out, "\<NL>"), lang.name, 1) >= 0
   endif
 endfunction
 
 function! s:get_tags(context)
-  let lang = s:Ctags.langs[a:context.buffer.major_filetype]
+  let lang = s:ctags.langs[a:context.buffer.major_filetype]
   let path = a:context.buffer.path
 
   let opts  = ' -f - --excmd=number --fields=afiKmsSzt --sort=no '
@@ -54,7 +54,7 @@ function! s:get_tags(context)
 
   let path = unite#sources#outline#util#normalize_path(path, 'shell')
 
-  let ctags_out = unite#util#system(s:Ctags.bin . opts . path)
+  let ctags_out = unite#util#system(s:ctags.bin . opts . path)
   let status = unite#util#get_last_status()
 
   if status
@@ -116,7 +116,7 @@ function! s:Ctags_extract_headings(context)
     return []
   endif
 
-  let lang = s:Ctags.langs[a:context.buffer.filetype]
+  let lang = s:ctags.langs[a:context.buffer.filetype]
   let scope_kinds_pattern = '^\%(' . join(lang.scope_kinds, '\|') . '\)$'
 
   let tags = s:get_tags(a:context)
@@ -263,9 +263,9 @@ function! s:find_exuberant_ctags()
   return ''
 endfunction 
 
-let s:Ctags = unite#sources#outline#define_module(s:get_SID(), 'Ctags')
-let s:Ctags.bin = s:find_exuberant_ctags()
-let s:Ctags.langs = {}
+let s:ctags = unite#sources#outline#define_module(s:get_SID(), 'Ctags')
+let s:ctags.bin = s:find_exuberant_ctags()
+let s:ctags.langs = {}
 
 " C/C++
 "
@@ -284,13 +284,13 @@ let s:Ctags.langs = {}
 "   v  variable definitions
 "   x  external and forward variable declarations
 "
-let s:Ctags.langs.cpp = {
+let s:ctags.langs.cpp = {
       \ 'name': 'C++',
       \ 'ctags_options': ' --c++-kinds=cdfgnstu ',
       \ 'scope_kinds'  : ['namespace', 'class', 'struct'],
       \ 'scope_delim'  : '::',
       \ }
-function! s:Ctags.langs.cpp.create_heading(tag, context)
+function! s:ctags.langs.cpp.create_heading(tag, context)
   let line = a:context.lines[a:tag.lnum]
   let heading = {
         \ 'word' : a:tag.name,
@@ -322,8 +322,8 @@ function! s:Ctags.langs.cpp.create_heading(tag, context)
   return ignore ? {} : heading
 endfunction
 
-let s:Ctags.langs.c = copy(s:Ctags.langs.cpp)
-call extend(s:Ctags.langs.c, { 'name': 'C', 'ctags_options': ' --c-kinds=cdfgnstu ' }, 'force')
+let s:ctags.langs.c = copy(s:ctags.langs.cpp)
+call extend(s:ctags.langs.c, { 'name': 'C', 'ctags_options': ' --c-kinds=cdfgnstu ' }, 'force')
 
 " Java
 "
@@ -336,7 +336,7 @@ call extend(s:Ctags.langs.c, { 'name': 'C', 'ctags_options': ' --c-kinds=cdfgnst
 "  [m] methods
 "  [p] packages
 "
-let s:Ctags.langs.java = {
+let s:ctags.langs.java = {
       \ 'name': 'Java',
       \ 'ctags_options': ' --java-kinds=cgimp ',
       \ 'scope_kinds'  : ['interface', 'class'],
@@ -351,13 +351,13 @@ let s:Ctags.langs.java = {
 "   v  variables
 "   i  imports
 "
-let s:Ctags.langs.python = {
+let s:ctags.langs.python = {
       \ 'name': 'Python',
       \ 'ctags_options': ' --python-kinds=cfm ',
       \ 'scope_kinds'  : ['function', 'class', 'member'],
       \ 'scope_delim'  : '.',
       \ }
-function! s:Ctags.langs.python.create_heading(tag, context)
+function! s:ctags.langs.python.create_heading(tag, context)
   let heading = {
         \ 'word' : a:tag.name,
         \ 'type' : a:tag.kind,

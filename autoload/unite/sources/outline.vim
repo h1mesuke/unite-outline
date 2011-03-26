@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-24
+" Updated : 2011-03-26
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -166,12 +166,12 @@ function! s:find_outline_info(filetype, ...)
   return ""
 endfunction
 
-function! unite#sources#outline#define_module(sid, name)
+function! unite#sources#outline#define_module(sid, prefix)
 
   " Original source from vital.vim
   " https://github.com/ujihisa/vital.vim
   "
-  let prefix = '<SNR>' . a:sid . '_' . a:name . '_'
+  let prefix = '<SNR>' . a:sid . '_' . a:prefix . '_'
   redir => funcs
     silent! function
   redir END
@@ -199,8 +199,8 @@ function! s:find_autoload_script(funcname)
 endfunction
 
 function! unite#sources#outline#clear_cache()
-  let s:Cache = unite#sources#outline#import('s:Cache')
-  call s:Cache.clear()
+  let s:cache = unite#sources#outline#import('cache')
+  call s:cache.clear()
 endfunction
 
 "-----------------------------------------------------------------------------
@@ -266,8 +266,8 @@ let s:source = {
       \ }
 
 function! s:source.hooks.on_init(args, context)
-  let s:Cache = unite#sources#outline#import('Cache')
-  let s:Util  = unite#sources#outline#import('Util')
+  let s:cache = unite#sources#outline#import('cache')
+  let s:util  = unite#sources#outline#import('util')
 
   let s:heading_id = 1
   let s:context = {
@@ -308,8 +308,8 @@ function! s:source.gather_candidates(args, context)
     let is_force = ((len(a:args) > 0 && a:args[0] == '!') || a:context.is_redraw)
 
     let path = s:context.buffer.path
-    if s:Cache.has(path) && !is_force
-      return s:Cache.get(path)
+    if s:cache.has(path) && !is_force
+      return s:cache.get(path)
     endif
 
     let filetype = s:context.buffer.filetype
@@ -361,16 +361,16 @@ function! s:source.gather_candidates(args, context)
 
     let is_volatile = has_key(outline_info, 'is_volatile') && outline_info.is_volatile
     if !is_volatile && (num_lines > 100)
-      let should_serialize = (num_lines > g:unite_source_outline_cache_limit)
-      call s:Cache.set(path, candidates, should_serialize)
-    elseif s:Cache.has(path)
-      call s:Cache.remove(path)
+      let do_serialize = (num_lines > g:unite_source_outline_cache_limit)
+      call s:cache.set(path, candidates, do_serialize)
+    elseif s:cache.has(path)
+      call s:cache.remove(path)
     endif
 
     if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
       let used_time = s:get_time() - start_time
       let used_time_100l = used_time * (str2float("100") / num_lines)
-      call s:Util.print_progress("unite-outline: used=" . string(used_time) . "s, "
+      call s:util.print_progress("unite-outline: used=" . string(used_time) . "s, "
             \ . "100l=". string(used_time_100l) . "s")
     endif
 
@@ -506,13 +506,13 @@ function! unite#sources#outline#extract_headings()
               \ "unite-outline: Too many headings, the extraction was interrupted.")
         break
       else
-        call s:Util.print_progress("Extracting headings..." . s:lnum * 100 / num_lines . "%")
+        call s:util.print_progress("Extracting headings..." . s:lnum * 100 / num_lines . "%")
       endif
     endif
 
     let s:lnum += 1
   endwhile
-  call s:Util.print_progress("Extracting headings...done.")
+  call s:util.print_progress("Extracting headings...done.")
 
   return headings
 endfunction

@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-20
+" Updated : 2011-03-26
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -27,7 +27,7 @@
 "=============================================================================
 
 function! unite#sources#outline#modules#tree#module()
-  return s:Tree
+  return s:tree
 endfunction
 
 function! s:Tree_append_child(parent, child)
@@ -107,9 +107,9 @@ endfunction
 "-----------------------------------------------------------------------------
 
 function! s:get_SID()
-  return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_') - 0
+  return str2nr(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_'))
 endfunction
 
-let s:Tree = unite#sources#outline#define_module(s:get_SID(), 'Tree')
+let s:tree = unite#sources#outline#make_module(s:get_SID(), 'Tree')
 
 " vim: filetype=vim

@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-24
+" Updated : 2011-03-26
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -27,7 +27,7 @@
 "=============================================================================
 
 function! unite#sources#outline#modules#cache#module()
-  return s:Cache
+  return s:cache
 endfunction
 
 function! s:Cache_has(path) dict
@@ -39,27 +39,27 @@ function! s:exists_cache_file(path)
 endfunction
 
 function! s:check_cache_dir()
-  if isdirectory(s:Cache.dir)
+  if isdirectory(s:cache.dir)
     return 1
   else
     try
-      call mkdir(s:Cache.dir, 'p')
+      call mkdir(s:cache.dir, 'p')
     catch
       call unite#util#print_error("unite-outline: Couldn't create the cache directory.")
     endtry
-    return isdirectory(s:Cache.dir)
+    return isdirectory(s:cache.dir)
   endif
 endfunction
 
 function! s:cache_file_path(path)
-    return s:Cache.dir . '/' . s:encode_file_path(a:path)
+    return s:cache.dir . '/' . s:encode_file_path(a:path)
 endfunction
 
 " Original source from Shougo' neocomplcache
 " https://github.com/Shougo/neocomplcache
 "
 function! s:encode_file_path(path)
-  if len(s:Cache.dir) + len(a:path) < 150
+  if len(s:cache.dir) + len(a:path) < 150
     " encode the path to a base name
     return substitute(substitute(a:path, ':', '=-', 'g'), '[/\\]', '=+', 'g')
   else
@@ -158,7 +158,7 @@ function! s:Cache_clear()
 endfunction
 
 function! s:cleanup_old_cache_files()
-  let cache_files = split(globpath(s:Cache.dir, '*'), "\<NL>")
+  let cache_files = split(globpath(s:cache.dir, '*'), "\<NL>")
   let num_deletes = len(cache_files) - g:unite_source_outline_cache_buffers
   if num_deletes > 0
     call map(cache_files, '[v:val, getftime(v:val)]')
@@ -171,7 +171,7 @@ function! s:cleanup_old_cache_files()
 endfunction
 
 function! s:cleanup_all_cache_files()
-  let cache_files = split(globpath(s:Cache.dir, '*'), "\<NL>")
+  let cache_files = split(globpath(s:cache.dir, '*'), "\<NL>")
   for path in cache_files
     call s:remove_file(path)
   endfor
@@ -189,9 +189,9 @@ function! s:get_SID()
   return str2nr(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_'))
 endfunction
 
-let s:Cache = unite#sources#outline#define_module(s:get_SID(), 'Cache')
+let s:cache = unite#sources#outline#define_module(s:get_SID(), 'Cache')
 
-let s:Cache.dir  = g:unite_data_directory . '/.outline'
-let s:Cache.data = {}
+let s:cache.dir  = g:unite_data_directory . '/.outline'
+let s:cache.data = {}
 
 " vim: filetype=vim

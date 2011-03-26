@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-24
+" Updated : 2011-03-26
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -27,7 +27,7 @@
 "=============================================================================
 
 function! unite#sources#outline#modules#util#module()
-  return s:Util
+  return s:util
 endfunction
 
 "-----------------------------------------------------------------------------
@@ -178,7 +178,7 @@ function! s:Util_shared_pattern(filetype, which)
 endfunction
 
 "-----------------------------------------------------------------------------
-" Path
+" Paths
 
 function! s:Util_normalize_path(path, ...)
   let path = a:path | let sep = '/'
@@ -291,6 +291,6 @@ function! s:get_SID()
   return str2nr(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_'))
 endfunction
 
-let s:Util = unite#sources#outline#define_module(s:get_SID(), 'Util')
+let s:util = unite#sources#outline#define_module(s:get_SID(), 'Util')
 
 " vim: filetype=vim
