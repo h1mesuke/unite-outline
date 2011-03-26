@@ -27,6 +27,7 @@
 "=============================================================================
 
 function! unite#sources#outline#modules#cache#module()
+  let s:util = unite#sources#outline#import('util')
   return s:cache
 endfunction
 
@@ -85,10 +86,10 @@ function! s:load_cache_file(path)
   try
     let cache_file = s:cache_file_path(a:path)
     let dumped_data = readfile(cache_file)[0]
-    call unite#sources#outline#util#print_debug("[LOADED] cache file: " . cache_file)
+    call s:util.print_debug("[LOADED] cache file: " . cache_file)
     " update the timestamp of the file
     call writefile([dumped_data], cache_file)
-    call unite#sources#outline#util#print_debug("[TOUCHED] cache file: " . cache_file)
+    call s:util.print_debug("[TOUCHED] cache file: " . cache_file)
     sandbox let data = eval(dumped_data)
     return data
   catch
@@ -97,9 +98,9 @@ function! s:load_cache_file(path)
   endtry
 endfunction
 
-function! s:Cache_set(path, cands, should_serialize) dict
+function! s:Cache_set(path, candidates, should_serialize) dict
   let self.data[a:path] = {
-        \ 'candidates': a:cands,
+        \ 'candidates': a:candidates,
         \ 'touched'   : localtime(),
         \ }
   let cache_items = items(self.data)
@@ -124,7 +125,7 @@ function! s:save_cache_file(path, data)
     let cache_file = s:cache_file_path(a:path)
     let dumped_data = string(a:data)
     call writefile([dumped_data], cache_file)
-    call unite#sources#outline#util#print_debug("[SAVED] cache file: " . cache_file)
+    call s:util.print_debug("[SAVED] cache file: " . cache_file)
   catch
     call unite#util#print_error("unite-outline: Couldn't save the cache to: " . cache_file)
     return
@@ -142,7 +143,7 @@ endfunction
 function! s:remove_file(path)
   try
     call delete(a:path)
-    call unite#sources#outline#util#print_debug("[DELETED] cache file: " . a:path)
+    call s:util.print_debug("[DELETED] cache file: " . a:path)
   catch
     call unite#util#print_error("unite-outline: Couldn't delete the cache file: " . a:path)
   endtry

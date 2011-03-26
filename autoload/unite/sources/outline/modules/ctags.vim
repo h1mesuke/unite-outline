@@ -27,6 +27,7 @@
 "=============================================================================
 
 function! unite#sources#outline#modules#ctags#module()
+  let s:util = unite#sources#outline#import('util')
   return s:ctags
 endfunction
 
@@ -52,7 +53,7 @@ function! s:get_tags(context)
   let opts .= ' --language-force=' . lang.name
   let opts .= lang.ctags_options
 
-  let path = unite#sources#outline#util#normalize_path(path, 'shell')
+  let path = s:util.path.normalize(path, 'shell')
 
   let ctags_out = unite#util#system(s:ctags.bin . opts . path)
   let status = unite#util#get_last_status()
@@ -172,20 +173,19 @@ function! s:Ctags_extract_headings(context)
     endif
 
     if idx % 50 == 0
-      call unite#sources#outline#util#print_progress(
-            \ "Extracting headings..." . idx * 100 / num_tags . "%")
+      call s:util.print_progress("Extracting headings..." . idx * 100 / num_tags . "%")
     endif
 
     let idx += 1
   endwhile
-  call unite#sources#outline#util#print_progress("Extracting headings...done.")
+  call s:util.print_progress("Extracting headings...done.")
 
   " merge
   let is_toplevel = '!has_key(v:val, "parent")'
   for heading in filter(values(scope_table), is_toplevel)
     call Tree.append_child(tree_root, heading)
   endfor
-  call unite#sources#outline#util#sort_by_lnum(get(tree_root, 'children', []))
+  call s:util.list.sort_by_lnum(get(tree_root, 'children', []))
 
   return tree_root
 endfunction
@@ -209,7 +209,7 @@ function! s:create_heading(tag, context)
 endfunction
 
 function! s:get_param_list(context, lnum)
-  let line = unite#sources#outline#util#join_to_rparen(a:context, a:lnum)
+  let line = s:util.join_to_rparen(a:context, a:lnum)
   return matchstr(line, '([^)]*)')
 endfunction
 

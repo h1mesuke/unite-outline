@@ -178,9 +178,50 @@ function! s:Util_shared_pattern(filetype, which)
 endfunction
 
 "-----------------------------------------------------------------------------
+" List
+
+function! s:List_sort_by_lnum(dicts)
+  return sort(a:dicts, 's:compare_by_lnum')
+endfunction
+function! s:compare_by_lnum(d1, d2)
+  let n1 = a:d1.lnum
+  let n2 = a:d2.lnum
+  return n1 == n2 ? 0 : n1 > n2 ? 1 : -1
+endfunction
+
+function! s:List_split(list, sep)
+  let result = []
+  let sub_list = []
+  for value in a:list
+    if value == a:sep
+      call add(result, sub_list)
+      let sub_list = []
+    else
+      call add(sub_list, value)
+    endif
+  endfor
+  call add(result, sub_list)
+  return result
+endfunction
+
+function! s:List_join(lists, sep)
+  let result = []
+  for sub_list in a:lists
+    let result += sub_list
+    let result += [a:sep]
+  endfor
+  call remove(result, -1)
+  return result
+endfunction
+
+function! s:List_zip(list1, list2)
+  return map(range(len(a:list1)), '[a:list1[v:val], a:list2[v:val]]')
+endfunction
+
+"-----------------------------------------------------------------------------
 " Paths
 
-function! s:Util_normalize_path(path, ...)
+function! s:Path_normalize(path, ...)
   let path = a:path | let sep = '/'
   let do_shellescape = 0 | let do_iconv = 0
 
@@ -219,7 +260,7 @@ endfunction
 
 " capitalize( {str} [, {flag}])
 "
-function! s:Util_capitalize(str, ...)
+function! s:Str_capitalize(str, ...)
   let flag = (a:0 ? a:1 : '')
   return substitute(a:str, '\<\(\h\)\(\w\+\)\>', '\u\1\L\2', flag)
 endfunction
@@ -227,7 +268,7 @@ endfunction
 " ported from:
 " Sample code from Programing Ruby, page 145
 "
-function! s:Util_nr2roman(nr)
+function! s:Str_nr2roman(nr)
   if a:nr <= 0 || 4999 < a:nr
     return string(a:nr)
   endif
@@ -249,7 +290,7 @@ function! s:Util_nr2roman(nr)
   return roman
 endfunction
 
-function! s:Util_shellescape(str)
+function! s:Str_shellescape(str)
   if &shell =~? '^\%(cmd\%(\.exe\)\=\|command\.com\)\%(\s\|$\)'
     return '"' . substitute(a:str, '"', '""', 'g') . '"'
   else
@@ -271,15 +312,6 @@ function! s:Util_print_progress(msg)
   echon a:msg
 endfunction
 
-function! s:Util_sort_by_lnum(dicts)
-  return sort(a:dicts, 's:compare_by_lnum')
-endfunction
-function! s:compare_by_lnum(d1, d2)
-  let n1 = a:d1.lnum
-  let n2 = a:d2.lnum
-  return n1 == n2 ? 0 : n1 > n2 ? 1 : -1
-endfunction
-
 function! s:Util__cpp_is_in_comment(heading_line, matched_line)
   return ((a:matched_line =~ '^\s*//'  && a:heading_line =~ '^\s*//') ||
         \ (a:matched_line =~ '^\s*/\*' && a:matched_line !~ '\*/\s*$'))
@@ -290,7 +322,14 @@ endfunction
 function! s:get_SID()
   return str2nr(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_'))
 endfunction
+let SID = s:get_SID()
 
-let s:util = unite#sources#outline#make_module(s:get_SID(), 'Util')
+let s:util = unite#sources#outline#make_module(SID, 'Util')
+
+" bind submodules
+let s:util.list = unite#sources#outline#make_module(SID, 'List')
+let s:util.path = unite#sources#outline#make_module(SID, 'Path')
+let s:util.str  = unite#sources#outline#make_module(SID, 'Str' )
+unlet SID
 
 " vim: filetype=vim

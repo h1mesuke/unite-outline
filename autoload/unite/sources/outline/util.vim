@@ -28,9 +28,9 @@
 
 let s:util = unite#sources#outline#import('Util')
 
-" NOTE: All of the functions in this file are obsolete now. If you need to use
-" any of them, please import util module and call them via the module as
-" Dictionary functions.
+" NOTE: All of the functions in this file are obsolete now. If you need any of
+" them, please import util module and call them via the module as Dictionary
+" functions.
 
 "-----------------------------------------------------------------------------
 " Headings
@@ -70,22 +70,22 @@ endfunction
 " Paths
 
 function! unite#sources#outline#util#normalize_path(...)
-  return call(s:util.normalize_path, a:000)
+  return call(s:util.path.normalize, a:000)
 endfunction
 
 "-----------------------------------------------------------------------------
 " Strings
 
 function! unite#sources#outline#util#capitalize(...)
-  return call(s:util.capitalize, a:000)
+  return call(s:util.str.capitalize, a:000)
 endfunction
 
 function! unite#sources#outline#util#nr2roman(...)
-  return call(s:util.nr2roman, a:000)
+  return call(s:util.str.nr2roman, a:000)
 endfunction
 
 function! unite#sources#outline#util#shellescape(...)
-  return call(s:util.shellescape, a:000)
+  return call(s:util.str.shellescape, a:000)
 endfunction
 
 "-----------------------------------------------------------------------------
@@ -100,7 +100,7 @@ function! unite#sources#outline#util#print_progress(...)
 endfunction
 
 function! unite#sources#outline#util#sort_by_lnum(...)
-  return call(s:util.sort_by_lnum, a:000)
+  return call(s:util.list.sort_by_lnum, a:000)
 endfunction
 
 function! unite#sources#outline#util#_cpp_is_in_comment(...)
