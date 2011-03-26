@@ -121,10 +121,10 @@ function! s:Cache_set(path, candidates, should_serialize) dict
   let cache_items = items(self.data)
   let num_dels = len(cache_items) - g:unite_source_outline_cache_buffers
   if num_dels > 0
-    call map(cache_items, '[v:key, v:val.timestamp]')
-    call sort(cache_items, 's:compare_timestamp')
-    let delete_keys = map(cache_items[0 : num_dels - 1], 'v:val[0]')
-    for path in delete_keys
+    call map(cache_items, '[v:val[0], v:val[1].touched]')
+    call sort_by_ftime(cache_items)
+    let del_buffs = map(cache_items[0 : num_dels - 1], 'v:val[0]')
+    for path in del_buffs
       unlet self.data[path]
     endfor
   endif
@@ -201,7 +201,7 @@ function! s:cleanup_cache_files(...)
     let num_dels = len(cache_files) - g:unite_source_outline_cache_buffers
     if num_dels > 0
       call map(cache_files, '[v:val, getftime(v:val)]')
-      call sort(cache_files, 's:compare_timestamp')
+      call sort_by_ftime(cache_files)
       let del_files = map(cache_files[0 : num_dels - 1], 'v:val[0]')
     else
       return
@@ -220,7 +220,10 @@ function! s:cleanup_all_cache_files()
   call s:cleanup_cache_files(1)
 endfunction
 
-function! s:compare_timestamp(pair1, pair2)
+function! s:sort_by_ftime(zipped_list)
+  return sort(zipped_list, 's:compare_2nd')
+endfunction
+function! s:compare_2nd(pair1, pair2)
   let t1 = a:pair1[1]
   let t2 = a:pair2[1]
   return t1 == t2 ? 0 : t1 > t2 ? 1 : -1
