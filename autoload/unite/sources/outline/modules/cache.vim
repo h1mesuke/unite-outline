@@ -77,7 +77,7 @@ function! s:Cache_get(path) dict
   if !has_key(self.data, a:path) && s:exists_cache_file(a:path)
     try
       let self.data[a:path] = s:load_cache_file(a:path)
-    catch
+    catch /^unite-outline:/
       call unite#util#print_error(v:exception)
       return []
     endtry
@@ -88,23 +88,26 @@ function! s:Cache_get(path) dict
 endfunction
 
 function! s:load_cache_file(path)
-  try
-    " load
-    let cache_file = s:cache_file_path(a:path)
-    let dumped_data = readfile(cache_file)[0]
+  let cache_file = s:cache_file_path(a:path)
+
+  " load
+  let lines = readfile(cache_file)
+  if !empty(lines)
+    let dumped_data = lines[0]
     call s:util.print_debug("[LOADED] cache file: " . cache_file)
-
-    " touch; update the timestamp
-    call writefile([dumped_data], cache_file)
-    call s:util.print_debug("[TOUCHED] cache file: " . cache_file)
-
-    " deserialize
-    sandbox let data = eval(dumped_data)
-
-    return data
-  catch
+  else
     throw "unite-outline: Couldn't load the cache file: " . cache_file
-  endtry
+  endif
+
+  " touch; update the timestamp
+  if writefile([dumped_data], cache_file) == 0
+    call s:util.print_debug("[TOUCHED] cache file: " . cache_file)
+  endif
+
+  " deserialize
+  sandbox let data = eval(dumped_data)
+
+  return data
 endfunction
 
 function! s:Cache_set(path, candidates, should_serialize) dict
@@ -130,22 +133,23 @@ function! s:Cache_set(path, candidates, should_serialize) dict
     elseif s:exists_cache_file(a:path)
       call s:remove_file(s:cache_file_path(a:path))
     endif
-  catch
+  catch /^unite-outline:/
     call unite#util#print_error(v:exception)
   endtry
 endfunction
 
 function! s:save_cache_file(path, data)
-  try
     let cache_file = s:cache_file_path(a:path)
+
+    " serialize
     let dumped_data = string(a:data)
 
     " save
-    call writefile([dumped_data], cache_file)
-    call s:util.print_debug("[SAVED] cache file: " . cache_file)
-  catch
-    throw "unite-outline: Couldn't save the cache to: " . cache_file
-  endtry
+    if writefile([dumped_data], cache_file) == 0
+      call s:util.print_debug("[SAVED] cache file: " . cache_file)
+    else
+      throw "unite-outline: Couldn't save the cache to: " . cache_file
+    endif
 
   call s:cleanup_cache_files()
 endfunction
@@ -155,19 +159,18 @@ function! s:Cache_remove(path) dict
   if s:exists_cache_file(a:path)
     try
       call s:remove_file(s:cache_file_path(a:path))
-    catch
+    catch /^unite-outline:/
       call unite#util#print_error(v:exception)
     endtry
   endif
 endfunction
 
 function! s:remove_file(path)
-  try
-    call delete(a:path)
-    call s:util.print_debug("[DELETED] cache file: " . a:path)
-  catch
-    throw "unite-outline: Couldn't delete the cache file: " . a:path
-  endtry
+    if delete(a:path) == 0
+      call s:util.print_debug("[DELETED] cache file: " . a:path)
+    else
+      throw "unite-outline: Couldn't delete the cache file: " . a:path
+    endif
 endfunction
 
 function! s:Cache_clear()
@@ -198,7 +201,7 @@ function! s:cleanup_cache_files(...)
   for path in del_files
     try
       call s:remove_file(path)
-    catch
+    catch /^unite-outline:/
       call unite#util#print_error(v:exception)
     endtry
   endfor
