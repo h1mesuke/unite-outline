@@ -27,6 +27,7 @@
 "=============================================================================
 
 function! unite#sources#outline#modules#cache#module()
+  let s:tree = unite#sources#outline#import('tree')
   let s:util = unite#sources#outline#import('util')
   return s:cache
 endfunction
@@ -106,6 +107,7 @@ function! s:load_cache_file(path)
 
   " deserialize
   sandbox let data = eval(dumped_data)
+  call s:tree.convert_id_to_ref(data.candidates)
 
   return data
 endfunction
@@ -140,6 +142,13 @@ endfunction
 
 function! s:save_cache_file(path, data)
     let cache_file = s:cache_file_path(a:path)
+
+    " NOTE: Built-in string() function can't dump an object that has any
+    " cyclic references because of E724, nested too deep error; therefore, we
+    " need to substitute direct references with id numbers before
+    " serialization.
+    "
+    call s:tree.convert_ref_to_id(a:data.candidates)
 
     " serialize
     let dumped_data = string(a:data)
