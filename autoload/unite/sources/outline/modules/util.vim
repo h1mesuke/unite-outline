@@ -241,7 +241,7 @@ function! s:Path_normalize(path, ...)
   let path = substitute(path, '[/\\]', sep, 'g')
 
   if do_shellescape
-    let path = s:Util_shellescape(path)
+    let path = s:Str_shellescape(path)
   endif
 
   if do_iconv && &termencoding != '' && &termencoding != &encoding
