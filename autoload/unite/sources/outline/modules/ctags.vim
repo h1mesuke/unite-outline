@@ -263,7 +263,7 @@ function! s:find_exuberant_ctags()
   return ''
 endfunction 
 
-let s:ctags = unite#sources#outline#define_module(s:get_SID(), 'Ctags')
+let s:ctags = unite#sources#outline#make_module(s:get_SID(), 'Ctags')
 let s:ctags.bin = s:find_exuberant_ctags()
 let s:ctags.langs = {}
 

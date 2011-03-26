@@ -189,7 +189,7 @@ function! s:get_SID()
   return str2nr(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_'))
 endfunction
 
-let s:cache = unite#sources#outline#define_module(s:get_SID(), 'Cache')
+let s:cache = unite#sources#outline#make_module(s:get_SID(), 'Cache')
 
 let s:cache.dir  = g:unite_data_directory . '/.outline'
 let s:cache.data = {}

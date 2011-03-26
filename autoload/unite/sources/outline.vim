@@ -166,7 +166,7 @@ function! s:find_outline_info(filetype, ...)
   return ""
 endfunction
 
-function! unite#sources#outline#define_module(sid, prefix)
+function! unite#sources#outline#make_module(sid, prefix)
 
   " Original source from vital.vim
   " https://github.com/ujihisa/vital.vim

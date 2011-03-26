@@ -291,6 +291,6 @@ function! s:get_SID()
   return str2nr(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_'))
 endfunction
 
-let s:util = unite#sources#outline#define_module(s:get_SID(), 'Util')
+let s:util = unite#sources#outline#make_module(s:get_SID(), 'Util')
 
 " vim: filetype=vim
