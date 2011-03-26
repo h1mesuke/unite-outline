@@ -75,7 +75,12 @@ endfunction
 
 function! s:Cache_get(path) dict
   if !has_key(self.data, a:path) && s:exists_cache_file(a:path)
-    let self.data[a:path] = s:load_cache_file(a:path)
+    try
+      let self.data[a:path] = s:load_cache_file(a:path)
+    catch
+      call unite#util#print_error(v:exception)
+      return []
+    endtry
   endif
   let item = self.data[a:path]
   let item.touched = localtime()
@@ -84,17 +89,21 @@ endfunction
 
 function! s:load_cache_file(path)
   try
+    " load
     let cache_file = s:cache_file_path(a:path)
     let dumped_data = readfile(cache_file)[0]
     call s:util.print_debug("[LOADED] cache file: " . cache_file)
-    " update the timestamp of the file
+
+    " touch; update the timestamp
     call writefile([dumped_data], cache_file)
     call s:util.print_debug("[TOUCHED] cache file: " . cache_file)
+
+    " deserialize
     sandbox let data = eval(dumped_data)
+
     return data
   catch
-    call unite#util#print_error("unite-outline: Couldn't load the cache file: " . cache_file)
-    return []
+    throw "unite-outline: Couldn't load the cache file: " . cache_file
   endtry
 endfunction
 
@@ -103,40 +112,52 @@ function! s:Cache_set(path, candidates, should_serialize) dict
         \ 'candidates': a:candidates,
         \ 'touched'   : localtime(),
         \ }
+
   let cache_items = items(self.data)
-  let num_deletes = len(cache_items) - g:unite_source_outline_cache_buffers
-  if num_deletes > 0
+  let num_dels = len(cache_items) - g:unite_source_outline_cache_buffers
+  if num_dels > 0
     call map(cache_items, '[v:key, v:val.timestamp]')
     call sort(cache_items, 's:compare_timestamp')
-    let delete_keys = map(cache_items[0 : num_deletes - 1], 'v:val[0]')
+    let delete_keys = map(cache_items[0 : num_dels - 1], 'v:val[0]')
     for path in delete_keys
       unlet self.data[path]
     endfor
   endif
-  if a:should_serialize && s:check_cache_dir()
-    call s:save_cache_file(a:path, self.data[a:path])
-  elseif s:exists_cache_file(a:path)
-    call s:remove_file(s:cache_file_path(a:path))
-  endif
+
+  try
+    if a:should_serialize && s:check_cache_dir()
+      call s:save_cache_file(a:path, self.data[a:path])
+    elseif s:exists_cache_file(a:path)
+      call s:remove_file(s:cache_file_path(a:path))
+    endif
+  catch
+    call unite#util#print_error(v:exception)
+  endtry
 endfunction
 
 function! s:save_cache_file(path, data)
   try
     let cache_file = s:cache_file_path(a:path)
     let dumped_data = string(a:data)
+
+    " save
     call writefile([dumped_data], cache_file)
     call s:util.print_debug("[SAVED] cache file: " . cache_file)
   catch
-    call unite#util#print_error("unite-outline: Couldn't save the cache to: " . cache_file)
-    return
+    throw "unite-outline: Couldn't save the cache to: " . cache_file
   endtry
-  call s:cleanup_old_cache_files()
+
+  call s:cleanup_cache_files()
 endfunction
 
 function! s:Cache_remove(path) dict
   call remove(self.data, a:path)
   if s:exists_cache_file(a:path)
-    call s:remove_file(s:cache_file_path(a:path))
+    try
+      call s:remove_file(s:cache_file_path(a:path))
+    catch
+      call unite#util#print_error(v:exception)
+    endtry
   endif
 endfunction
 
@@ -145,7 +166,7 @@ function! s:remove_file(path)
     call delete(a:path)
     call s:util.print_debug("[DELETED] cache file: " . a:path)
   catch
-    call unite#util#print_error("unite-outline: Couldn't delete the cache file: " . a:path)
+    throw "unite-outline: Couldn't delete the cache file: " . a:path
   endtry
 endfunction
 
@@ -158,24 +179,33 @@ function! s:Cache_clear()
   endif
 endfunction
 
-function! s:cleanup_old_cache_files()
+function! s:cleanup_cache_files(...)
+  let do_all = (a:0 ? a:1 : 0)
   let cache_files = split(globpath(s:cache.dir, '*'), "\<NL>")
-  let num_deletes = len(cache_files) - g:unite_source_outline_cache_buffers
-  if num_deletes > 0
-    call map(cache_files, '[v:val, getftime(v:val)]')
-    call sort(cache_files, 's:compare_timestamp')
-    let old_files = map(cache_files[0 : num_deletes - 1], 'v:val[0]')
-    for path in old_files
-      call s:remove_file(path)
-    endfor
+
+  if do_all
+    let del_files = cache_files
+  else
+    let num_dels = len(cache_files) - g:unite_source_outline_cache_buffers
+    if num_dels > 0
+      call map(cache_files, '[v:val, getftime(v:val)]')
+      call sort(cache_files, 's:compare_timestamp')
+      let del_files = map(cache_files[0 : num_dels - 1], 'v:val[0]')
+    else
+      return
+    endif
   endif
+  for path in del_files
+    try
+      call s:remove_file(path)
+    catch
+      call unite#util#print_error(v:exception)
+    endtry
+  endfor
 endfunction
 
 function! s:cleanup_all_cache_files()
-  let cache_files = split(globpath(s:cache.dir, '*'), "\<NL>")
-  for path in cache_files
-    call s:remove_file(path)
-  endfor
+  call s:cleanup_cache_files(1)
 endfunction
 
 function! s:compare_timestamp(pair1, pair2)
