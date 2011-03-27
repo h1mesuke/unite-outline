@@ -25,8 +25,8 @@ let s:outline_info = {
       \}
 
 function! s:outline_info.extract_headings(context)
-  let Ctags = unite#sources#outline#import('Ctags')
-  return Ctags.extract_headings(a:context)
+  let ctags = unite#sources#outline#import('ctags')
+  return ctags.extract_headings(a:context)
 endfunction
 
 function! s:outline_info.get_heading_group(heading)
