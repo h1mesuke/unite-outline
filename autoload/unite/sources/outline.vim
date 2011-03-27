@@ -271,10 +271,7 @@ function! s:source.hooks.on_init(args, context)
   let s:util  = unite#sources#outline#import('util')
 
   let s:heading_id = 1
-  let s:context = {
-        \ 'heading_lnum': 0,
-        \ 'matched_lnum': 0,
-        \ }
+  let s:context = {}
   let s:context.buffer = {
         \ 'nr'        : bufnr('%'),
         \ 'path'      : expand('%:p'),
@@ -288,7 +285,7 @@ function! s:source.hooks.on_init(args, context)
         \ 'minor_filetype': get(compound_filetypes, 1, ''),
         \ 'compound_filetypes': compound_filetypes,
         \ })
-  let a:context.source__buffer = s:context.buffer
+  let a:context.source__outline_context = s:context
 endfunction
 
 function! s:source.hooks.on_close(args, context)
@@ -420,6 +417,8 @@ function! s:skip_header()
 endfunction
 
 function! s:extract_headings()
+  let s:context.heading_lnum = 0
+  let s:context.matched_lnum = 0
   let s:lnum = 1
 
   call s:skip_header()
@@ -521,6 +520,9 @@ function! s:extract_headings()
     let s:lnum += 1
   endwhile
   call s:util.print_progress("Extracting headings...done.")
+
+  unlet s:context.heading_lnum
+  unlet s:context.matched_lnum
 
   return headings
 endfunction
