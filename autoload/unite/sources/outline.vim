@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-26
+" Updated : 2011-03-27
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -267,6 +267,7 @@ let s:source = {
 
 function! s:source.hooks.on_init(args, context)
   let s:cache = unite#sources#outline#import('cache')
+  let s:tree  = unite#sources#outline#import('tree')
   let s:util  = unite#sources#outline#import('util')
 
   let s:heading_id = 1
@@ -334,27 +335,34 @@ function! s:source.gather_candidates(args, context)
       call outline_info.initialize(s:context)
     endif
 
-    let Tree = unite#sources#outline#get_module('Tree')
-
     if has_key(outline_info, 'extract_headings')
       let headings = outline_info.extract_headings(s:context)
-      if type(headings) == type({})
-        let tree_root = Tree.normalize(headings) | unlet headings
-        let headings  = Tree.flatten(tree_root)
-      else
-        call Tree.build(headings)
-      endif
-      call map(headings, 's:normalize_heading(v:val)')
+      let normalized = 0
     else
-      let headings = unite#sources#outline#extract_headings()
-      call Tree.build(headings)
+      let headings = s:extract_headings()
+      let normalized = 1
     endif
 
     if has_key(outline_info, 'finalize')
       call outline_info.finalize(s:context)
     endif
 
-    call s:filter_headings(headings)
+    let ignore_types = unite#sources#outline#get_ignore_heading_types(s:context.buffer.filetype)
+
+    " normalize and filter
+    if type(headings) == type({})
+      let tree_root = headings | unlet headings
+      let headings  = s:tree.flatten(s:tree.normalize(tree_root))
+      call s:filter_headings(headings, ignore_types, 1)
+      call map(headings, 's:normalize_heading(v:val)')
+    else
+      call s:filter_headings(headings, ignore_types, 1)
+      if !normalized
+        call map(headings, 's:normalize_heading(v:val)')
+      endif
+      let tree_root = s:tree.build(headings)
+    endif
+    let headings = s:filter_headings(headings, ignore_types)
 
     " headings -> candidates
     let candidates = s:convert_headings_to_candidates(headings)
@@ -411,7 +419,7 @@ function! s:skip_header()
   endif
 endfunction
 
-function! unite#sources#outline#extract_headings()
+function! s:extract_headings()
   let s:lnum = 1
 
   call s:skip_header()
@@ -572,16 +580,35 @@ function! s:normalize_heading_word(heading_word)
   return heading_word
 endfunction
 
-function! s:filter_headings(headings)
-  let ignore_types = s:get_ignore_heading_types(s:context.buffer.filetype)
-  if !empty(ignore_types)
-    let ignore_types = map(copy(ignore_types), 'unite#util#escape_pattern(v:val)')
-    let ignore_types_pattern = '^\%(' . join(ignore_types, '\|') . '\)$'
-    call filter(a:headings, 'v:val.type !~# ignore_types_pattern')
+" Heading Type Filter
+function! s:filter_headings(headings, ignore_types, ...)
+  let headings = a:headings
+  let remove_comments = (a:0 ? a:1 : 0)
+
+  if !empty(a:ignore_types)
+    if remove_comments
+      if index(a:ignore_types, 'comment') >= 0
+        call filter(headings, 'v:val.type !=# "comment"')
+      endif
+    else
+      let ignore_types = map(copy(a:ignore_types), 'unite#util#escape_pattern(v:val)')
+      let ignore_types_pattern = '^\%(' . join(ignore_types, '\|') . '\)$'
+
+      " something like closure
+      let test_proc = {}
+      let test_proc.ignore_types_pattern = ignore_types_pattern
+      function test_proc.call(heading)
+        return (a:heading.type !~# self.ignore_types_pattern)
+      endfunction
+
+      let headings = s:tree.filter(headings, test_proc, 1)
+    endif
   endif
+
+  return headings
 endfunction
 
-function! s:get_ignore_heading_types(filetype)
+function! unite#sources#outline#get_ignore_heading_types(filetype)
   for filetype in [a:filetype, s:resolve_filetype_alias(a:filetype), '*']
     if has_key(g:unite_source_outline_ignore_heading_types, filetype)
       return g:unite_source_outline_ignore_heading_types[filetype]
@@ -593,108 +620,48 @@ endfunction
 function! s:convert_headings_to_candidates(headings)
   if empty(a:headings) | return [] | endif
 
-  let outline_info = s:context.outline_info
-  let use_blanks = has_key(outline_info, 'heading_groups')    ||
-        \          has_key(outline_info, 'get_heading_group') ||
-        \          has_key(outline_info, 'need_blank_between')
-
-  let levels = s:smooth_levels(a:headings)
+  let physical_levels = s:smooth_levels(a:headings)
 
   let candidates = []
-  call add(candidates, s:create_candidate(a:headings[0], levels[0]))
-  let prev_heading = a:headings[0]
+  for [heading, physical_level] in s:util.list.zip(a:headings, physical_levels)
 
-  let idx = 1
-  while idx < len(a:headings)
-    let heading = a:headings[idx]
-    if use_blanks && s:need_blank_between(prev_heading, heading)
-      call add(candidates, s:create_blank())
+    " To keep the tree structure of the headings, convert a heading Dictionary
+    " to a candidate Dictionary in-place.
+    "
+    let cand = heading
+    call extend(cand, {
+          \ 'word': s:make_indent(physical_level) . heading.word,
+          \ 'source': 'outline',
+          \ 'kind'  : 'jump_list',
+          \ 'action__path': s:context.buffer.path,
+          \ 'action__pattern'  : s:make_search_pattern(s:context.lines[heading.lnum]),
+          \ 'action__signature': s:source.calc_signature(heading.lnum, s:context.lines),
+          \
+          \ 'source__heading_id'   : heading.id,
+          \ 'source__heading_level': heading.level,
+          \ 'source__heading_type' : heading.type,
+          \ 'source__heading_lnum' : heading.lnum,
+          \
+          \ 'source__heading_physical_level': physical_level,
+          \ })
+    unlet cand.id
+    unlet cand.level
+    unlet cand.type
+    unlet cand.lnum
+
+    if has_key(heading, 'parent')
+      let cand.source__heading_parent = heading.parent
+      unlet cand.parent
     endif
-    call add(candidates, s:create_candidate(a:headings[idx], levels[idx]))
-    let prev_heading = heading
-    let idx += 1
-  endwhile
+    if has_key(heading, 'children')
+      let cand.source__heading_children = heading.children
+      unlet cand.children
+    endif
+
+    call add(candidates, cand)
+  endfor
 
   return candidates
-endfunction
-
-function! s:need_blank_between(head1, head2)
-  let outline_info = s:context.outline_info
-
-  if has_key(outline_info, 'need_blank_between')
-    return outline_info.need_blank_between(a:head1, a:head2)
-  elseif a:head1.level < a:head2.level
-    return 0
-  elseif a:head1.level == a:head2.level
-    if has_key(outline_info, 'get_heading_group')
-      return (outline_info.get_heading_group(a:head1) != outline_info.get_heading_group(a:head2) ||
-            \ has_key(a:head1, 'children') || has_key(a:head2, 'children'))
-    else
-      return (s:get_heading_group(a:head1) != s:get_heading_group(a:head2) ||
-            \ has_key(a:head1, 'children') || has_key(a:head2, 'children'))
-    endif
-  else
-    return 1
-  endif
-endfunction
-
-function! s:get_heading_group(heading)
-  let group_map = s:context.outline_info.heading_group_map
-  return  get(group_map, a:heading.type, 0)
-endfunction
-
-function! s:smooth_levels(headings)
-  let levels = map(copy(a:headings), 'v:val.level')
-  return s:_smooth_levels(levels, 0)
-endfunction
-function! s:_smooth_levels(levels, base_level)
-  let splitted = s:split_list(a:levels, a:base_level)
-  for sub_levels in splitted
-    let shift = min(sub_levels) - a:base_level - 1
-    call map(sub_levels, 'v:val - shift')
-  endfor
-  call map(splitted, 'empty(v:val) ? v:val : s:_smooth_levels(v:val, a:base_level + 1)')
-  return s:join_list(splitted, a:base_level)
-endfunction
-
-function! s:split_list(list, sep)
-  let result = []
-  let sub_list = []
-  for value in a:list
-    if value == a:sep
-      call add(result, sub_list)
-      let sub_list = []
-    else
-      call add(sub_list, value)
-    endif
-  endfor
-  call add(result, sub_list)
-  return result
-endfunction
-
-function! s:join_list(lists, sep)
-  let result = []
-  for sub_list in a:lists
-    let result += sub_list
-    let result += [a:sep]
-  endfor
-  call remove(result, -1)
-  return result
-endfunction
-
-function! s:create_candidate(heading, level)
-  let cand = {
-        \ 'word': s:make_indent(a:level) . a:heading.word,
-        \ 'source': 'outline',
-        \ 'kind'  : 'jump_list',
-        \ 'action__path': s:context.buffer.path,
-        \ 'action__pattern'  : s:make_search_pattern(s:context.lines[a:heading.lnum]),
-        \ 'action__signature': s:source.calc_signature(a:heading.lnum, s:context.lines),
-        \ }
-  if has_key(a:heading, 'abbr')
-    let cand.abbr = a:heading.abbr
-  endif
-  return cand
 endfunction
 
 function! s:make_indent(level)
@@ -705,12 +672,18 @@ function! s:make_search_pattern(line)
   return '^' . unite#util#escape_pattern(a:line) . '$'
 endfunction
 
-function! s:create_blank()
-  return {
-        \ 'word': '',
-        \ 'source': 'outline',
-        \ 'kind'  : 'common',
-        \ }
+function! s:smooth_levels(headings)
+  let levels = map(copy(a:headings), 'v:val.level')
+  return s:_smooth_levels(levels, 0)
+endfunction
+function! s:_smooth_levels(levels, base_level)
+  let splitted = s:util.list.split(a:levels, a:base_level)
+  for sub_levels in splitted
+    let shift = min(sub_levels) - a:base_level - 1
+    call map(sub_levels, 'v:val - shift')
+  endfor
+  call map(splitted, 'empty(v:val) ? v:val : s:_smooth_levels(v:val, a:base_level + 1)')
+  return s:util.list.join(splitted, a:base_level)
 endfunction
 
 function! s:source.calc_signature(lnum, ...)
@@ -863,5 +836,10 @@ let s:source.alias_table.common = {}
 for action in ['yank', 'yank_escape', 'ex', 'insert']
   let s:source.alias_table.common[action] = 'nop'
 endfor
+
+"---------------------------------------
+" Filters
+
+"call unite#custom_filters('outline', 'filter_outline_tree_heading_types')
 
 " vim: filetype=vim
