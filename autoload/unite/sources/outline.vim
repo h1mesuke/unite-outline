@@ -300,7 +300,7 @@ function! s:source.gather_candidates(args, context)
 
   try
     if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
-      let start_time = s:get_time()
+      let start_time = s:get_reltime()
     endif
 
     let is_force = ((len(a:args) > 0 && a:args[0] == '!') || a:context.is_redraw)
@@ -373,7 +373,7 @@ function! s:source.gather_candidates(args, context)
     endif
 
     if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
-      let used_time = s:get_time() - start_time
+      let used_time = s:get_reltime() - start_time
       let used_time_100l = used_time * (str2float("100") / num_lines)
       call s:util.print_progress("unite-outline: used=" . string(used_time) . "s, "
             \ . "100l=". string(used_time_100l) . "s")
@@ -390,7 +390,7 @@ function! s:source.gather_candidates(args, context)
   endtry
 endfunction
 
-function! s:get_time()
+function! s:get_reltime()
   return str2float(reltimestr(reltime()))
 endfunction
 
