@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-28
+" Updated : 2011-03-29
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -177,18 +177,19 @@ function! s:serialize(data)
   " substitute direct references to the object's parent and children with
   " their id numbers before serialization.
   "
-  let a:data.candidates = copy(a:data.candidates)
-  for cand in a:data.candidates
+  let data = copy(a:data)
+  let data.candidates = map(copy(data.candidates), 'copy(v:val)')
+  for cand in data.candidates
     let cand.source__heading = copy(cand.source__heading)
     unlet cand.source__heading.candidate
     if has_key(cand, 'source__parent')
       let cand.source__parent = cand.source__parent.source__id
     endif
     if has_key(cand, 'source__children')
-      call map(cand.source__children, 'v:val.source__id')
+      let cand.source__children = map(copy(cand.source__children), 'v:val.source__id')
     endif
   endfor
-  let dumped_data = string(a:data)
+  let dumped_data = string(data)
 
   return dumped_data
 endfunction
