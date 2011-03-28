@@ -307,7 +307,12 @@ function! s:source.gather_candidates(args, context)
 
     let path = s:context.buffer.path
     if s:cache.has(path) && !is_force
-      return s:cache.get(path)
+      try
+        return s:cache.get(path)
+      catch /^CacheCompatibilityError/
+      catch /^unite-outline:/
+        call unite#util#print_error(v:exception)
+      endtry
     endif
 
     let filetype = s:context.buffer.filetype

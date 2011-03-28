@@ -57,7 +57,7 @@ function! s:cache_file_path(path)
     return s:cache.dir . '/' . s:encode_file_path(a:path)
 endfunction
 
-" Original source from Shougo' neocomplcache
+" Original source from Shougo's neocomplcache
 " https://github.com/Shougo/neocomplcache
 "
 function! s:encode_file_path(path)
@@ -76,12 +76,7 @@ endfunction
 
 function! s:Cache_get(path) dict
   if !has_key(self.data, a:path) && s:exists_cache_file(a:path)
-    try
-      let self.data[a:path] = s:load_cache_file(a:path)
-    catch /^unite-outline:/
-      call unite#util#print_error(v:exception)
-      return []
-    endtry
+    let self.data[a:path] = s:load_cache_file(a:path)
   endif
   let item = self.data[a:path]
   let item.touched = localtime()
@@ -107,7 +102,11 @@ function! s:load_cache_file(path)
 
   " deserialize
   sandbox let data = eval(dumped_data)
-  call s:tree.convert_id_to_ref(data.candidates)
+  try
+    call s:tree.convert_id_to_ref(data.candidates)
+  catch
+    throw "CacheCompatibilityError"
+  endtry
 
   return data
 endfunction
