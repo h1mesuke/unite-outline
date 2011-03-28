@@ -847,6 +847,6 @@ endfor
 "---------------------------------------
 " Filters
 
-"call unite#custom_filters('outline', 'filter_outline_tree_heading_types')
+call unite#custom_filters('outline', ['matcher_glob', 'outline_formatter'])
 
 " vim: filetype=vim
