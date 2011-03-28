@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-28
+" Updated : 2011-03-29
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -42,20 +42,42 @@ function! s:Tree_remove_child(parent, child)
   call remove(a:parent.source__children, index(a:parent.source__children, a:child))
 endfunction
 
+function! s:Tree_has_parent(node)
+  let cand = has_key(a:node, 'candidate') ? a:node.candidate : a:node
+  return has_key(cand, 'source__parent')
+endfunction
+
+function! s:Tree_has_children(node)
+  let cand = has_key(a:node, 'candidate') ? a:node.candidate : a:node
+  return has_key(cand, 'source__children')
+endfunction
+
 function! s:Tree_get_parent(node)
-  return get(a:node, 'source__parent')
+  if has_key(a:node, 'candidate')
+    let cand = a:node.candidate
+    return cand.source__parent.source__heading
+  else
+    return get(a:node, 'source__parent')
+  endif
 endfunction
 
 function! s:Tree_get_children(node)
-  return get(a:node, 'source__children', [])
+  if has_key(a:node, 'candidate')
+    let cand = a:node.candidate
+    return map(get(cand, 'source__children', []), 'v:val.source__heading')
+  else
+    return get(a:node, 'source__children', [])
+  endif
 endfunction
 
 function! s:Tree_is_toplevel(node)
-  return !has_key(a:node, 'source__parent')
+  let cand = has_key(a:node, 'candidate') ? a:node.candidate : a:node
+  return !has_key(cand, 'source__parent')
 endfunction
 
 function! s:Tree_is_leaf(node)
-  return !has_key(a:node, 'source__children')
+  let cand = has_key(a:node, 'candidate') ? a:node.candidate : a:node
+  return !has_key(cand, 'source__children')
 endfunction
 
 function! s:Tree_build(headings)
@@ -73,36 +95,6 @@ function! s:Tree_build(headings)
   endfor
 
   return s:Tree_normalize(root)
-endfunction
-
-function! s:Tree_convert_ref_to_id(candidates)
-  for cand in a:candidates
-    let cand.source__heading.word = cand.word
-    if has_key(cand, 'source__parent')
-      let cand.source__parent = cand.source__parent.source__id
-    endif
-    if has_key(cand, 'source__children')
-      call map(cand.source__children, 'v:val.source__id')
-    endif
-  endfor
-  return a:candidates
-endfunction
-
-function! s:Tree_convert_id_to_ref(candidates)
-  let cand_table = {}
-  for cand in a:candidates
-    let cand_table[cand.source__id] = cand
-  endfor
-  for cand in a:candidates
-    unlet cand.source__heading.word
-    if has_key(cand, 'source__parent')
-      let cand.source__parent = cand_table[cand.source__parent]
-    endif
-    if has_key(cand, 'source__children')
-      call map(cand.source__children, 'cand_table[v:val]')
-    endif
-  endfor
-  return a:candidates
 endfunction
 
 function! s:Tree_filter(treed_list, pred, ...)

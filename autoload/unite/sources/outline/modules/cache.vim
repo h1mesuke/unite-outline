@@ -86,7 +86,6 @@ endfunction
 function! s:load_cache_file(path)
   let cache_file = s:cache_file_path(a:path)
 
-  " load
   let lines = readfile(cache_file)
   if !empty(lines)
     let dumped_data = lines[0]
@@ -100,11 +99,30 @@ function! s:load_cache_file(path)
     call s:util.print_debug("[TOUCHED] cache file: " . cache_file)
   endif
 
-  " deserialize
-  sandbox let data = eval(dumped_data)
+  let data = s:deserialize(dumped_data)
+  return data
+endfunction
+
+function! s:deserialize(dumped_data)
+  sandbox let data = eval(a:dumped_data)
+
   try
-    call s:tree.convert_id_to_ref(data.candidates)
+    let cand_table = {}
+    for cand in data.candidates
+      let cand_table[cand.source__id] = cand
+    endfor
+    for cand in data.candidates
+      let cand.source__heading.candidate = cand
+      if has_key(cand, 'source__parent')
+        let cand.source__parent = cand_table[cand.source__parent]
+      endif
+      if has_key(cand, 'source__children')
+        call map(cand.source__children, 'cand_table[v:val]')
+      endif
+    endfor
   catch
+    call s:util.print_debug(v:throwpoint)
+    call s:util.print_debug(v:exception)
     throw "CacheCompatibilityError"
   endtry
 
@@ -141,18 +159,8 @@ endfunction
 
 function! s:save_cache_file(path, data)
   let cache_file = s:cache_file_path(a:path)
+  let dumped_data = s:serialize(a:data)
 
-  " NOTE: Built-in string() function can't dump an object that has any cyclic
-  " references because of E724, nested too deep error; therefore, we need to
-  " substitute direct references to the object's parent and children with
-  " their id numbers before serialization.
-  "
-  call s:tree.convert_ref_to_id(a:data.candidates)
-
-  " serialize
-  let dumped_data = string(a:data)
-
-  " save
   if writefile([dumped_data], cache_file) == 0
     call s:util.print_debug("[SAVED] cache file: " . cache_file)
   else
@@ -160,6 +168,29 @@ function! s:save_cache_file(path, data)
   endif
 
   call s:cleanup_cache_files()
+endfunction
+
+function! s:serialize(data)
+
+  " NOTE: Built-in string() function can't dump an object that has any cyclic
+  " references because of E724, nested too deep error; therefore, we need to
+  " substitute direct references to the object's parent and children with
+  " their id numbers before serialization.
+  "
+  let a:data.candidates = copy(a:data.candidates)
+  for cand in a:data.candidates
+    let cand.source__heading = copy(cand.source__heading)
+    unlet cand.source__heading.candidate
+    if has_key(cand, 'source__parent')
+      let cand.source__parent = cand.source__parent.source__id
+    endif
+    if has_key(cand, 'source__children')
+      call map(cand.source__children, 'v:val.source__id')
+    endif
+  endfor
+  let dumped_data = string(a:data)
+
+  return dumped_data
 endfunction
 
 function! s:Cache_remove(path) dict

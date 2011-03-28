@@ -653,6 +653,7 @@ function! s:create_candidate(heading, physical_level)
   " Dictionary to a candidate Dictionary in-place.
   "
   let cand = a:heading
+  let heading.candidate = cand
   call extend(cand, {
         \ 'word': s:make_indent(a:physical_level) . a:heading.word,
         \ 'source': 'outline',
