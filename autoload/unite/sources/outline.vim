@@ -271,20 +271,25 @@ function! s:source.hooks.on_init(args, context)
   let s:util  = unite#sources#outline#import('util')
 
   let s:heading_id = 1
-  let s:context = {}
-  let s:context.buffer = {
+
+  let buffer = {
         \ 'nr'        : bufnr('%'),
         \ 'path'      : expand('%:p'),
         \ 'filetype'  : getbufvar('%', '&filetype'),
         \ 'shiftwidth': getbufvar('%', '&shiftwidth'),
         \ 'tabstop'   : getbufvar('%', '&tabstop'),
         \ }
-  let compound_filetypes = split(s:context.buffer.filetype, '\.')
-  call extend(s:context.buffer, {
+  let compound_filetypes = split(buffer.filetype, '\.')
+  call extend(buffer, {
         \ 'major_filetype': get(compound_filetypes, 0, ''),
         \ 'minor_filetype': get(compound_filetypes, 1, ''),
         \ 'compound_filetypes': compound_filetypes,
         \ })
+  let outline_info = unite#sources#outline#get_outline_info(buffer.filetype)
+  let s:context = {
+        \ 'buffer': buffer,
+        \ 'outline_info': outline_info,
+        \ }
   let a:context.source__outline_context = s:context
 endfunction
 
@@ -316,7 +321,8 @@ function! s:source.gather_candidates(args, context)
     endif
 
     let filetype = s:context.buffer.filetype
-    let outline_info = unite#sources#outline#get_outline_info(filetype)
+    let outline_info = s:context.outline_info
+
     if empty(outline_info)
       if empty(filetype)
         call unite#util#print_error("unite-outline: Please set the filetype.")
@@ -351,7 +357,7 @@ function! s:source.gather_candidates(args, context)
       call outline_info.finalize(s:context)
     endif
 
-    let ignore_types = unite#sources#outline#get_ignore_heading_types(s:context.buffer.filetype)
+    let ignore_types = unite#sources#outline#get_ignore_heading_types(filetype)
 
     " normalize and filter
     if type(headings) == type({})
