@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-27
+" Updated : 2011-03-28
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -327,6 +327,8 @@ function! s:source.gather_candidates(args, context)
 
     let s:context.outline_info = outline_info
     let s:context.lines = lines
+    let s:context.heading_lnum = 0
+    let s:context.matched_lnum = 0
 
     if has_key(outline_info, 'initialize')
       call outline_info.initialize(s:context)
@@ -360,6 +362,9 @@ function! s:source.gather_candidates(args, context)
       let tree_root = s:tree.build(headings)
     endif
     let headings = s:filter_headings(headings, ignore_types)
+
+    unlet s:context.heading_lnum
+    unlet s:context.matched_lnum
 
     " headings -> candidates
     let candidates = s:convert_headings_to_candidates(headings)
@@ -417,8 +422,6 @@ function! s:skip_header()
 endfunction
 
 function! s:extract_headings()
-  let s:context.heading_lnum = 0
-  let s:context.matched_lnum = 0
   let s:lnum = 1
 
   call s:skip_header()
@@ -521,9 +524,6 @@ function! s:extract_headings()
   endwhile
   call s:util.print_progress("Extracting headings...done.")
 
-  unlet s:context.heading_lnum
-  unlet s:context.matched_lnum
-
   return headings
 endfunction
 
@@ -564,9 +564,9 @@ function! s:normalize_heading(heading)
     let heading = a:heading
   endif
 
+  let heading.source__id = s:heading_id
   let heading.word = s:normalize_heading_word(heading.word)
   call extend(heading, {
-        \ 'id'   : s:heading_id,
         \ 'level': 1,
         \ 'type' : 'generic',
         \ 'lnum' : s:context.heading_lnum,
@@ -623,47 +623,40 @@ function! s:convert_headings_to_candidates(headings)
   if empty(a:headings) | return [] | endif
 
   let physical_levels = s:smooth_levels(a:headings)
-
-  let candidates = []
-  for [heading, physical_level] in s:util.list.zip(a:headings, physical_levels)
-
-    " To keep the tree structure of the headings, convert a heading Dictionary
-    " to a candidate Dictionary in-place.
-    "
-    let cand = heading
-    call extend(cand, {
-          \ 'word': s:make_indent(physical_level) . heading.word,
-          \ 'source': 'outline',
-          \ 'kind'  : 'jump_list',
-          \ 'action__path': s:context.buffer.path,
-          \ 'action__pattern'  : s:make_search_pattern(s:context.lines[heading.lnum]),
-          \ 'action__signature': s:source.calc_signature(heading.lnum, s:context.lines),
-          \
-          \ 'source__heading_id'   : heading.id,
-          \ 'source__heading_level': heading.level,
-          \ 'source__heading_type' : heading.type,
-          \ 'source__heading_lnum' : heading.lnum,
-          \
-          \ 'source__heading_physical_level': physical_level,
-          \ })
-    unlet cand.id
-    unlet cand.level
-    unlet cand.type
-    unlet cand.lnum
-
-    if has_key(heading, 'parent')
-      let cand.source__heading_parent = heading.parent
-      unlet cand.parent
-    endif
-    if has_key(heading, 'children')
-      let cand.source__heading_children = heading.children
-      unlet cand.children
-    endif
-
-    call add(candidates, cand)
-  endfor
-
+  let candidates = map(s:util.list.zip(a:headings, physical_levels),
+        \ 's:create_candidate(v:val[0], v:val[1])')
   return candidates
+endfunction
+
+function! s:create_candidate(heading, physical_level)
+  let heading = {
+        \ 'word' : a:heading.word,
+        \ 'level': a:heading.level,
+        \ 'type' : a:heading.type,
+        \ 'lnum' : a:heading.lnum,
+        \
+        \ 'physical_level' : a:physical_level,
+        \ }
+
+  " NOTE: To keep the tree structure of the headings, convert a heading
+  " Dictionary to a candidate Dictionary in-place.
+  "
+  let cand = a:heading
+  call extend(cand, {
+        \ 'word': s:make_indent(a:physical_level) . a:heading.word,
+        \ 'source': 'outline',
+        \ 'kind'  : 'jump_list',
+        \ 'action__path': s:context.buffer.path,
+        \ 'action__pattern'  : s:make_search_pattern(s:context.lines[a:heading.lnum]),
+        \ 'action__signature': s:source.calc_signature(a:heading.lnum, s:context.lines),
+        \
+        \ 'source__heading': heading,
+        \ })
+  unlet cand.level
+  unlet cand.type
+  unlet cand.lnum
+
+  return cand
 endfunction
 
 function! s:make_indent(level)

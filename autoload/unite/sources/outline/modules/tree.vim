@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-27
+" Updated : 2011-03-28
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -31,39 +31,35 @@ function! unite#sources#outline#modules#tree#module()
 endfunction
 
 function! s:Tree_append_child(parent, child)
-  if !has_key(a:parent, 'children')
-    let a:parent.children = []
+  if !has_key(a:parent, 'source__children')
+    let a:parent.source__children = []
   endif
-  call add(a:parent.children, a:child)
-  let a:child.parent = a:parent
+  call add(a:parent.source__children, a:child)
+  let a:child.source__parent = a:parent
 endfunction
 
 function! s:Tree_remove_child(parent, child)
-  call remove(a:parent.children, index(a:parent.children, a:child))
+  call remove(a:parent.source__children, index(a:parent.source__children, a:child))
 endfunction
 
-function! s:get_id(node)
-  return get(a:node, 'id', get(a:node, 'source__heading_id'))
+function! s:Tree_get_parent(node)
+  return get(a:node, 'source__parent')
 endfunction
 
-function! s:get_parent(node)
-  return get(a:node, 'parent', get(a:node, 'source__heading_parent'))
+function! s:Tree_get_children(node)
+  return get(a:node, 'source__children', [])
 endfunction
 
-function! s:get_children(node)
-  return get(a:node, 'children', get(a:node, 'source__heading_children', []))
+function! s:Tree_is_toplevel(node)
+  return !has_key(a:node, 'source__parent')
 endfunction
 
-function! s:is_toplevel(node)
-  return !(has_key(a:node, 'parent') || has_key(a:node, 'source__heading_parent'))
-endfunction
-
-function! s:is_leaf(node)
-  return !(has_key(a:node, 'children') || has_key(a:node, 'source__heading_children'))
+function! s:Tree_is_leaf(node)
+  return !has_key(a:node, 'source__children')
 endfunction
 
 function! s:Tree_build(headings)
-  let root = { 'level': 0, 'children': [] }
+  let root = { 'level': 0, 'source__children': [] }
   if empty(a:headings) | return root | endif
 
   let context = [root] | " stack
@@ -79,31 +75,31 @@ function! s:Tree_build(headings)
   return s:Tree_normalize(root)
 endfunction
 
-function! s:Tree_convert_id_to_ref(candidates)
-  let cand_table = {}
+function! s:Tree_convert_ref_to_id(candidates)
   for cand in a:candidates
-    let cand_table[cand.source__heading_id] = cand
-  endfor
-  for cand in a:candidates
-    if has_key(cand, 'source__heading_parent')
-      let cand.source__heading_parent = cand_table[cand.source__heading_parent]
+    let cand.source__heading.word = cand.word
+    if has_key(cand, 'source__parent')
+      let cand.source__parent = cand.source__parent.source__id
     endif
-    if has_key(cand, 'source__heading_children')
-      let cand.source__heading_children =
-            \ map(cand.source__heading_children, 'cand_table[v:val]')
+    if has_key(cand, 'source__children')
+      call map(cand.source__children, 'v:val.source__id')
     endif
   endfor
   return a:candidates
 endfunction
 
-function! s:Tree_convert_ref_to_id(candidates)
+function! s:Tree_convert_id_to_ref(candidates)
+  let cand_table = {}
   for cand in a:candidates
-    if has_key(cand, 'source__heading_parent')
-      let cand.source__heading_parent = cand.source__heading_parent.source__heading_id
+    let cand_table[cand.source__id] = cand
+  endfor
+  for cand in a:candidates
+    unlet cand.source__heading.word
+    if has_key(cand, 'source__parent')
+      let cand.source__parent = cand_table[cand.source__parent]
     endif
-    if has_key(cand, 'source__heading_children')
-      let cand.source__heading_children =
-            \ map(cand.source__heading_children, 'v:val.source__heading_id')
+    if has_key(cand, 'source__children')
+      call map(cand.source__children, 'cand_table[v:val]')
     endif
   endfor
   return a:candidates
@@ -115,13 +111,13 @@ function! s:Tree_filter(treed_list, pred, ...)
   let do_remove_child = (a:0 ? a:1 : 0)
 
   let marked = {}
-  for node in filter(copy(a:treed_list), 's:is_toplevel(v:val)')
+  for node in filter(copy(a:treed_list), 's:Tree_is_toplevel(v:val)')
     call s:mark(node, a:pred, marked, do_remove_child)
   endfor
 
   let treed_list = []
   for node in a:treed_list
-    if marked[s:get_id(node)]
+    if marked[node.source__id]
       call add(treed_list, node)
     endif
   endfor
@@ -130,8 +126,8 @@ endfunction
 
 function! s:mark(node, pred, marked, do_remove_child)
   let child_marked = 0
-  if !s:is_leaf(a:node)
-    for child in s:get_children(a:node)
+  if has_key(a:node, 'source__children')
+    for child in a:node.source__children
       if s:mark(child, a:pred, a:marked, a:do_remove_child)
         let child_marked = 1
       elseif a:do_remove_child
@@ -140,15 +136,16 @@ function! s:mark(node, pred, marked, do_remove_child)
     endfor
   endif
   let self_marked = (child_marked || a:pred.call(a:node))
-  let a:marked[s:get_id(a:node)] = self_marked
+  let a:marked[a:node.source__id] = self_marked
   return self_marked
 endfunction
 
 function! s:Tree_flatten(tree)
+  " Flatten a tree of headings into a liner List of the headings.
   let headings = []
-  if !s:is_leaf(a:tree)
-    for node in s:get_children(a:tree)
-      let node.level = s:is_toplevel(node) ? 1 : node.parent.level + 1
+  if has_key(a:tree, 'source__children')
+    for node in a:tree.source__children
+      let node.level = s:Tree_is_toplevel(node) ? 1 : node.source__parent.level + 1
       call add(headings, node)
       let headings += s:Tree_flatten(node)
     endfor
@@ -157,12 +154,12 @@ function! s:Tree_flatten(tree)
 endfunction
 
 function! s:Tree_normalize(root)
-  call extend(a:root, { 'id': 0, 'level': 0 })
-  if has_key(a:root, 'children')
+  call extend(a:root, { 'source__id': 0, 'level': 0 })
+  if has_key(a:root, 'source__children')
     " unlink the references to the root node
-    for node in a:root.children
-      if has_key(node, 'parent')
-        unlet node.parent
+    for node in a:root.source__children
+      if has_key(node, 'source__parent')
+        unlet node.source__parent
       endif
     endfor
   endif

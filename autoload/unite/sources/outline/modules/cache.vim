@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-26
+" Updated : 2011-03-28
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -141,24 +141,24 @@ function! s:Cache_set(path, candidates, should_serialize) dict
 endfunction
 
 function! s:save_cache_file(path, data)
-    let cache_file = s:cache_file_path(a:path)
+  let cache_file = s:cache_file_path(a:path)
 
-    " NOTE: Built-in string() function can't dump an object that has any
-    " cyclic references because of E724, nested too deep error; therefore, we
-    " need to substitute direct references with id numbers before
-    " serialization.
-    "
-    call s:tree.convert_ref_to_id(a:data.candidates)
+  " NOTE: Built-in string() function can't dump an object that has any cyclic
+  " references because of E724, nested too deep error; therefore, we need to
+  " substitute direct references to the object's parent and children with
+  " their id numbers before serialization.
+  "
+  call s:tree.convert_ref_to_id(a:data.candidates)
 
-    " serialize
-    let dumped_data = string(a:data)
+  " serialize
+  let dumped_data = string(a:data)
 
-    " save
-    if writefile([dumped_data], cache_file) == 0
-      call s:util.print_debug("[SAVED] cache file: " . cache_file)
-    else
-      throw "unite-outline: Couldn't save the cache to: " . cache_file
-    endif
+  " save
+  if writefile([dumped_data], cache_file) == 0
+    call s:util.print_debug("[SAVED] cache file: " . cache_file)
+  else
+    throw "unite-outline: Couldn't save the cache to: " . cache_file
+  endif
 
   call s:cleanup_cache_files()
 endfunction
