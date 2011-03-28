@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-28
+" Updated : 2011-03-29
 " Version : 0.3.2
 " License : MIT license {{{
 "
@@ -608,13 +608,13 @@ function! s:filter_headings(headings, ignore_types, ...)
       let ignore_types_pattern = '^\%(' . join(ignore_types, '\|') . '\)$'
 
       " something like closure
-      let test_proc = {}
-      let test_proc.ignore_types_pattern = ignore_types_pattern
-      function test_proc.call(heading)
+      let pred = {}
+      let pred.ignore_types_pattern = ignore_types_pattern
+      function pred.call(heading)
         return (a:heading.type !~# self.ignore_types_pattern)
       endfunction
 
-      let headings = s:tree.filter(headings, test_proc, 1)
+      let headings = s:tree.filter(headings, pred, 1)
     endif
   endif
 
@@ -631,7 +631,7 @@ function! unite#sources#outline#get_ignore_heading_types(filetype)
 endfunction
 
 function! s:convert_headings_to_candidates(headings)
-  if empty(a:headings) | return [] | endif
+  if empty(a:headings) | return a:headings | endif
 
   let physical_levels = s:smooth_levels(a:headings)
   let candidates = map(s:util.list.zip(a:headings, physical_levels),
@@ -847,6 +847,6 @@ endfor
 "---------------------------------------
 " Filters
 
-call unite#custom_filters('outline', ['matcher_glob', 'outline_formatter'])
+call unite#custom_filters('outline', ['outline_matcher_glob_tree', 'outline_formatter'])
 
 " vim: filetype=vim
