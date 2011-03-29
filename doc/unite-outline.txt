@@ -2,7 +2,7 @@
 
 Author  : h1mesuke <himesuke@gmail.com>
 Updated : 2011-03-19
-Version : 0.3.2
+Version : 0.3.3
 License : MIT license {{{
 
 	Permission is hereby granted, free of charge, to any person obtaining
@@ -44,9 +44,9 @@ CONTENTS					*unite-outline-contents*
 INTRODUCTION					*unite-outline-introduction*
 
 	*unite-outline* is a source of |unite| which parses the buffer's
-	content and extracts headings and then show the list of the headings
-	using the UI of unite.vim. When you select a heading from the list,
-	you can jump to the corresponding location of the buffer.
+	content and extracts headings and then show the list of them using the
+	UI of unite.vim. When you select a heading from the list, you can jump
+	to the corresponding location of the buffer.
 
 	The methods for extracting headings have been implemented for each
 	individual filetypes. You can customize them as you like and can also
@@ -71,8 +71,8 @@ USAGE						*unite-outline-usage*
 	:Unite outline
 <
 	unite-outline parses the buffer's content and extracts headings and
-	then shows the list of the headings using the UI of unite.vim. When
-	you select a heading from the list that appears, you can jump to the
+	then shows the list of them using the UI of unite.vim. When you select
+	a heading from the list that appears, you can jump to the
 	corresponding location of the buffer.
 
 	In most cases, extracted headings are cached. Because unite-outline
@@ -100,9 +100,9 @@ g:unite_source_outline_info			*g:unite_source_outline_info*
 
 	Default value is {}.
 
-	Because all of the default outline infos, which have been included the
-	distributed archive, will be loaded by autoload functions later, the
-	initial value of this dictionary is empty.
+	Because all of the default outline infos, which have been included in
+	the distributed archive, will be loaded by autoload functions later on
+	demand, the initial value of this dictionary is empty.
 
 	See |unite-outline-info|
 
@@ -148,8 +148,8 @@ g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
 	a file.
 
 	Once the cache is stored in a file, unite-outline loads the headings
-	from the file at the first time of its execution for the buffer after
-	a reboot of Vim.
+	from the file even at the first time of its execution after a reboot
+	of Vim.
 
 	Default value is 1000.
 

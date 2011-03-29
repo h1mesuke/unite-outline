@@ -2,7 +2,7 @@
 " File    : autoload/unite/source/outline/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
 " Updated : 2011-03-26
-" Version : 0.3.2
+" Version : 0.3.3
 " License : MIT license {{{
 "
 "   Permission is hereby granted, free of charge, to any person obtaining
