@@ -160,7 +160,7 @@ function! s:find_outline_info(filetype, ...)
   let filetype = substitute(a:filetype, '\.', '_', 'g')
   let is_default = (a:0 ? a:1 : 0)
   for path in (is_default ? s:OUTLINE_INFO_PATH[-1:] : s:OUTLINE_INFO_PATH)
-    let oinfo_path = findfile(path . filetype . '.vim', &runtimepath)
+    let oinfo_path = globpath(&runtime, path . filetype . '.vim')
     if !empty(oinfo_path) | return oinfo_path | endif
   endfor
   return ""
@@ -195,7 +195,7 @@ function! unite#sources#outline#import(name)
 endfunction
 
 function! s:find_autoload_script(funcname)
-  return findfile('autoload/' . join(split(a:funcname, '#')[:-2], '/') . '.vim', &runtimepath)
+  return globpath(&runtimepath, 'autoload/' . join(split(a:funcname, '#')[:-2], '/') . '.vim')
 endfunction
 
 function! unite#sources#outline#clear_cache()
