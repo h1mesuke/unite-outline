@@ -263,7 +263,6 @@ let s:source = {
       \ 'description': 'candidates from heading list',
       \
       \ 'hooks': {}, 'action_table'  : {}, 'alias_table': {}, 'default_action': {},
-      \ 'is_volatile': 1,
       \ }
 
 function! s:source.hooks.on_init(args, context)
