@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_matcher_glob_tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-29
+" Updated : 2011-04-04
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -76,9 +76,9 @@ function! s:matcher.filter(candidates, context)
           return (stridx(a:cand.word, self.input) != -1)
         endfunction
       endif
-
-      let candidates = tree.filter(candidates, pred)
     endif
+
+    let candidates = tree.filter(candidates, pred)
   endfor
 
   return candidates
