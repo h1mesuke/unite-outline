@@ -196,8 +196,24 @@ function! unite#sources#outline#import(name)
 endfunction
 
 function! s:find_autoload_script(funcname)
-  let path = 'autoload/' . join(split(a:funcname, '#')[:-2], '/') . '.vim'
-  return get(split(globpath(&runtimepath, path), "\<NL>"), 0, '')
+  let path_list = split(a:funcname, '#')
+  let dir = s:find_dir('autoload/' . join(path_list[:-3], '/'))
+  if empty(dir)
+    throw "unite-outline: Directory not found for " . a:funcname
+  endif
+  let base = path_list[-2] . '.vim'
+  return get(split(globpath(dir, base), "\<NL>"), 0, '')
+endfunction
+
+function! s:find_dir(rel_path)
+  if !exists('s:autoload_dirs')
+    let s:autoload_dirs = {}
+  endif
+  if !has_key(s:autoload_dirs, a:rel_path)
+    let dir = get(split(globpath(&runtimepath, a:rel_path), "\<NL>"), 0, '')
+    let s:autoload_dirs[a:rel_path] = dir
+  endif
+  return s:autoload_dirs[a:rel_path]
 endfunction
 
 function! unite#sources#outline#clear_cache()
