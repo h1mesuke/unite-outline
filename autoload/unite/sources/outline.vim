@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-07
+" Updated : 2011-04-08
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -261,8 +261,12 @@ endif
 " Aliases
 
 function! s:define_filetype_aliases()
+
+  " NOTE: If the user has his/her own outline info for a filetype, not define
+  " it as an alias of the other filetype by default.
+  "
   let oinfos = {}
-  for path in s:OUTLINE_INFO_PATH
+  for path in s:OUTLINE_INFO_PATH[:-2]
     let dir = s:find_dir(path)
     if empty(dir) | continue | endif
     let oinfo_paths = split(globpath(dir, '*.vim'), "\<NL>")
@@ -273,8 +277,6 @@ function! s:define_filetype_aliases()
   endfor
 
   for [alias, src_filetype] in s:OUTLINE_ALIASES
-    " NOTE: If the user has his/her own outline info for {alias} filetype, not
-    " define it as an alias of the other filetype by default.
     if !has_key(oinfos, alias)
       call unite#sources#outline#alias(alias, src_filetype)
     endif
