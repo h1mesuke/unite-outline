@@ -26,19 +26,38 @@
 " }}}
 "=============================================================================
 
-function! unite#sources#outline#define()
-  return s:source
-endfunction
-
-function! unite#sources#outline#alias(alias, src_filetype)
-  let s:filetype_alias_table[a:alias] = a:src_filetype
-endfunction
+"-----------------------------------------------------------------------------
+" Constants
 
 let s:OUTLINE_INFO_PATH = [
       \ 'autoload/outline/',
       \ 'autoload/unite/sources/outline/',
       \ 'autoload/unite/sources/outline/defaults/',
       \ ]
+
+let s:OUTLINE_ALIASES = [
+      \ ['c',        'cpp'     ],
+      \ ['cfg',      'dosini'  ],
+      \ ['mkd',      'markdown'],
+      \ ['plaintex', 'tex'     ],
+      \ ['snippet',  'conf'    ],
+      \ ['xhtml',    'html'    ],
+      \ ['zsh',      'sh'      ],
+      \]
+
+"-----------------------------------------------------------------------------
+" Functions
+
+function! unite#sources#outline#define()
+  return s:source
+endfunction
+
+function! unite#sources#outline#alias(alias, src_filetype)
+  if !exists('s:filetype_alias_table')
+    let s:filetype_alias_table = {}
+  endif
+  let s:filetype_alias_table[a:alias] = a:src_filetype
+endfunction
 
 function! unite#sources#outline#get_outline_info(filetype, ...)
   let is_default = (a:0 ? a:1 : 0)
@@ -157,16 +176,6 @@ function! s:init_heading_group_map(outline_info)
   let a:outline_info.heading_group_map = group_map
 endfunction
 
-function! s:find_outline_info(filetype, ...)
-  let filetype = substitute(a:filetype, '\.', '_', 'g')
-  let is_default = (a:0 ? a:1 : 0)
-  for path in (is_default ? s:OUTLINE_INFO_PATH[-1:] : s:OUTLINE_INFO_PATH)
-    let oinfo_path = get(split(globpath(&runtimepath, path . filetype . '.vim'), "\<NL>"), 0, '')
-    if !empty(oinfo_path) | return oinfo_path | endif
-  endfor
-  return ""
-endfunction
-
 function! unite#sources#outline#make_module(sid, prefix)
 
   " Original source from vital.vim
@@ -251,26 +260,28 @@ endif
 "-----------------------------------------------------------------------------
 " Aliases
 
-let s:filetype_alias_table = {}
+function! s:define_filetype_aliases()
+  let oinfos = {}
+  for path in s:OUTLINE_INFO_PATH
+    let dir = s:find_dir(path)
+    if empty(dir) | continue | endif
+    let oinfo_paths = split(globpath(dir, '*.vim'), "\<NL>")
+    for filetype in map(oinfo_paths, 'matchstr(v:val, "\\w\\+\\ze\\.vim$")')
+      let filetype = substitute(filetype, '_', '.', 'g')
+      let oinfos[filetype] = 1
+    endfor
+  endfor
 
-let s:default_alias_map = [
-      \ ['c',        'cpp'     ],
-      \ ['cfg',      'dosini'  ],
-      \ ['mkd',      'markdown'],
-      \ ['plaintex', 'tex'     ],
-      \ ['snippet',  'conf'    ],
-      \ ['xhtml',    'html'    ],
-      \ ['zsh',      'sh'      ],
-      \]
-for [alias, src_filetype] in s:default_alias_map
-  " NOTE: If the user has his/her own outline info for {alias} filetype, not
-  " define it as an alias of the other filetype by default.
-  if empty(s:find_outline_info(alias))
-    call unite#sources#outline#alias(alias, src_filetype)
-  endif
-endfor
-unlet alias | unlet src_filetype
-unlet s:default_alias_map
+  for [alias, src_filetype] in s:OUTLINE_ALIASES
+    " NOTE: If the user has his/her own outline info for {alias} filetype, not
+    " define it as an alias of the other filetype by default.
+    if !has_key(oinfos, alias)
+      call unite#sources#outline#alias(alias, src_filetype)
+    endif
+  endfor
+endfunction
+
+call s:define_filetype_aliases()
 
 "-----------------------------------------------------------------------------
 " Source
