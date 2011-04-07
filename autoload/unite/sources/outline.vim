@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-01
+" Updated : 2011-04-07
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -93,12 +93,13 @@ function! s:resolve_filetype_alias(filetype)
   return a:filetype
 endfunction
 
-let s:ftime_table = {}
-
 function! s:check_update(path)
+  if !exists('s:ftime_table')
+    let s:ftime_table = {}
+  endif
   let path = fnamemodify(a:path, ':p')
-  let old_ftime = get(s:ftime_table, path, 0)
   let new_ftime = getftime(path)
+  let old_ftime = get(s:ftime_table, path, new_ftime)
   if new_ftime > old_ftime
     source `=path`
   endif
