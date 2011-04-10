@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-29
+" Updated : 2011-04-11
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -32,9 +32,21 @@ function! unite#sources#outline#modules#cache#module()
   return s:cache
 endfunction
 
+"-----------------------------------------------------------------------------
+
+function! s:get_SID()
+  return str2nr(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_'))
+endfunction
+
+let s:cache = unite#sources#outline#modules#base#new(s:get_SID(), 'Cache')
+
+let s:cache.dir  = g:unite_data_directory . '/.outline'
+let s:cache.data = {}
+
 function! s:Cache_has(path) dict
   return (has_key(self.data, a:path) || s:exists_cache_file(a:path))
 endfunction
+call s:cache.bind('has')
 
 function! s:exists_cache_file(path)
   return (s:check_cache_dir() && filereadable(s:cache_file_path(a:path)))
@@ -82,6 +94,7 @@ function! s:Cache_get(path) dict
   let item.touched = localtime()
   return item.candidates
 endfunction
+call s:cache.bind('get')
 
 function! s:load_cache_file(path)
   let cache_file = s:cache_file_path(a:path)
@@ -156,6 +169,7 @@ function! s:Cache_set(path, candidates, should_serialize) dict
     call unite#util#print_error(v:exception)
   endtry
 endfunction
+call s:cache.bind('set')
 
 function! s:save_cache_file(path, data)
   let cache_file = s:cache_file_path(a:path)
@@ -204,6 +218,7 @@ function! s:Cache_remove(path) dict
     endtry
   endif
 endfunction
+call s:cache.bind('remove')
 
 function! s:remove_file(path)
     if delete(a:path) == 0
@@ -221,6 +236,7 @@ function! s:Cache_clear()
     call unite#util#print_error("unite-outline: Cache directory doesn't exist.")
   endif
 endfunction
+call s:cache.bind('clear')
 
 function! s:cleanup_cache_files(...)
   let do_all = (a:0 ? a:1 : 0)
@@ -259,16 +275,5 @@ function! s:compare_2nd(pair1, pair2)
   let t2 = a:pair2[1]
   return t1 == t2 ? 0 : t1 > t2 ? 1 : -1
 endfunction
-
-"-----------------------------------------------------------------------------
-
-function! s:get_SID()
-  return str2nr(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_'))
-endfunction
-
-let s:cache = unite#sources#outline#make_module(s:get_SID(), 'Cache')
-
-let s:cache.dir  = g:unite_data_directory . '/.outline'
-let s:cache.data = {}
 
 " vim: filetype=vim

@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-26
+" Updated : 2011-04-11
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -26,7 +26,7 @@
 " }}}
 "=============================================================================
 
-let s:util = unite#sources#outline#import('Util')
+let s:util = unite#sources#outline#import('util')
 
 " NOTE: All of the functions in this file are obsolete now. If you need any of
 " them, please import util module and call them via the module as Dictionary

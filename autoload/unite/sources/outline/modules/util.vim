@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-26
+" Updated : 2011-04-11
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -31,6 +31,15 @@ function! unite#sources#outline#modules#util#module()
 endfunction
 
 "-----------------------------------------------------------------------------
+
+function! s:get_SID()
+  return str2nr(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_'))
+endfunction
+let SID = s:get_SID()
+
+let s:util = unite#sources#outline#modules#base#new(s:get_SID(), 'Util')
+
+"-----------------------------------------------------------------------------
 " Headings
 
 function! s:Util_get_indent_level(context, lnum)
@@ -40,6 +49,7 @@ function! s:Util_get_indent_level(context, lnum)
   let indent = substitute(matchstr(line, '^\s*'), '\t', repeat(' ', ts), 'g')
   return strlen(indent) / sw + 1
 endfunction
+call s:util.bind('get_indent_level')
 
 function! s:Util_get_comment_heading_level(context, lnum, ...)
   let line = a:context.lines[a:lnum]
@@ -51,6 +61,7 @@ function! s:Util_get_comment_heading_level(context, lnum, ...)
   endif
   return level
 endfunction
+call s:util.bind('get_comment_heading_level')
 
 "-----------------------------------------------------------------------------
 " Matching
@@ -74,6 +85,7 @@ function! s:Util_join_to(context, lnum, pattern, ...)
   endwhile
   return join(lines[a:lnum : lnum], "\n")
 endfunction
+call s:util.bind('join_to')
 
 function! s:join_to_backward(context, lnum, pattern, limit)
   let lines = a:context.lines
@@ -95,6 +107,7 @@ function! s:Util_join_to_rparen(context, lnum, ...)
   let line = substitute(line, ')\zs.*$', '', '')
   return line
 endfunction
+call s:util.bind('join_to_rparen')
 
 " neighbor_match( {context}, {lnum}, {pattern} [, {range} [, {exclusive}])
 "
@@ -120,6 +133,7 @@ function! s:Util_neighbor_match(context, lnum, pattern, ...)
   endfor
   return 0
 endfunction
+call s:util.bind('neighbor_match')
 
 function! s:neighbor_ranges(context, lnum, prev, next, exclusive)
   let max_lnum = len(a:context.lines) - 1
@@ -154,6 +168,7 @@ function! s:Util_neighbor_matchstr(context, lnum, pattern, ...)
   endfor
   return ""
 endfunction
+call s:util.bind('neighbor_matchstr')
 
 let s:SHARED_PATTERNS = {
       \ 'c': {
@@ -176,9 +191,13 @@ let s:SHARED_PATTERNS = {
 function! s:Util_shared_pattern(filetype, which)
   return s:SHARED_PATTERNS[a:filetype][a:which]
 endfunction
+call s:util.bind('shared_pattern')
 
 "-----------------------------------------------------------------------------
 " List
+
+let s:list = unite#sources#outline#modules#base#new(s:get_SID(), 'List')
+let s:util.list = s:list
 
 function! s:List_sort_by_lnum(dicts)
   return sort(a:dicts, 's:compare_by_lnum')
@@ -188,6 +207,7 @@ function! s:compare_by_lnum(d1, d2)
   let n2 = a:d2.lnum
   return n1 == n2 ? 0 : n1 > n2 ? 1 : -1
 endfunction
+call s:list.bind('sort_by_lnum')
 
 function! s:List_split(list, sep)
   let result = []
@@ -203,6 +223,7 @@ function! s:List_split(list, sep)
   call add(result, sub_list)
   return result
 endfunction
+call s:list.bind('split')
 
 function! s:List_join(lists, sep)
   let result = []
@@ -213,13 +234,20 @@ function! s:List_join(lists, sep)
   call remove(result, -1)
   return result
 endfunction
+call s:list.bind('join')
 
 function! s:List_zip(list1, list2)
   return map(range(len(a:list1)), '[a:list1[v:val], a:list2[v:val]]')
 endfunction
+call s:list.bind('zip')
+
+unlet s:list
 
 "-----------------------------------------------------------------------------
 " Paths
+
+let s:path = unite#sources#outline#modules#base#new(s:get_SID(), 'Path')
+let s:util.path = s:path
 
 function! s:Path_normalize(path, ...)
   let path = a:path | let sep = '/'
@@ -254,9 +282,15 @@ function! s:Path_normalize(path, ...)
 
   return path
 endfunction
+call s:path.bind('normalize')
+
+unlet s:path
 
 "-----------------------------------------------------------------------------
 " Strings
+
+let s:str = unite#sources#outline#modules#base#new(s:get_SID(), 'Str' )
+let s:util.str = s:str
 
 " capitalize( {str} [, {flag}])
 "
@@ -264,6 +298,7 @@ function! s:Str_capitalize(str, ...)
   let flag = (a:0 ? a:1 : '')
   return substitute(a:str, '\<\(\h\)\(\w\+\)\>', '\u\1\L\2', flag)
 endfunction
+call s:str.bind('capitalize')
 
 " ported from:
 " Sample code from Programing Ruby, page 145
@@ -289,6 +324,7 @@ function! s:Str_nr2roman(nr)
   endfor
   return roman
 endfunction
+call s:str.bind('nr2roman')
 
 function! s:Str_shellescape(str)
   if &shell =~? '^\%(cmd\%(\.exe\)\=\|command\.com\)\%(\s\|$\)'
@@ -297,6 +333,9 @@ function! s:Str_shellescape(str)
     return "'" . substitute(a:str, "'", "'\\\\''", 'g') . "'"
   endif
 endfunction
+call s:str.bind('shellescape')
+
+unlet s:str
 
 "-----------------------------------------------------------------------------
 " Misc
@@ -306,30 +345,18 @@ function! s:Util_print_debug(msg)
     echomsg "unite-outline: " . a:msg
   endif
 endfunction
+call s:util.bind('print_debug')
 
 function! s:Util_print_progress(msg)
   redraw
   echon a:msg
 endfunction
+call s:util.bind('print_progress')
 
 function! s:Util__cpp_is_in_comment(heading_line, matched_line)
   return ((a:matched_line =~ '^\s*//'  && a:heading_line =~ '^\s*//') ||
         \ (a:matched_line =~ '^\s*/\*' && a:matched_line !~ '\*/\s*$'))
 endfunction
-
-"-----------------------------------------------------------------------------
-
-function! s:get_SID()
-  return str2nr(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_'))
-endfunction
-let SID = s:get_SID()
-
-let s:util = unite#sources#outline#make_module(SID, 'Util')
-
-" bind submodules
-let s:util.list = unite#sources#outline#make_module(SID, 'List')
-let s:util.path = unite#sources#outline#make_module(SID, 'Path')
-let s:util.str  = unite#sources#outline#make_module(SID, 'Str' )
-unlet SID
+call s:util.bind('_cpp_is_in_comment')
 
 " vim: filetype=vim

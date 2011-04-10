@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-29
+" Updated : 2011-04-11
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -30,6 +30,14 @@ function! unite#sources#outline#modules#tree#module()
   return s:tree
 endfunction
 
+"-----------------------------------------------------------------------------
+
+function! s:get_SID()
+  return str2nr(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_'))
+endfunction
+
+let s:tree = unite#sources#outline#modules#base#new(s:get_SID(), 'Tree')
+
 function! s:Tree_append_child(parent, child)
   if !has_key(a:parent, 'source__children')
     let a:parent.source__children = []
@@ -37,20 +45,24 @@ function! s:Tree_append_child(parent, child)
   call add(a:parent.source__children, a:child)
   let a:child.source__parent = a:parent
 endfunction
+call s:tree.bind('append_child')
 
 function! s:Tree_remove_child(parent, child)
   call remove(a:parent.source__children, index(a:parent.source__children, a:child))
 endfunction
+call s:tree.bind('remove_child')
 
 function! s:Tree_has_parent(node)
   let cand = has_key(a:node, 'candidate') ? a:node.candidate : a:node
   return has_key(cand, 'source__parent')
 endfunction
+call s:tree.bind('has_parent')
 
 function! s:Tree_has_children(node)
   let cand = has_key(a:node, 'candidate') ? a:node.candidate : a:node
   return has_key(cand, 'source__children')
 endfunction
+call s:tree.bind('has_children')
 
 function! s:Tree_get_parent(node)
   if has_key(a:node, 'candidate')
@@ -60,6 +72,7 @@ function! s:Tree_get_parent(node)
     return get(a:node, 'source__parent')
   endif
 endfunction
+call s:tree.bind('get_parent')
 
 function! s:Tree_get_children(node)
   if has_key(a:node, 'candidate')
@@ -69,16 +82,19 @@ function! s:Tree_get_children(node)
     return get(a:node, 'source__children', [])
   endif
 endfunction
+call s:tree.bind('get_children')
 
 function! s:Tree_is_toplevel(node)
   let cand = has_key(a:node, 'candidate') ? a:node.candidate : a:node
   return !has_key(cand, 'source__parent')
 endfunction
+call s:tree.bind('is_toplevel')
 
 function! s:Tree_is_leaf(node)
   let cand = has_key(a:node, 'candidate') ? a:node.candidate : a:node
   return !has_key(cand, 'source__children')
 endfunction
+call s:tree.bind('is_leaf')
 
 function! s:Tree_build(headings)
   let root = { 'level': 0, 'source__children': [] }
@@ -96,6 +112,7 @@ function! s:Tree_build(headings)
 
   return s:Tree_normalize(root)
 endfunction
+call s:tree.bind('build')
 
 function! s:Tree_filter(treed_list, pred, ...)
   if empty(a:treed_list) | return a:treed_list | endif
@@ -115,6 +132,7 @@ function! s:Tree_filter(treed_list, pred, ...)
   endfor
   return treed_list
 endfunction
+call s:tree.bind('filter')
 
 function! s:mark(node, pred, marked, do_remove_child)
   let child_marked = 0
@@ -144,6 +162,7 @@ function! s:Tree_flatten(tree)
   endif
   return headings
 endfunction
+call s:tree.bind('flatten')
 
 function! s:Tree_normalize(root)
   call extend(a:root, { 'source__id': 0, 'level': 0 })
@@ -157,13 +176,6 @@ function! s:Tree_normalize(root)
   endif
   return a:root
 endfunction
-
-"-----------------------------------------------------------------------------
-
-function! s:get_SID()
-  return str2nr(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_'))
-endfunction
-
-let s:tree = unite#sources#outline#make_module(s:get_SID(), 'Tree')
+call s:tree.bind('normalize')
 
 " vim: filetype=vim

@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-28
+" Updated : 2011-04-11
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -32,9 +32,151 @@ function! unite#sources#outline#modules#ctags#module()
   return s:ctags
 endfunction
 
+"-----------------------------------------------------------------------------
+
+function! s:get_SID()
+  return str2nr(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_'))
+endfunction
+
+function! s:find_exuberant_ctags()
+  let ctags_bin_names = [
+        \ 'ctags-exuberant',
+        \ 'exctags',
+        \ 'ctags',
+        \ 'tags',
+        \ ]
+  if exists('g:neocomplcache_ctags_program')
+    let ctags_bin_names = [g:neocomplcache_ctags_program] + ctags_bin_names
+  endif
+  for ctags in ctags_bin_names
+    if executable(ctags)
+      let ctags_out = unite#util#system(ctags . ' --version')
+      if split(ctags_out, "\<NL>")[0] =~? '\<Exuberant Ctags\>'
+        return ctags
+      endif
+    endif
+  endfor
+  return ''
+endfunction 
+
+let s:ctags = unite#sources#outline#modules#base#new(s:get_SID(), 'Ctags')
+let s:ctags.bin = s:find_exuberant_ctags()
+let s:ctags.langs = {}
+
+" C/C++
+"
+"  [c] classes
+"  [d] macro definitions
+"   e  enumerators (values inside an enumeration)
+"  [f] function definitions
+"  [g] enumeration names
+"   l  local variables
+"   m  class, struct, and union members
+"  [n] namespaces
+"   p  function prototypes
+"  [s] structure names
+"  [t] typedefs
+"  [u] union names
+"   v  variable definitions
+"   x  external and forward variable declarations
+"
+let s:ctags.langs.cpp = {
+      \ 'name': 'C++',
+      \ 'ctags_options': ' --c++-kinds=cdfgnstu ',
+      \ 'scope_kinds'  : ['namespace', 'class', 'struct'],
+      \ 'scope_delim'  : '::',
+      \ }
+function! s:ctags.langs.cpp.create_heading(tag, context)
+  let line = a:context.lines[a:tag.lnum]
+  let heading = {
+        \ 'word' : a:tag.name,
+        \ 'type' : a:tag.kind,
+        \ 'lnum' : a:tag.lnum,
+        \ }
+  let ignore = 0
+  if heading.type ==# 'function'
+    if a:tag.name =~# '^[[:upper:]_]\{3,}$'
+      let ignore = 1
+    elseif has_key(a:tag, 'signature')
+      let heading.word .= ' ' . a:tag.signature
+    else
+      let heading.word .= ' ' . s:get_param_list(a:context, a:tag.lnum)
+    endif
+  else
+    if heading.type ==# 'macro'
+      if line =~# '#undef\>'
+        let ignore = 1
+      elseif line =~# a:tag.name . '('
+        let heading.word .= ' ' . s:get_param_list(a:context, a:tag.lnum)
+      endif
+    endif
+    let heading.word .= ' : ' . a:tag.kind
+  endif
+  if has_key(a:tag, 'implementation')
+    let heading.word .= ' <' . a:tag.implementation . '>'
+  endif
+  return ignore ? {} : heading
+endfunction
+
+let s:ctags.langs.c = copy(s:ctags.langs.cpp)
+call extend(s:ctags.langs.c, { 'name': 'C', 'ctags_options': ' --c-kinds=cdfgnstu ' }, 'force')
+
+" Java
+"
+"  [c] classes
+"   e  enum constants
+"   f  fields
+"  [g] enum types
+"  [i] interfaces
+"   l  local variables
+"  [m] methods
+"  [p] packages
+"
+let s:ctags.langs.java = {
+      \ 'name': 'Java',
+      \ 'ctags_options': ' --java-kinds=cgimp ',
+      \ 'scope_kinds'  : ['interface', 'class'],
+      \ 'scope_delim'  : '.',
+      \ }
+
+" Python
+"
+"  [c] classes
+"  [f] functions
+"  [m] class members
+"   v  variables
+"   i  imports
+"
+let s:ctags.langs.python = {
+      \ 'name': 'Python',
+      \ 'ctags_options': ' --python-kinds=cfm ',
+      \ 'scope_kinds'  : ['function', 'class', 'member'],
+      \ 'scope_delim'  : '.',
+      \ }
+function! s:ctags.langs.python.create_heading(tag, context)
+  let heading = {
+        \ 'word' : a:tag.name,
+        \ 'type' : a:tag.kind,
+        \ 'lnum' : a:tag.lnum,
+        \ }
+  let ignore = 0
+  if heading.type =~# '^\%(function\|member\)'
+    let heading.word .= ' ' . s:get_param_list(a:context, a:tag.lnum)
+  elseif heading.type ==# 'variable'
+    " NOTE: ctags always generates tags for variables.
+    let ignore = 1
+  else
+    let heading.word .= ' : ' . a:tag.kind
+  endif
+  return ignore ? {} : heading
+endfunction
+
+"-----------------------------------------------------------------------------
+
 function! s:Ctags_exists()
   return !empty(s:ctags.bin)
 endfunction
+call s:ctags.bind('exists')
 
 function! s:Ctags_has(filetype)
   if !has_key(s:ctags.langs, a:filetype)
@@ -45,6 +187,7 @@ function! s:Ctags_has(filetype)
     return index(split(ctags_out, "\<NL>"), lang.name, 1) >= 0
   endif
 endfunction
+call s:ctags.bind('has')
 
 function! s:get_tags(context)
   let lang = s:ctags.langs[a:context.buffer.major_filetype]
@@ -187,6 +330,7 @@ function! s:Ctags_extract_headings(context)
 
   return tree_root
 endfunction
+call s:ctags.bind('extract_headings')
 
 function! s:create_heading(tag, context)
   let line = a:context.lines[a:tag.lnum]
@@ -232,145 +376,6 @@ function! s:get_tag_name_id_suffix(tag, counter)
     let a:counter[name] = 1
     return ''
   endif
-endfunction
-
-"-----------------------------------------------------------------------------
-
-function! s:get_SID()
-  return str2nr(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_'))
-endfunction
-
-function! s:find_exuberant_ctags()
-  let ctags_bin_names = [
-        \ 'ctags-exuberant',
-        \ 'exctags',
-        \ 'ctags',
-        \ 'tags',
-        \ ]
-  if exists('g:neocomplcache_ctags_program')
-    let ctags_bin_names = [g:neocomplcache_ctags_program] + ctags_bin_names
-  endif
-  for ctags in ctags_bin_names
-    if executable(ctags)
-      let ctags_out = unite#util#system(ctags . ' --version')
-      if split(ctags_out, "\<NL>")[0] =~? '\<Exuberant Ctags\>'
-        return ctags
-      endif
-    endif
-  endfor
-  return ''
-endfunction 
-
-let s:ctags = unite#sources#outline#make_module(s:get_SID(), 'Ctags')
-let s:ctags.bin = s:find_exuberant_ctags()
-let s:ctags.langs = {}
-
-" C/C++
-"
-"  [c] classes
-"  [d] macro definitions
-"   e  enumerators (values inside an enumeration)
-"  [f] function definitions
-"  [g] enumeration names
-"   l  local variables
-"   m  class, struct, and union members
-"  [n] namespaces
-"   p  function prototypes
-"  [s] structure names
-"  [t] typedefs
-"  [u] union names
-"   v  variable definitions
-"   x  external and forward variable declarations
-"
-let s:ctags.langs.cpp = {
-      \ 'name': 'C++',
-      \ 'ctags_options': ' --c++-kinds=cdfgnstu ',
-      \ 'scope_kinds'  : ['namespace', 'class', 'struct'],
-      \ 'scope_delim'  : '::',
-      \ }
-function! s:ctags.langs.cpp.create_heading(tag, context)
-  let line = a:context.lines[a:tag.lnum]
-  let heading = {
-        \ 'word' : a:tag.name,
-        \ 'type' : a:tag.kind,
-        \ 'lnum' : a:tag.lnum,
-        \ }
-  let ignore = 0
-  if heading.type ==# 'function'
-    if a:tag.name =~# '^[[:upper:]_]\{3,}$'
-      let ignore = 1
-    elseif has_key(a:tag, 'signature')
-      let heading.word .= ' ' . a:tag.signature
-    else
-      let heading.word .= ' ' . s:get_param_list(a:context, a:tag.lnum)
-    endif
-  else
-    if heading.type ==# 'macro'
-      if line =~# '#undef\>'
-        let ignore = 1
-      elseif line =~# a:tag.name . '('
-        let heading.word .= ' ' . s:get_param_list(a:context, a:tag.lnum)
-      endif
-    endif
-    let heading.word .= ' : ' . a:tag.kind
-  endif
-  if has_key(a:tag, 'implementation')
-    let heading.word .= ' <' . a:tag.implementation . '>'
-  endif
-  return ignore ? {} : heading
-endfunction
-
-let s:ctags.langs.c = copy(s:ctags.langs.cpp)
-call extend(s:ctags.langs.c, { 'name': 'C', 'ctags_options': ' --c-kinds=cdfgnstu ' }, 'force')
-
-" Java
-"
-"  [c] classes
-"   e  enum constants
-"   f  fields
-"  [g] enum types
-"  [i] interfaces
-"   l  local variables
-"  [m] methods
-"  [p] packages
-"
-let s:ctags.langs.java = {
-      \ 'name': 'Java',
-      \ 'ctags_options': ' --java-kinds=cgimp ',
-      \ 'scope_kinds'  : ['interface', 'class'],
-      \ 'scope_delim'  : '.',
-      \ }
-
-" Python
-"
-"  [c] classes
-"  [f] functions
-"  [m] class members
-"   v  variables
-"   i  imports
-"
-let s:ctags.langs.python = {
-      \ 'name': 'Python',
-      \ 'ctags_options': ' --python-kinds=cfm ',
-      \ 'scope_kinds'  : ['function', 'class', 'member'],
-      \ 'scope_delim'  : '.',
-      \ }
-function! s:ctags.langs.python.create_heading(tag, context)
-  let heading = {
-        \ 'word' : a:tag.name,
-        \ 'type' : a:tag.kind,
-        \ 'lnum' : a:tag.lnum,
-        \ }
-  let ignore = 0
-  if heading.type =~# '^\%(function\|member\)'
-    let heading.word .= ' ' . s:get_param_list(a:context, a:tag.lnum)
-  elseif heading.type ==# 'variable'
-    " NOTE: ctags always generates tags for variables.
-    let ignore = 1
-  else
-    let heading.word .= ' : ' . a:tag.kind
-  endif
-  return ignore ? {} : heading
 endfunction
 
 " vim: filetype=vim
