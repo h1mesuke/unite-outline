@@ -288,7 +288,7 @@ function! s:Ctags_extract_headings(context)
       " the heading has its scope
       if !has_key(scope_table, tag.name)
         let scope_table[tag.qualified_name] = heading
-      elseif has_key(scope_table[tag.qualified_name], '__pseudo__')
+      elseif has_key(scope_table[tag.qualified_name], 'source__pseudo__')
         let heading.children = scope_table[tag.qualified_name].children
         let scope_table[tag.qualified_name] = heading
       endif
@@ -302,7 +302,7 @@ function! s:Ctags_extract_headings(context)
               \ 'level': 1,
               \ 'type' : tag.scope_kind,
               \ 'lnum' : tag.lnum,
-              \ '__pseudo__': 1,
+              \ 'source__pseudo__': 1,
               \ }
         let scope_table[tag.scope] = pseudo_heading
       endif

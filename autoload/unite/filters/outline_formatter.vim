@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_formatter.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-03-29
+" Updated : 2011-04-11
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -34,8 +34,7 @@ let s:BLANK = {
       \ 'word': '',
       \ 'source': 'outline',
       \ 'kind'  : 'common',
-      \
-      \ 'source__type' : '__blank__',
+      \ 'source__blank__': 1,
       \ }
 
 let s:formatter = {
