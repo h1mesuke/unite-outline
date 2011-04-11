@@ -118,19 +118,12 @@ function! s:Tree_filter(treed_list, pred, ...)
   if empty(a:treed_list) | return a:treed_list | endif
 
   let do_remove_child = (a:0 ? a:1 : 0)
-
   let marked = {}
   for node in filter(copy(a:treed_list), 's:Tree_is_toplevel(v:val)')
     call s:mark(node, a:pred, marked, do_remove_child)
   endfor
 
-  let treed_list = []
-  for node in a:treed_list
-    if marked[node.source__id]
-      call add(treed_list, node)
-    endif
-  endfor
-  return treed_list
+  return filter(a:treed_list, 'marked[v:val.source__id]')
 endfunction
 call s:tree.bind('filter')
 
