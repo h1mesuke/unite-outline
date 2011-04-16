@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-03-19
+Updated : 2011-04-16
 Version : 0.3.3
 License : MIT license {{{
 
@@ -31,6 +31,8 @@ License : MIT license {{{
 	使い方			|unite-outline-usage|
 	設定			|unite-outline-settings|
 	  変数			  |unite-outline-variables|
+	  キーマッピング	  |unite-outline-key-mappings|
+	  設定例		  |unite-outline-settings-examples|
 	Outline Info		|unite-outline-info|
 	  outline info の作成	  |unite-outline-info-create|
 	  outline info の属性	  |unite-outline-info-attributes|
@@ -52,13 +54,14 @@ License : MIT license {{{
 ==============================================================================
 インストール					*unite-outline-install*
 
-	配布アーカイブに含まれるファイル群を、そのフォルダごと Vim
-	の 'runtimepath' にコピーします。 $HOME/.vim（Windows の場合は
-	$HOME/vimfiles）へのインストールがもっとも一般的でしょう。その場合イン
-	ストール後の配置は
+	配布アーカイブに含まれるファイル群を、そのフォルダごと Vim の
+	'runtimepath' にコピーします。 $HOME/.vim（Windows の場合は
+	$HOME/vimfiles）へのインストールがもっとも一般的でしょう。
+	インストール後の配置は
 
 	$HOME/.vim/autoload/unite/sources/outline.vim
 	$HOME/.vim/autoload/unite/sources/outline
+	$HOME/.vim/autoload/unite/filters/*.vim
 	$HOME/.vim/doc/unite-outline.jax
 
 	になります。
@@ -132,11 +135,11 @@ g:unite_source_outline_ignore_heading_types
 	初期値は {}
 
 	設定例： >
-	let ignore_heading_types = {}
-	let ignore_heading_types['*'] = ['comment']
-	let ignore_heading_types.cpp  = ['macro', 'typedef', 'enum']
-	let g:unite_source_outline_ignore_heading_types = ignore_heading_types
-	unlet ignore_heading_types
+	let ignore_types = {}
+	let ignore_types['*'] = ['comment']
+	let ignore_types.cpp  = ['macro', 'typedef', 'enum']
+	let g:unite_source_outline_ignore_heading_types = ignore_types
+	unlet ignore_types
 <
 g:unite_source_outline_max_headings	*g:unite_source_outline_max_headings*
 
@@ -163,6 +166,44 @@ g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
 
 	初期値は 1000
 
+------------------------------------------------------------------------------
+キーマッピング					*unite-outline-key-mappings*
+
+ノーマルモードマッピング
+				*<Plug>(unite_source_outline_loop_cursor_down)*
+<Plug>(unite_source_outline_loop_cursor_down)
+
+	絞り込みを行っている場合、マッチした次の見出しへ移動します。
+	そうでない場合、|<Plug>(unite_loop_cursor_down)|を実行します。
+
+	uniteバッファの buffer name が "outline" であるときのみ利用可能
+
+				*<Plug>(unite_source_outline_loop_cursor_up)*
+<Plug>(unite_source_outline_loop_cursor_up)
+
+	絞り込みを行っている場合、マッチした前の見出しへ移動します。
+	そうでない場合、|<Plug>(unite_loop_cursor_up)|を実行します。
+
+	uniteバッファの buffer name が "outline" であるときのみ利用可能
+
+------------------------------------------------------------------------------
+設定例						*unite-outline-settings-examples*
+
+.vimrc
+>
+	nnoremap [unite] <Nop>
+	nmap f [unite]
+
+	nnoremap <silent> [unite]o :<C-u>Unite -buffer-name=outline outline<CR>
+<
+
+(runtimepath)/after/ftplugin/unite.vim
+>
+	if unite#get_context().buffer_name ==# 'outline'
+	  nmap <buffer> J <Plug>(unite_source_outline_loop_cursor_down)
+	  nmap <buffer> K <Plug>(unite_source_outline_loop_cursor_up)
+	endif
+<
 ==============================================================================
 Outline Info					*unite-outline-info*
 
@@ -424,10 +465,6 @@ FORMATTING ~
 
 	TODO
 
-NARROWING ~
-
-	TODO
-
 CACHING ~
 
 is_volatile	数値（任意）			*unite-outline-info-is_volatile*
@@ -544,23 +581,10 @@ unite#sources#outline#util#nr2roman( {nr})
 ==============================================================================
 TODO						*unite-outline-todo*
 
-	* ctags対応版 outline info への置き換え
-
-		プログラミング言語用の outline info については、見出し抽出に
-		ctags またはそれに類する外部の構文解析プログラムを利用する方向で
-		改修を予定しています。
-
 	* Erlang, Go, Haskell などの outline info
 
 		作者にとって未知の言語なため対応が遅れています。
 		なんとかしなければ。
-
-	* 親子関係に配慮した matcher の実装
-
-		現在、候補の絞り込みに際して、見出しの親子関係が考慮されないの
-		で、これに配慮した matcher を実装したいと考えています。
-
-	* ヘルプの英訳
 
 	* 対応ファイルタイプの充実
 
@@ -575,11 +599,9 @@ TODO						*unite-outline-todo*
 ------------------------------------------------------------------------------
 outline info 募集！
 
-	デフォルトの outline info が用意されていないファイルタイプについて、も
-	し outline info を書かれた方がおられたら、ぜひとも作者までお寄せ下さい。
-
-	デフォルトの outline info を書くときに参考に（もしくはそのまま採用）さ
-	せていただきます。
+	デフォルトの outline info が用意されていないファイルタイプについて
+	outline info を作成された方がおられたら、ぜひとも作者までお寄せ下さい。
+	参考に（もしくはそのまま採用）させていただきます。
 
 	* Issues - h1mesuke/unite-outline - GitHub
 	  https://github.com/h1mesuke/unite-outline/issues
@@ -593,9 +615,13 @@ outline info 募集！
 ==============================================================================
 更新履歴					*unite-outline-changelog*
 
-	https://github.com/h1mesuke/unite-outline/commits/master
+https://github.com/h1mesuke/unite-outline/commits/master
 
-0.3.x	2011-03-xx
+0.3.4	2011-03-xx
+
+	* 親子関係に配慮した matcher を実装
+
+0.3.3	2011-03-19
 
 	* outline info の仕様から skip_header() を削除
 
