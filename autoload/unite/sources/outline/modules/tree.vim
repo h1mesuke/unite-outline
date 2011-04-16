@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-11
+" Updated : 2011-04-16
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -117,21 +117,30 @@ call s:tree.bind('build')
 function! s:Tree_filter(treed_list, pred, ...)
   if empty(a:treed_list) | return a:treed_list | endif
 
+  let contained = {}
+  for node in a:treed_list
+    let contained[node.source__id] = 1
+  endfor
+
   let do_remove_child = (a:0 ? a:1 : 0)
   let marked = {}
   for node in filter(copy(a:treed_list), 's:Tree_is_toplevel(v:val)')
-    call s:mark(node, a:pred, marked, do_remove_child)
+    call s:mark(node, a:pred, contained, marked, do_remove_child)
   endfor
 
   return filter(a:treed_list, 'marked[v:val.source__id]')
 endfunction
 call s:tree.bind('filter')
 
-function! s:mark(node, pred, marked, do_remove_child)
+function! s:mark(node, pred, contained, marked, do_remove_child)
+  if !has_key(a:contained, a:node.source__id)
+    return 0
+  endif
+
   let child_marked = 0
   if has_key(a:node, 'source__children')
     for child in a:node.source__children
-      if s:mark(child, a:pred, a:marked, a:do_remove_child)
+      if s:mark(child, a:pred, a:contained, a:marked, a:do_remove_child)
         let child_marked = 1
       elseif a:do_remove_child
         call s:Tree_remove_child(a:node, child)
