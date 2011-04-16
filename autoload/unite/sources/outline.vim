@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-11
+" Updated : 2011-04-16
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -209,6 +209,36 @@ function! unite#sources#outline#clear_cache()
 endfunction
 
 "-----------------------------------------------------------------------------
+" Key-mappings
+
+let g:unite_source_outline_input = ''
+
+function! s:jump_to_match(...)
+  if unite#get_context().buffer_name !=# 'outline'
+    call unite#util#print_error("unite-outline: Invalid buffer name.")
+    return
+  endif
+
+  let flags = (a:0 ? a:1 : '')
+  let forward = (flags !~# 'b')
+  if empty(g:unite_source_outline_input)
+    execute 'normal' "\<Plug>(unite_loop_cursor_" . (forward ? 'down' : 'up') . ')'
+  else
+    for i in range(3)
+      execute 'normal!' (forward ? '$' : '0')
+      call search('\c' . g:unite_source_outline_input, 'w' . flags)
+      if winline() > 2 | break | endif
+    endfor
+  endif
+endfunction
+
+nnoremap <silent> <Plug>(unite_source_outline_loop_cursor_down)
+      \ :<C-u>call <SID>jump_to_match()<CR>
+
+nnoremap <silent> <Plug>(unite_source_outline_loop_cursor_up)
+      \ :<C-u>call <SID>jump_to_match('b')<CR>
+
+"-----------------------------------------------------------------------------
 " Variables
 
 if !exists('g:unite_source_outline_info')
@@ -235,7 +265,7 @@ if !exists('g:unite_source_outline_cache_limit')
   let g:unite_source_outline_cache_limit = 1000
 endif
 
-"-----------------------------------------------------------------------------
+"---------------------------------------
 " Aliases
 
 function! s:define_filetype_aliases()

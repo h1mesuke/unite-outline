@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_matcher_glob_tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-04
+" Updated : 2011-04-11
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -40,6 +40,7 @@ let s:matcher = {
 "
 function! s:matcher.filter(candidates, context)
   if a:context.input == ''
+    let g:unite_source_outline_input = ''
     return a:candidates
   endif
 
@@ -78,6 +79,7 @@ function! s:matcher.filter(candidates, context)
       endif
     endif
 
+    let g:unite_source_outline_input = pred.input
     let candidates = tree.filter(candidates, pred)
   endfor
 
