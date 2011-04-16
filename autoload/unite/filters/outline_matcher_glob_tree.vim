@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_matcher_glob_tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-11
+" Updated : 2011-04-16
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -57,17 +57,20 @@ function! s:matcher.filter(candidates, context)
     if input =~ '^!'
       " exclusion
       let pred.input = unite#escape_match(input)
+      let g:unite_source_outline_input = ''
       function pred.call(cand)
         return (a:cand.word !~ self.input[1:])
       endfunction
     elseif input =~ '\\\@<!\*'
       " wildcard
       let pred.input = unite#escape_match(input)
+      let g:unite_source_outline_input = pred.input
       function pred.call(cand)
         return (a:cand.word =~ self.input)
       endfunction
     else
       let pred.input = substitute(input, '\\\(.\)', '\1', 'g')
+      let g:unite_source_outline_input = pred.input
       if &ignorecase
         function pred.call(cand)
           return (stridx(tolower(a:cand.word), self.input) != -1)
@@ -79,7 +82,6 @@ function! s:matcher.filter(candidates, context)
       endif
     endif
 
-    let g:unite_source_outline_input = pred.input
     let candidates = tree.filter(candidates, pred)
   endfor
 
