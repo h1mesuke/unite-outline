@@ -31,7 +31,6 @@ License : MIT license {{{
 	使い方			|unite-outline-usage|
 	設定			|unite-outline-settings|
 	  変数			  |unite-outline-variables|
-	  キーマッピング	  |unite-outline-key-mappings|
 	  設定例		  |unite-outline-settings-examples|
 	Outline Info		|unite-outline-info|
 	  outline info の作成	  |unite-outline-info-create|
@@ -167,29 +166,7 @@ g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
 	初期値は 1000
 
 ------------------------------------------------------------------------------
-キーマッピング					*unite-outline-key-mappings*
-
-ノーマルモードマッピング
-				*<Plug>(unite_source_outline_loop_cursor_down)*
-<Plug>(unite_source_outline_loop_cursor_down)
-
-	絞り込みを行っている場合、マッチした次の見出しへ移動します。
-	そうでない場合、|<Plug>(unite_loop_cursor_down)|を実行します。
-
-	uniteバッファの buffer name が "outline" であるときのみ利用可能
-
-				*<Plug>(unite_source_outline_loop_cursor_up)*
-<Plug>(unite_source_outline_loop_cursor_up)
-
-	絞り込みを行っている場合、マッチした前の見出しへ移動します。
-	そうでない場合、|<Plug>(unite_loop_cursor_up)|を実行します。
-
-	uniteバッファの buffer name が "outline" であるときのみ利用可能
-
-------------------------------------------------------------------------------
 設定例						*unite-outline-settings-examples*
-
-.vimrc
 >
 	nnoremap [unite] <Nop>
 	nmap f [unite]
@@ -198,14 +175,6 @@ g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
 
 	call unite#set_buffer_name_option('outline', 'ignorecase', 1)
 	call unite#set_buffer_name_option('outline', 'smartcase', 1)
-<
-
-(runtimepath)/after/ftplugin/unite.vim
->
-	if unite#get_context().buffer_name ==# 'outline'
-	  nmap <buffer> J <Plug>(unite_source_outline_loop_cursor_down)
-	  nmap <buffer> K <Plug>(unite_source_outline_loop_cursor_up)
-	endif
 <
 ==============================================================================
 Outline Info					*unite-outline-info*

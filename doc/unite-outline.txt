@@ -31,7 +31,6 @@ CONTENTS					*unite-outline-contents*
 	Usage			|unite-outline-usage|
 	Settings		|unite-outline-settings|
 	  Variables		  |unite-outline-variables|
-	  Key Mappings		  |unite-outline-key-mappings|
 	  Examples		  |unite-outline-settings-examples|
 	Outline Info		|unite-outline-info|
 	  Create Outline Info	  |unite-outline-info-create|
@@ -156,14 +155,7 @@ g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
 	Default value is 1000.
 
 ------------------------------------------------------------------------------
-KEY MAPPINGS					*unite-outline-key-mappings*
-
-	TODO
-
-------------------------------------------------------------------------------
 EXAMPLES					*unite-outline-settings-examples*
-
-.vimrc
 >
 	nnoremap [unite] <Nop>
 	nmap f [unite]
@@ -172,14 +164,6 @@ EXAMPLES					*unite-outline-settings-examples*
 
 	call unite#set_buffer_name_option('outline', 'ignorecase', 1)
 	call unite#set_buffer_name_option('outline', 'smartcase', 1)
-<
-
-(runtimepath)/after/ftplugin/unite.vim
->
-	if unite#get_context().buffer_name ==# 'outline'
-	  nmap <buffer> J <Plug>(unite_source_outline_loop_cursor_down)
-	  nmap <buffer> K <Plug>(unite_source_outline_loop_cursor_up)
-	endif
 <
 ==============================================================================
 OUTLINE INFO					*unite-outline-info*
