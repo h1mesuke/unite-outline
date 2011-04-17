@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-16
+" Updated : 2011-04-17
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -864,23 +864,6 @@ function! s:adjust_scroll(best_winline)
 endfunction
 
 let s:source.action_table.jump_list = s:action_table
-
-let s:action_table = {}
-let s:action_table.nop_ = {
-      \ 'description'  : 'do nothing',
-      \ 'is_selectable': 0,
-      \ }
-function! s:action_table.nop_.func(candidate)
-endfunction
-
-let s:source.action_table.common = s:action_table
-let s:source.default_action.common = 'nop_'
-unlet s:action_table
-
-let s:source.alias_table.common = {}
-for action in ['yank', 'yank_escape', 'ex', 'insert']
-  let s:source.alias_table.common[action] = 'nop'
-endfor
 
 "---------------------------------------
 " Filters
