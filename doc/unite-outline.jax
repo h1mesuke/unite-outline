@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-04-16
+Updated : 2011-04-17
 Version : 0.3.3
 License : MIT license {{{
 
@@ -195,6 +195,9 @@ g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
 	nmap f [unite]
 
 	nnoremap <silent> [unite]o :<C-u>Unite -buffer-name=outline outline<CR>
+
+	call unite#set_buffer_name_option('outline', 'ignorecase', 1)
+	call unite#set_buffer_name_option('outline', 'smartcase', 1)
 <
 
 (runtimepath)/after/ftplugin/unite.vim
@@ -617,26 +620,26 @@ outline info 募集！
 
 https://github.com/h1mesuke/unite-outline/commits/master
 
+------------------------------------------------------------------------------
 0.3.4	2011-03-xx
 
 	* 親子関係に配慮した matcher を実装
 
+------------------------------------------------------------------------------
 0.3.3	2011-03-19
 
 	* outline info の仕様から skip_header() を削除
 
 	* キャッシュの保存ディレクトリを g:unite_data_directory以下に固定し、
 	  以下の変数を削除
-
 	  - g:unite_source_outline_cache_dir
 
 	* キャッシュに関するオプション変数を整理
-
 	  - g:unite_source_outline_cache_serialize_limit を
 	   |g:unite_source_outline_cache_limit|に変更
-
 	  - 従来の g:unite_source_outline_cache_limit は削除
 
+------------------------------------------------------------------------------
 0.3.2	2011-03-01
 
 	* outline info の探索パスに "autoload/outline" を追加
@@ -647,7 +650,6 @@ https://github.com/h1mesuke/unite-outline/commits/master
 	* {context} の仕様を変更
 	  context.lines の先頭にダミーの空行を付加し、リストの添字と行番号が
 	  一致するように修正し、以下の属性名を変更
-
 	  - heading_index -> heading_lnum
 	  - matched_index -> matched_lnum
 
@@ -655,21 +657,22 @@ https://github.com/h1mesuke/unite-outline/commits/master
 	  引数として、{lines} ではなく {context} を、{idx} ではなく {lnum} を
 	  受け取るように修正
 
+------------------------------------------------------------------------------
 0.3.1	2011-01-29
 
 	* 特定の種類の見出しを非表示にする機能を追加し、以下の変数を追加
-
 	  -|g:unite_source_outline_ignore_heading_types|
 
+------------------------------------------------------------------------------
 0.3.0	2011-01-10
 
 	* create_heading() から見出しのメタ情報をもった辞書を返せるように
 	  outline info の仕様を拡張
 
+------------------------------------------------------------------------------
 0.2.1	2011-01-04
 
 	* キャッシュの一部永続化を実装し、以下の変数を追加
-
 	  -|g:unite_source_outline_cache_dir|
 	  -|g:unite_source_outline_cache_serialize_limit|
 
