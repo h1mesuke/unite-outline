@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-17
+" Updated : 2011-04-18
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -116,6 +116,9 @@ function! s:check_update(path)
   if !exists('s:ftime_table')
     let s:ftime_table = {}
   endif
+  if !filereadable(a:path) || a:path !~? '\.vim$'
+    throw "unite-outline: Invalid script path."
+  endif
   let path = fnamemodify(a:path, ':p')
   let new_ftime = getftime(path)
   let old_ftime = get(s:ftime_table, path, new_ftime)
@@ -183,24 +186,27 @@ function! unite#sources#outline#import(name)
 endfunction
 
 function! s:find_autoload_script(funcname)
-  let path_list = split(a:funcname, '#')
-  let dir = s:find_dir('autoload/' . join(path_list[:-3], '/'))
-  if empty(dir)
-    throw "unite-outline: Directory not found for " . a:funcname
+  if !exists('s:autoload_scripts')
+    let s:autoload_scripts = {}
   endif
-  let base = path_list[-2] . '.vim'
-  return get(split(globpath(dir, base), "\<NL>"), 0, '')
-endfunction
-
-function! s:find_dir(rel_path)
-  if !exists('s:autoload_dirs')
-    let s:autoload_dirs = {}
+  if has_key(s:autoload_scripts, a:funcname)
+    return s:autoload_scripts[a:funcname]
+  else
+    let path_list = split(a:funcname, '#')
+    let rel_path = 'autoload/' . join(path_list[:-3], '/')
+    let dir = get(split(globpath(&runtimepath, rel_path), "\<NL>"), 0, '')
+    if empty(dir)
+      throw "unite-outline: Directory not found for " . a:funcname
+    endif
+    let base = path_list[-2] . '.vim'
+    let path = get(split(globpath(dir, base), "\<NL>"), 0, '')
+    if empty(path)
+      throw "unite-outline: Script not found for " . a:funcname
+    else
+      let s:autoload_scripts[a:funcname] = path
+    endif
+    return path
   endif
-  if !has_key(s:autoload_dirs, a:rel_path)
-    let dir = get(split(globpath(&runtimepath, a:rel_path), "\<NL>"), 0, '')
-    let s:autoload_dirs[a:rel_path] = dir
-  endif
-  return s:autoload_dirs[a:rel_path]
 endfunction
 
 function! unite#sources#outline#clear_cache()
@@ -275,9 +281,7 @@ function! s:define_filetype_aliases()
   "
   let oinfos = {}
   for path in s:OUTLINE_INFO_PATH[:-2]
-    let dir = s:find_dir(path)
-    if empty(dir) | continue | endif
-    let oinfo_paths = split(globpath(dir, '*.vim'), "\<NL>")
+    let oinfo_paths = split(globpath(&rtp, path . '*.vim'), "\<NL>")
     for filetype in map(oinfo_paths, 'matchstr(v:val, "\\w\\+\\ze\\.vim$")')
       let filetype = substitute(filetype, '_', '.', 'g')
       let oinfos[filetype] = 1
