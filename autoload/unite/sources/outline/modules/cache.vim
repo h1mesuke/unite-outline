@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-11
+" Updated : 2011-04-18
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -136,7 +136,7 @@ function! s:deserialize(dumped_data)
   catch
     call s:util.print_debug(v:throwpoint)
     call s:util.print_debug(v:exception)
-    throw "CacheCompatibilityError"
+    throw "CacheCompatibilityError:"
   endtry
 
   return data

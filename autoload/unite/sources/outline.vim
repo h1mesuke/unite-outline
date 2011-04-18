@@ -356,7 +356,7 @@ function! s:source.gather_candidates(args, context)
     if s:cache.has(path) && !is_force
       try
         return s:cache.get(path)
-      catch /^CacheCompatibilityError/
+      catch /^CacheCompatibilityError:/
       catch /^unite-outline:/
         call unite#util#print_error(v:exception)
       endtry
