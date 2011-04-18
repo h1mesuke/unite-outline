@@ -98,7 +98,13 @@ function! s:get_outline_info(filetype, is_default)
       " E117: Unknown function:
       continue
     endtry
-    call s:check_update(s:find_autoload_script(load_func))
+    try
+      let scr_path = s:find_autoload_script(load_func)
+    catch /^ScriptNotFoundError:/
+      " the user moved his/her outline info somewhere!
+      continue
+    endtry
+    call s:check_update(scr_path)
     return s:init_outline_info({load_func}())
   endfor
   return {}
@@ -115,9 +121,6 @@ endfunction
 function! s:check_update(path)
   if !exists('s:ftime_table')
     let s:ftime_table = {}
-  endif
-  if !filereadable(a:path) || a:path !~? '\.vim$'
-    throw "unite-outline: Invalid script path."
   endif
   let path = fnamemodify(a:path, ':p')
   let new_ftime = getftime(path)
@@ -190,23 +193,23 @@ function! s:find_autoload_script(funcname)
     let s:autoload_scripts = {}
   endif
   if has_key(s:autoload_scripts, a:funcname)
-    return s:autoload_scripts[a:funcname]
-  else
-    let path_list = split(a:funcname, '#')
-    let rel_path = 'autoload/' . join(path_list[:-3], '/')
-    let dir = get(split(globpath(&runtimepath, rel_path), "\<NL>"), 0, '')
-    if empty(dir)
-      throw "unite-outline: Directory not found for " . a:funcname
-    endif
-    let base = path_list[-2] . '.vim'
-    let path = get(split(globpath(dir, base), "\<NL>"), 0, '')
-    if empty(path)
-      throw "unite-outline: Script not found for " . a:funcname
+    let path =  s:autoload_scripts[a:funcname]
+    if filereadable(path)
+      return s:autoload_scripts[a:funcname]
     else
-      let s:autoload_scripts[a:funcname] = path
+      " the script was moved somewhere for some reason...
+      unlet s:autoload_scripts[a:funcname]
     endif
-    return path
   endif
+  let path_list = split(a:funcname, '#')
+  let rel_path = 'autoload/' . join(path_list[:-2], '/') . '.vim'
+  let path = get(split(globpath(&runtimepath, rel_path), "\<NL>"), 0, '')
+  if empty(path)
+    throw "ScriptNotFoundError: Script file not found for " . a:funcname
+  else
+    let s:autoload_scripts[a:funcname] = path
+  endif
+  return path
 endfunction
 
 function! unite#sources#outline#clear_cache()
