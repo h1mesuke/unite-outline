@@ -308,12 +308,7 @@ let s:source = {
       \ }
 
 function! s:source.hooks.on_init(args, context)
-  let s:cache = unite#sources#outline#import('cache')
-  let s:tree  = unite#sources#outline#import('tree')
-  let s:util  = unite#sources#outline#import('util')
-
   let s:heading_id = 1
-
   let buffer = {
         \ 'nr'        : bufnr('%'),
         \ 'path'      : expand('%:p'),
@@ -327,12 +322,17 @@ function! s:source.hooks.on_init(args, context)
         \ 'minor_filetype': get(compound_filetypes, 1, ''),
         \ 'compound_filetypes': compound_filetypes,
         \ })
-  let outline_info = unite#sources#outline#get_outline_info(buffer.filetype)
-  let s:context = {
-        \ 'buffer': buffer,
-        \ 'outline_info': outline_info,
-        \ }
+  let s:context = { 'buffer': buffer }
   let a:context.source__outline_context = s:context
+  call s:import()
+endfunction
+function! s:import()
+  let s:cache = unite#sources#outline#import('cache')
+  let s:tree  = unite#sources#outline#import('tree')
+  let s:util  = unite#sources#outline#import('util')
+
+  let filetype = s:context.buffer.filetype
+  let s:context.outline_info = unite#sources#outline#get_outline_info(filetype)
 endfunction
 
 function! s:source.hooks.on_close(args, context)
@@ -362,6 +362,9 @@ function! s:source.gather_candidates(args, context)
       endtry
     endif
 
+    if is_force
+      call s:import()
+    endif
     let filetype = s:context.buffer.filetype
     let outline_info = s:context.outline_info
 
