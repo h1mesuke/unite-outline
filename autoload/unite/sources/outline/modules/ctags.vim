@@ -27,12 +27,13 @@
 "=============================================================================
 
 function! unite#sources#outline#modules#ctags#module()
-  let s:tree = unite#sources#outline#import('tree')
-  let s:util = unite#sources#outline#import('util')
   return s:ctags
 endfunction
 
 "-----------------------------------------------------------------------------
+
+let s:tree = unite#sources#outline#import('tree')
+let s:util = unite#sources#outline#import('util')
 
 function! s:get_SID()
   return str2nr(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_'))
