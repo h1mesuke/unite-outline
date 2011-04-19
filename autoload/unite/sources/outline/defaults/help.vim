@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/help.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-02-28
+" Updated : 2011-04-19
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,11 +9,13 @@
 "=============================================================================
 
 " Default outline info for Vim Help
-" Version: 0.1.1
+" Version: 0.1.2
 
 function! unite#sources#outline#defaults#help#outline_info()
   return s:outline_info
 endfunction
+
+let s:util = unite#sources#outline#import('util')
 
 " HEADING SAMPLES:
 "
@@ -65,20 +67,20 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   let lines = a:context.lines
 
   if a:which ==# 'heading-1'
-    let m = a:context.matched_lnum
+    let m_lnum = a:context.matched_lnum
     if a:matched_line =~ '^='
       let heading.level = 1
-    elseif a:matched_line =~ '^-' && lines[m-1] !~ '\S'
+    elseif a:matched_line =~ '^-' && lines[m_lnum-1] !~ '\S'
       let heading.level = 2
     endif
   elseif a:which ==# 'heading'
-    let h = a:context.heading_lnum
+    let h_lnum = a:context.heading_lnum
     if a:heading_line =~ '^' . s:section_number
       if a:heading_line =~ '\~\s*$'
         let heading.level = 3
       endif
-    elseif a:heading_line =~ s:helptag || unite#sources#outline#
-          \util#neighbor_match(a:context, a:context.heading_lnum, s:helptag)
+    elseif a:heading_line =~ s:helptag ||
+          \ s:util.neighbor_match(a:context, h_lnum, s:helptag)
       let heading.level = 4
     endif
   endif
@@ -98,7 +100,7 @@ function! s:normalize_heading_word(heading_word)
   let heading_word = substitute(a:heading_word, '\%(\~\|{{{\d\=\)\s*$', '', '')
   let heading_word = substitute(heading_word, s:helptag, '', 'g')
   if heading_word !~ '\l'
-    let heading_word = unite#sources#outline#util#capitalize(heading_word, 'g')
+    let heading_word = s:util.str.capitalize(heading_word, 'g')
   endif
   return heading_word
 endfunction

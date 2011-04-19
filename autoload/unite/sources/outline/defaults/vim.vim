@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/vim.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-02-25
+" Updated : 2011-04-19
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,11 +9,13 @@
 "=============================================================================
 
 " Default outline info for Vim script
-" Version: 0.1.0
+" Version: 0.1.1
 
 function! unite#sources#outline#defaults#vim#outline_info()
   return s:outline_info
 endfunction
+
+let s:util = unite#sources#outline#import('util')
 
 let s:outline_info = {
       \ 'heading-1': '^\s*"\s*[-=]\{10,}\s*$',
@@ -29,9 +31,9 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
         \ }
 
   if a:which ==# 'heading-1' && a:heading_line =~ '^\s*"'
+    let m_lnum = a:context.matched_lnum
     let heading.type = 'comment'
-    let heading.level = unite#sources#outline#
-          \util#get_comment_heading_level(a:context, a:context.matched_lnum, 5)
+    let heading.level = s:util.get_comment_heading_level(a:context, m_lnum, 5)
   elseif a:which ==# 'heading'
     let heading.level = 4
     let heading.type = 'function'

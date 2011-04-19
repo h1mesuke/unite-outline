@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/css.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-01-28
+" Updated : 2011-04-19
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,18 +9,20 @@
 "=============================================================================
 
 " Default outline info for CSS
-" Version: 0.0.2
+" Version: 0.0.3
 
 function! unite#sources#outline#defaults#css#outline_info()
   return s:outline_info
 endfunction
 
+let s:util = unite#sources#outline#import('util')
+
 let s:outline_info = {
-      \ 'heading-1': unite#sources#outline#util#shared_pattern('c', 'heading-1'),
+      \ 'heading-1': s:util.shared_pattern('c', 'heading-1'),
       \ 'skip': {
       \   'header': {
       \     'leading': '^@charset',
-      \     'block'  : unite#sources#outline#util#shared_pattern('c', 'header'),
+      \     'block'  : s:util.shared_pattern('c', 'header'),
       \   },
       \ },
       \}
@@ -33,9 +35,9 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
         \ }
 
   if a:which ==# 'heading-1'
+    let m_lnum = a:context.matched_lnum
     let heading.type = 'comment'
-    let heading.level = unite#sources#outline#
-          \util#get_comment_heading_level(a:context, a:context.matched_lnum, 4)
+    let heading.level = s:util.get_comment_heading_level(a:context, m_lnum, 4)
   endif
 
   if heading.level > 0
