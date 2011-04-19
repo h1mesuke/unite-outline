@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-18
+" Updated : 2011-04-19
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -183,9 +183,7 @@ function! s:init_heading_group_map(outline_info)
 endfunction
 
 function! unite#sources#outline#import(name)
-  let load_func = 'unite#sources#outline#modules#' . a:name . '#module'
-  call s:check_update(s:find_autoload_script(load_func))
-  return {load_func}()
+  return unite#sources#outline#modules#{a:name}#module()
 endfunction
 
 function! s:find_autoload_script(funcname)
@@ -213,7 +211,6 @@ function! s:find_autoload_script(funcname)
 endfunction
 
 function! unite#sources#outline#clear_cache()
-  let s:cache = unite#sources#outline#import('cache')
   call s:cache.clear()
 endfunction
 
@@ -303,6 +300,10 @@ call s:define_filetype_aliases()
 "-----------------------------------------------------------------------------
 " Source
 
+let s:cache = unite#sources#outline#import('cache')
+let s:tree  = unite#sources#outline#import('tree')
+let s:util  = unite#sources#outline#import('util')
+
 let s:source = {
       \ 'name'       : 'outline',
       \ 'description': 'candidates from heading list',
@@ -325,17 +326,12 @@ function! s:source.hooks.on_init(args, context)
         \ 'minor_filetype': get(compound_filetypes, 1, ''),
         \ 'compound_filetypes': compound_filetypes,
         \ })
-  let s:context = { 'buffer': buffer }
+  let outline_info = unite#sources#outline#get_outline_info(buffer.filetype)
+  let s:context = {
+        \ 'buffer': buffer,
+        \ 'outline_info': outline_info,
+        \ }
   let a:context.source__outline_context = s:context
-  call s:import()
-endfunction
-function! s:import()
-  let s:cache = unite#sources#outline#import('cache')
-  let s:tree  = unite#sources#outline#import('tree')
-  let s:util  = unite#sources#outline#import('util')
-
-  let filetype = s:context.buffer.filetype
-  let s:context.outline_info = unite#sources#outline#get_outline_info(filetype)
 endfunction
 
 function! s:source.hooks.on_close(args, context)
@@ -353,30 +349,28 @@ function! s:source.gather_candidates(args, context)
       let start_time = s:get_reltime()
     endif
 
-    let is_force = ((len(a:args) > 0 && a:args[0] == '!') || a:context.is_redraw)
+    let buffer = s:context.buffer
 
-    let path = s:context.buffer.path
-    if s:cache.has(path) && !is_force
+    let is_force = ((len(a:args) > 0 && a:args[0] == '!') || a:context.is_redraw)
+    if is_force
+      let s:context.outline_info = unite#sources#outline#get_outline_info(buffer.filetype)
+    elseif s:cache.has(buffer.path)
       try
-        return s:cache.get(path)
+        return s:cache.get(buffer.path)
       catch /^CacheCompatibilityError:/
       catch /^unite-outline:/
         call unite#util#print_error(v:exception)
       endtry
     endif
 
-    if is_force
-      call s:import()
-    endif
-    let filetype = s:context.buffer.filetype
     let outline_info = s:context.outline_info
 
     if empty(outline_info)
-      if empty(filetype)
+      if empty(buffer.filetype)
         call unite#util#print_error("unite-outline: Please set the filetype.")
       else
         call unite#util#print_error(
-              \ "unite-outline: Sorry, " . toupper(filetype) . " is not supported.")
+              \ "unite-outline: Sorry, " . toupper(buffer.filetype) . " is not supported.")
       endif
       return []
     endif
@@ -405,7 +399,7 @@ function! s:source.gather_candidates(args, context)
       call outline_info.finalize(s:context)
     endif
 
-    let ignore_types = unite#sources#outline#get_ignore_heading_types(filetype)
+    let ignore_types = unite#sources#outline#get_ignore_heading_types(buffer.filetype)
 
     " normalize and filter
     if type(headings) == type({})
@@ -431,9 +425,9 @@ function! s:source.gather_candidates(args, context)
     let is_volatile = has_key(outline_info, 'is_volatile') && outline_info.is_volatile
     if !is_volatile && (num_lines > 100)
       let do_serialize = (num_lines > g:unite_source_outline_cache_limit)
-      call s:cache.set(path, candidates, do_serialize)
-    elseif s:cache.has(path)
-      call s:cache.remove(path)
+      call s:cache.set(buffer.path, candidates, do_serialize)
+    elseif s:cache.has(buffer.path)
+      call s:cache.remove(buffer.path)
     endif
 
     if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
