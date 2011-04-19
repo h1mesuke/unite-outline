@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-11
+" Updated : 2011-04-19
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -38,6 +38,9 @@ function! s:get_SID()
   return str2nr(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_'))
 endfunction
 
+let s:ctags = unite#sources#outline#modules#base#new(s:get_SID(), 'Ctags')
+delfunction s:get_SID
+
 function! s:find_exuberant_ctags()
   let ctags_bin_names = [
         \ 'ctags-exuberant',
@@ -59,7 +62,6 @@ function! s:find_exuberant_ctags()
   return ''
 endfunction 
 
-let s:ctags = unite#sources#outline#modules#base#new(s:get_SID(), 'Ctags')
 let s:ctags.bin = s:find_exuberant_ctags()
 let s:ctags.langs = {}
 

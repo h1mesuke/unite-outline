@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-11
+" Updated : 2011-04-19
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -35,9 +35,11 @@ endfunction
 function! s:get_SID()
   return str2nr(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_'))
 endfunction
-let SID = s:get_SID()
 
-let s:util = unite#sources#outline#modules#base#new(s:get_SID(), 'Util')
+let s:SID = s:get_SID()
+delfunction s:get_SID
+
+let s:util = unite#sources#outline#modules#base#new(s:SID, 'Util')
 
 "-----------------------------------------------------------------------------
 " Headings
@@ -196,7 +198,7 @@ call s:util.bind('shared_pattern')
 "-----------------------------------------------------------------------------
 " List
 
-let s:list = unite#sources#outline#modules#base#new(s:get_SID(), 'List')
+let s:list = unite#sources#outline#modules#base#new(s:SID, 'List')
 let s:util.list = s:list
 
 function! s:List_sort_by_lnum(dicts)
@@ -246,7 +248,7 @@ unlet s:list
 "-----------------------------------------------------------------------------
 " Paths
 
-let s:path = unite#sources#outline#modules#base#new(s:get_SID(), 'Path')
+let s:path = unite#sources#outline#modules#base#new(s:SID, 'Path')
 let s:util.path = s:path
 
 function! s:Path_normalize(path, ...)
@@ -289,7 +291,7 @@ unlet s:path
 "-----------------------------------------------------------------------------
 " Strings
 
-let s:str = unite#sources#outline#modules#base#new(s:get_SID(), 'Str' )
+let s:str = unite#sources#outline#modules#base#new(s:SID, 'Str' )
 let s:util.str = s:str
 
 " capitalize( {str} [, {flag}])
@@ -358,5 +360,7 @@ function! s:Util__cpp_is_in_comment(heading_line, matched_line)
         \ (a:matched_line =~ '^\s*/\*' && a:matched_line !~ '\*/\s*$'))
 endfunction
 call s:util.bind('_cpp_is_in_comment')
+
+unlet s:SID
 
 " vim: filetype=vim

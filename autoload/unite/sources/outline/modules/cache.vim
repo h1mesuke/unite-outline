@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-18
+" Updated : 2011-04-19
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -39,6 +39,7 @@ function! s:get_SID()
 endfunction
 
 let s:cache = unite#sources#outline#modules#base#new(s:get_SID(), 'Cache')
+delfunction s:get_SID
 
 let s:cache.dir  = g:unite_data_directory . '/.outline'
 let s:cache.data = {}

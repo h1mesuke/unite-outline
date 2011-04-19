@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-16
+" Updated : 2011-04-19
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -37,6 +37,7 @@ function! s:get_SID()
 endfunction
 
 let s:tree = unite#sources#outline#modules#base#new(s:get_SID(), 'Tree')
+delfunction s:get_SID
 
 function! s:Tree_append_child(parent, child)
   if !has_key(a:parent, 'source__children')
