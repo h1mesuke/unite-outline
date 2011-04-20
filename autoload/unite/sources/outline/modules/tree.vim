@@ -148,9 +148,15 @@ function! s:mark(cand, pred, contained, marked, do_remove_child)
       endif
     endfor
   endif
-  let self_marked = (child_marked || a:pred.call(a:node))
-  let a:marked[a:node.source__id] = self_marked
-  return self_marked
+
+  " NOTE: A candidate is marked when it has any marked child or the given
+  " predicate yields True for the candidate. Marked candidates will be
+  " displayed as unite's narrowing results.
+  "
+  let a:cand.is_filtered = a:pred.call(a:cand) | " mark of self
+  let marked = (child_marked || a:cand.is_filtered)
+  let a:marked[a:cand.source__id] = marked
+  return marked
 endfunction
 
 function! s:Tree_flatten(tree)
