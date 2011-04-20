@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-19
+" Updated : 2011-04-21
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -110,41 +110,41 @@ function! s:Tree_build(headings)
     call s:Tree_append_child(context[-1], heading)
     call add(context, heading)
   endfor
-
-  return s:Tree_normalize(root)
+  let root = s:Tree_normalize(root)
+  return root
 endfunction
 call s:tree.bind('build')
 
-function! s:Tree_filter(treed_list, pred, ...)
-  if empty(a:treed_list) | return a:treed_list | endif
-
-  let contained = {}
-  for node in a:treed_list
-    let contained[node.source__id] = 1
-  endfor
+function! s:Tree_filter(treed_candidates, pred, ...)
+  if empty(a:treed_candidates) | return a:treed_candidates | endif
 
   let do_remove_child = (a:0 ? a:1 : 0)
-  let marked = {}
-  for node in filter(copy(a:treed_list), 's:Tree_is_toplevel(v:val)')
-    call s:mark(node, a:pred, contained, marked, do_remove_child)
+  let contained = {}
+  for cand in a:treed_candidates
+    let contained[cand.source__id] = 1
   endfor
-
-  return filter(a:treed_list, 'marked[v:val.source__id]')
+  let marked = {}
+  for cand in a:treed_candidates
+    if s:Tree_is_toplevel(cand)
+      call s:mark(cand, a:pred, contained, marked, do_remove_child)
+    endif
+  endfor
+  let filtered = filter(a:treed_candidates, 'marked[v:val.source__id]')
+  return filtered
 endfunction
 call s:tree.bind('filter')
 
-function! s:mark(node, pred, contained, marked, do_remove_child)
-  if !has_key(a:contained, a:node.source__id)
-    return 0
-  endif
-
+function! s:mark(cand, pred, contained, marked, do_remove_child)
   let child_marked = 0
-  if has_key(a:node, 'source__children')
-    for child in a:node.source__children
+  if has_key(a:cand, 'source__children')
+    for child in a:cand.source__children
+      if !has_key(a:contained, child.source__id)
+        continue
+      endif
       if s:mark(child, a:pred, a:contained, a:marked, a:do_remove_child)
         let child_marked = 1
       elseif a:do_remove_child
-        call s:Tree_remove_child(a:node, child)
+        call s:Tree_remove_child(a:cand, child)
       endif
     endfor
   endif
