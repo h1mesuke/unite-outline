@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_formatter.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-17
+" Updated : 2011-04-20
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -59,9 +59,10 @@ function! s:formatter.filter(candidates, context)
     let candidates = [a:candidates[0]]
     let prev_heading = a:candidates[0].source__heading
 
+    let memo = {}
     for cand in a:candidates[1:]
       let heading = cand.source__heading
-      if do_insert_blank && s:need_blank_between(prev_heading, heading)
+      if do_insert_blank && s:need_blank_between(prev_heading, heading, memo)
         call add(candidates, s:BLANK)
       endif
       call add(candidates, cand)
@@ -73,7 +74,7 @@ function! s:formatter.filter(candidates, context)
   return candidates
 endfunction
 
-function! s:need_blank_between(head1, head2)
+function! s:need_blank_between(head1, head2, memo)
   if has_key(s:outline_info, 'need_blank_between')
     return s:outline_info.need_blank_between(a:head1, a:head2)
   elseif a:head1.level < a:head2.level
@@ -86,7 +87,9 @@ function! s:need_blank_between(head1, head2)
       let group1 = s:get_heading_group(a:head1)
       let group2 = s:get_heading_group(a:head2)
     endif
-    return (group1 != group2 || s:tree.has_children(a:head1) || s:tree.has_children(a:head2))
+    return (group1 != group2 ||
+          \ s:tree.has_filtered_descendant(a:head1, a:memo) ||
+          \ s:tree.has_filtered_descendant(a:head2, a:memo))
   else
     return 1
   endif
