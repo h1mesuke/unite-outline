@@ -65,6 +65,28 @@ function! s:Tree_has_children(node)
 endfunction
 call s:tree.bind('has_children')
 
+function! s:Tree_has_filtered_descendant(node, memo)
+  let cand = has_key(a:node, 'candidate') ? a:node.candidate : a:node
+  return s:has_filtered_descendant(cand, a:memo)
+endfunction
+function! s:has_filtered_descendant(cand, memo)
+  if has_key(a:memo, a:cand.source__id)
+    return a:memo[a:cand.source__id]
+  endif
+  let result = 0
+  if has_key(a:cand, 'source__children')
+    for child in a:cand.source__children
+      if child.is_filtered || s:has_filtered_descendant(child, a:memo)
+        let result = 1
+        break
+      endif
+    endfor
+  endif
+  let a:memo[a:cand.source__id] = result
+  return result
+endfunction
+call s:tree.bind('has_filtered_descendant')
+
 function! s:Tree_get_parent(node)
   if has_key(a:node, 'candidate')
     let cand = a:node.candidate
