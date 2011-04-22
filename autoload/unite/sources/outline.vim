@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-19
+" Updated : 2011-04-23
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -607,8 +607,7 @@ endfunction
 function! s:normalize_heading(heading)
   if type(a:heading) == type("")
     " normalize to a Dictionary
-    let level = unite#sources#outline#
-          \util#get_indent_level(s:context, s:context.heading_lnum)
+    let level = s:util.get_indent_level(s:context, s:context.heading_lnum)
     let heading = {
           \ 'word' : a:heading,
           \ 'level': level,
