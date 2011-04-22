@@ -674,9 +674,19 @@ endfunction
 function! s:convert_headings_to_candidates(headings)
   if empty(a:headings) | return a:headings | endif
 
+  let outline_info = s:context.outline_info
+  if has_key(outline_info, 'not_match_patterns')
+    let not_match_pattern = '\%(' . join(outline_info.not_match_patterns, '\|') . '\)'
+  else
+    let not_match_pattern = ''
+  endif
   let physical_levels = s:smooth_levels(a:headings)
-  let candidates = map(s:util.list.zip(a:headings, physical_levels),
-        \ 's:create_candidate(v:val[0], v:val[1])')
+  let candidates = []
+  for [heading, phys_level] in s:util.list.zip(a:headings, physical_levels)
+    let cand = s:create_candidate(heading, phys_level)
+    let cand.word = substitute(cand.word, not_match_pattern, '', 'g')
+    call add(candidates, cand)
+  endfor
   return candidates
 endfunction
 
@@ -705,6 +715,7 @@ function! s:create_candidate(heading, physical_level)
         \
         \ 'source__heading': heading,
         \ })
+  let cand.abbr = cand.word
   unlet cand.level
   unlet cand.type
   unlet cand.lnum

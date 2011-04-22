@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-19
+" Updated : 2011-04-22
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -173,6 +173,9 @@ endfunction
 call s:util.bind('neighbor_matchstr')
 
 let s:SHARED_PATTERNS = {
+      \ '*': {
+      \   'parameter_list': '([^)]*)',
+      \ },
       \ 'c': {
       \   'heading-1': '^\s*\/\*\s*[-=*]\{10,}\s*$',
       \   'header'   : ['^/\*', '\*/\s*$'],
