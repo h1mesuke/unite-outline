@@ -506,10 +506,11 @@ UTILITY FUNCTIONS			*unite-outline-utility-functions*
 	以下は、outline info を作成するにあたり、create_heading() や
 	extract_headings() で使用すると便利なユーティリティ関数です。
 
-	使用するためには以下のようにしてモジュールをインポートし、辞書関数とし
-	て呼び出して下さい。
+	使用する場合は以下のようにモジュールをインポートし、辞書関数として呼び
+	出して下さい。
 >
 	let s:util = unite#sources#outline#import('util')
+	call s:util.get_indent_level(a:context, h_lnum)
 <
 	{context} には、create_heading() や extract_headings() が引数として
 	受け取った辞書|unite-outline-notation-{context}|を渡します。
@@ -605,14 +606,12 @@ outline info 募集！
 
 https://github.com/h1mesuke/unite-outline/commits/master
 
-------------------------------------------------------------------------------
 0.3.4	2011-04-xx
 
 	* outline info の仕様に not_match_patterns属性を追加
 
 	* 親子関係に配慮した matcher を実装
 
-------------------------------------------------------------------------------
 0.3.3	2011-03-19
 
 	* outline info の仕様から skip_header() を削除
@@ -626,7 +625,6 @@ https://github.com/h1mesuke/unite-outline/commits/master
 	   |g:unite_source_outline_cache_limit|に変更
 	  - 従来の g:unite_source_outline_cache_limit は削除
 
-------------------------------------------------------------------------------
 0.3.2	2011-03-01
 
 	* outline info の探索パスに "autoload/outline" を追加
@@ -644,19 +642,16 @@ https://github.com/h1mesuke/unite-outline/commits/master
 	  引数として、{lines} ではなく {context} を、{idx} ではなく {lnum} を
 	  受け取るように修正
 
-------------------------------------------------------------------------------
 0.3.1	2011-01-29
 
 	* 特定の種類の見出しを非表示にする機能を追加し、以下の変数を追加
 	  -|g:unite_source_outline_ignore_heading_types|
 
-------------------------------------------------------------------------------
 0.3.0	2011-01-10
 
 	* create_heading() から見出しのメタ情報をもった辞書を返せるように
 	  outline info の仕様を拡張
 
-------------------------------------------------------------------------------
 0.2.1	2011-01-04
 
 	* キャッシュの一部永続化を実装し、以下の変数を追加
