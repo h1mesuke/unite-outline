@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-04-17
+Updated : 2011-04-23
 Version : 0.3.3
 License : MIT license {{{
 
@@ -119,7 +119,7 @@ g:unite_source_outline_indent_width	*g:unite_source_outline_indent_width*
 	unite-outline はこの値にもとづいて見出し一覧のインデントを生成します。
 
 	初期値は 2
-					*g:unite_source_outline_ignore_heading_types*
+				*g:unite_source_outline_ignore_heading_types*
 g:unite_source_outline_ignore_heading_types
 
 	非表示にしたい見出しの種類を設定するための辞書
@@ -166,7 +166,7 @@ g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
 	初期値は 1000
 
 ------------------------------------------------------------------------------
-設定例						*unite-outline-settings-examples*
+設定例					*unite-outline-settings-examples*
 >
 	nnoremap [unite] <Nop>
 	nmap f [unite]
@@ -241,7 +241,7 @@ outline info の属性				*unite-outline-info-attributes*
 
 EXTRACTING HEADINGS ~
 
-heading-1	文字列（任意）			*unite-outline-info-heading-1*
+heading-1		文字列（任意）		*unite-outline-info-heading-1*
 
 	「次の行が」見出しであるような行にマッチするパターン
 	これを設定することで、例えば
@@ -267,12 +267,12 @@ heading-1	文字列（任意）			*unite-outline-info-heading-1*
 	る場合は、もうひとつ次の行も見るにようになっています。
 
 
-heading		文字列（任意） 			*unite-outline-info-heading*
+heading			文字列（任意） 		*unite-outline-info-heading*
 
 	「その行が」見出しであるような行にマッチするパターン
 
 
-heading+1	文字列（任意）			*unite-outline-info-heading+1*
+heading+1		文字列（任意）		*unite-outline-info-heading+1*
 
 	「前の行が」見出しであるような行にマッチするパターン
 	これを設定することで、例えば Markdown の
@@ -306,7 +306,7 @@ create_heading		関数（任意） 	*unite-outline-info-create_heading()*
 	* {matched-line}	文字列
 				マッチした行
 
-	* {context}		辞書		*unite-outline-notation-{context}*
+	* {context}		辞書	*unite-outline-notation-{context}*
 				その他の情報、以下の属性を含む
 
 	  * heading_lnum	整数
@@ -333,7 +333,7 @@ create_heading		関数（任意） 	*unite-outline-info-create_heading()*
 	既存の属性を書き換えないで下さい。
 
 	返値となる辞書には以下の属性を設定します。
-						*unite-outline-notation-{heading}*
+					*unite-outline-notation-{heading}*
 	* word		文字列（必須）
 			見出し一覧に表示される文字列
 
@@ -361,7 +361,7 @@ create_heading		関数（任意） 	*unite-outline-info-create_heading()*
 	endfunction
 <
 
-skip		辞書（任意）			*unite-outline-info-skip*
+skip			辞書（任意）		*unite-outline-info-skip*
 
 	見出し抽出の対象としない領域を指定するための辞書です。以下の属性を設定
 	することで、指定の領域を見出し抽出の対象外にできます。
@@ -409,7 +409,7 @@ skip		辞書（任意）			*unite-outline-info-skip*
 
 EXTRACTING HEADINGS [2] ~
 
-extract_headings	関数（任意）		*unite-outline-info-extract_headings()*
+extract_headings	関数（任意）	*unite-outline-info-extract_headings()*
 
 	extract_headings( {context})
 
@@ -437,16 +437,24 @@ FORMATTING ~
 
 	TODO
 
+NARROWING ~
+
+not_match_patterns	リスト（任意）		*unite-outline-info-is_volatile*
+
+	絞り込みの対象にしない部分を指定するパターンのリスト
+	見出しの word のうち、このリストに指定したパターンにマッチする部分は絞
+	り込みの対象にならなくなります。
+
 CACHING ~
 
-is_volatile	数値（任意）			*unite-outline-info-is_volatile*
+is_volatile		数値（任意）		*unite-outline-info-is_volatile*
 
 	抽出した見出しをキャッシュするかどうか。
 	1 を設定すると、見出しはキャッシュされません。
 
 HOOKS ~
 
-initialize	関数（任意） 			*unite-outline-info-initialize()*
+initialize		関数（任意） 		*unite-outline-info-initialize()*
 
 	initialize( {context})
 
@@ -456,7 +464,7 @@ initialize	関数（任意） 			*unite-outline-info-initialize()*
 	{context} については、|unite-outline-notation-{context}|を参照
 
 
-finalize	関数（任意） 			*unite-outline-info-finalize()*
+finalize		関数（任意） 		*unite-outline-info-finalize()*
 
 	finalize( {context})
 
@@ -477,13 +485,13 @@ unite#sources#outline#alias( {alias}, {source})
 	call unite#sources#outline#alias('xhtml', 'html')
 	call unite#sources#outline#alias('zsh',   'sh')
 <
-					*unite#sources#outline#get_outline_info()*
+				*unite#sources#outline#get_outline_info()*
 unite#sources#outline#get_outline_info( {filetype})
 
 	{filetype} の outline info を返します。
 	outline info が見つからない場合は空の辞書 {} を返します。
 
-				*unite#sources#outline#get_default_outline_info()*
+			*unite#sources#outline#get_default_outline_info()*
 unite#sources#outline#get_default_outline_info( {filetype})
 
 	{filetype} のデフォルトの outline info を返します。
@@ -498,18 +506,23 @@ UTILITY FUNCTIONS			*unite-outline-utility-functions*
 	以下は、outline info を作成するにあたり、create_heading() や
 	extract_headings() で使用すると便利なユーティリティ関数です。
 
+	使用するためには以下のようにしてモジュールをインポートし、辞書関数とし
+	て呼び出して下さい。
+>
+	let s:util = unite#sources#outline#import('util')
+<
 	{context} には、create_heading() や extract_headings() が引数として
 	受け取った辞書|unite-outline-notation-{context}|を渡します。
 
 HEADINGS ~
-				*unite#sources#outline#util#get_indent_level()*
-unite#sources#outline#util#get_indent_level( {context}, {lnum})
+					*unite-outline-util.get_indent_level()*
+util.get_indent_level( {context}, {lnum})
 
 	行番号が {lnum} である行のインデントレベルを返します。
 
 MATCHING ~
-					*unite#sources#outline#util#join_to()*
-unite#sources#outline#util#join_to( {context}, {lnum}, {pattern} [, {limit}])
+					*unite-outline-util.join_to()*
+util.join_to( {context}, {lnum}, {pattern} [, {limit}])
 
 	行番号が {lnum} の行から {pattern} にマッチする行までを連結した文字列
 	を返します。連結される行と行の間には "\n" が挿入されます。
@@ -517,9 +530,8 @@ unite#sources#outline#util#join_to( {context}, {lnum}, {pattern} [, {limit}])
 	場合は 3 になります。{limit} に負の値を指定すると、行番号が {lnum} の
 	行から前の行に対してマッチの試行と連結を行います。
 
-				*unite#sources#outline#util#neighbor_match()*
-unite#sources#outline#util#neighbor_match(
-	{context}, {lnum}, {pattern} [, {range} [, {exclusive}]])
+					*unite-outline-util.neighbor_match()*
+util.neighbor_match( {context}, {lnum}, {pattern} [, {range} [, {exclusive}]])
 
 	行番号が {lnum} の行およびその前後の行が {pattern} にマッチするならば
 	真、そうでないなら偽を返します。
@@ -528,30 +540,34 @@ unite#sources#outline#util#neighbor_match(
 	を前と後ろ、別々に設定できます。
 	{exclusive} に 1 を指定すると、行番号が {lnum} の行をマッチの試行対象
 	から除外します。
+					*unite-outline-util.neighbor_matchstr()*
+util.neighbor_matchstr( {context}, {lnum}, {pattern} [, {range} [, {exclusive}]])
 
-				*unite#sources#outline#util#neighbor_matchstr()*
-unite#sources#outline#util#neighbor_matchstr(
-	{context}, {lnum}, {pattern} [, {range} [, {exclusive}]])
-
-	|unite#sources#outline#util#neighbor_match()|の派生形。真偽値ではなく、
-	マッチした部分文字列を返します。マッチしない場合は "" を返します。
-
-STRINGS  ~
-					*unite#sources#outline#util#capitalize()*
-unite#sources#outline#util#capitalize( {str} [, {flag}])
-
-	{str} の先頭の文字を大文字に、残りを小文字に変換した文字列を返します。
-	{flag} に "g" を指定すると、すべての単語を同様に処理します。
-
-					*unite#sources#outline#util#nr2roman()*
-unite#sources#outline#util#nr2roman( {nr})
-
-	{nr} をローマ数字へと変換します。
-	ローマ数字として表現可能な範囲は 1以上 4999以下の範囲で、{nr} がその範
-	囲外にある場合は、{nr} を単に文字列に変換したものを返します。
+	|unite-outline-util.neighbor_match()|の派生形。真偽値ではなく、マッチ
+	した部分文字列を返します。マッチしない場合は "" を返します。
 
 ==============================================================================
 TODO						*unite-outline-todo*
+
+	* ハイライト対応（色付け)
+
+		unite.vim に候補一覧のハイライト機能が実装されたので、それを利
+		用して見出し一覧をカラフルにする。また、重要でない情報を目立た
+		なくする。
+
+	* 空行を入れてみやすく！
+
+		一部のファイルタイプで試験的に実施しているが、空行をどこに入れ
+		るか、を指定するための outline info の属性の仕様がまだ固まらな
+		いため本格実施は足踏み中。
+	
+	* キャッシュの改善
+
+		無駄に LRU などやっているのをやめる。
+
+	* JavaScript用 outline info の改善
+
+		jsctags を使えばよさげ。
 
 	* Erlang, Go, Haskell などの outline info
 
@@ -571,9 +587,9 @@ TODO						*unite-outline-todo*
 ------------------------------------------------------------------------------
 outline info 募集！
 
-	デフォルトの outline info が用意されていないファイルタイプについて
-	outline info を作成された方がおられたら、ぜひとも作者までお寄せ下さい。
-	参考に（もしくはそのまま採用）させていただきます。
+	outline info が同梱されていないファイルタイプ用の outline info を作成
+	された方がおられたら、ぜひとも作者までお寄せ下さい。参考に（もしくは配
+	布アーカイブにそのまま同梱）させていただきます。
 
 	* Issues - h1mesuke/unite-outline - GitHub
 	  https://github.com/h1mesuke/unite-outline/issues
@@ -590,7 +606,9 @@ outline info 募集！
 https://github.com/h1mesuke/unite-outline/commits/master
 
 ------------------------------------------------------------------------------
-0.3.4	2011-03-xx
+0.3.4	2011-04-xx
+
+	* outline info の仕様に not_match_patterns属性を追加
 
 	* 親子関係に配慮した matcher を実装
 
