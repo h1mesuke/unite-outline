@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/php.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-19
+" Updated : 2011-04-23
 "
 " Contributed by hamaco
 "
@@ -28,6 +28,9 @@ let s:outline_info = {
       \     'block'  : s:util.shared_pattern('c', 'header'),
       \   },
       \ },
+      \ 'not_match_patterns': [
+      \   s:util.shared_pattern('*', 'parameter_list'),
+      \ ],
       \}
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)

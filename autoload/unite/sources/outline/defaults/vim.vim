@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/vim.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-19
+" Updated : 2011-04-23
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for Vim script
-" Version: 0.1.1
+" Version: 0.1.2
 
 function! unite#sources#outline#defaults#vim#outline_info()
   return s:outline_info
@@ -21,6 +21,10 @@ let s:outline_info = {
       \ 'heading-1': '^\s*"\s*[-=]\{10,}\s*$',
       \ 'heading'  : '^\s*fu\%[nction]!\= ',
       \ 'skip': { 'header': '^"' },
+      \ 'not_match_patterns': [
+      \   '^\s*fu\%[nction]!\=\s',
+      \   s:util.shared_pattern('*', 'parameter_list'),
+      \ ],
       \}
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
