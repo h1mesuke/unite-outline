@@ -27,7 +27,11 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
         \ 'level': level,
         \ 'type' : 'generic',
         \ }
-  return heading
+  if heading.word !~ '^\[/'
+    return heading
+  else
+    return {}
+  endif
 endfunction
 
 " vim: filetype=vim
