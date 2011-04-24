@@ -439,7 +439,7 @@ FORMATTING ~
 
 NARROWING ~
 
-not_match_patterns	リスト（任意）		*unite-outline-info-is_volatile*
+not_match_patterns	リスト（任意）		*unite-outline-info-not_match_patterns*
 
 	絞り込みの対象にしない部分を指定するパターンのリスト
 	見出しの word のうち、このリストに指定したパターンにマッチする部分は絞
