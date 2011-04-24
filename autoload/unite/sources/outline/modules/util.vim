@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-23
+" Updated : 2011-04-25
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -310,7 +310,7 @@ function! s:Str_capitalize(str, ...)
 endfunction
 call s:str.bind('capitalize')
 
-" ported from:
+" Ported from:
 " Sample code from Programing Ruby, page 145
 "
 function! s:Str_nr2roman(nr)
