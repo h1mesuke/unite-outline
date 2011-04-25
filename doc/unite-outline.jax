@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-04-23
+Updated : 2011-04-26
 Version : 0.3.3
 License : MIT license {{{
 
@@ -108,8 +108,8 @@ g:unite_source_outline_info			*g:unite_source_outline_info*
 
 	初期値は {}
 
-	デフォルトの outline info はオートロード関数によって遅延ロードされる
-	ため、この辞書の初期値は空になっています。
+	unite-outline に同梱されている outline info はオートロード関数によって
+	遅延ロードされるため、この辞書の初期値は空になっています。
 
 	outline info については|unite-outline-info|を参照
 
@@ -147,21 +147,16 @@ g:unite_source_outline_max_headings	*g:unite_source_outline_max_headings*
 
 	初期値は 1000
 
-g:unite_source_outline_cache_buffers	*g:unite_source_outline_cache_buffers*
-
-	見出しをキャッシュするバッファ数の上限
-	これを超えた分は参照時刻の古いものから削除されます。
-
-	初期値は 100
-
 g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
 
-	見出しをキャッシュするバッファの行数しきい値
-	見出し抽出の対象バッファの行数がこの値より大きい場合、抽出した見出しの
-	キャッシュをファイルに保存します。
+	キャッシュ永続化の行数しきい値
+	見出しのキャッシュは通常バッファローカル変数に保存されますが、見出し抽
+	出の対象バッファの行数がこの値より大きい場合、キャッシュをファイルにも
+	保存します。
 
 	キャッシュがファイルに保存されると、Vim の再起動後もそのファイルから見
-	出しを読み込むため、見出し一覧の表示が初回から高速になります。
+	出しを読み込むため、大きなバッファの見出し一覧の表示が初回から高速にな
+	ります。
 
 	初期値は 1000
 
@@ -196,8 +191,8 @@ Outline Info					*unite-outline-info*
 ------------------------------------------------------------------------------
 outline info の作成				*unite-outline-info-create*
 
-	unite-outline がデフォルトで提供する outline info ではなく、ユーザー独
-	自の outline info を作成／使用したい場合、その方法は以下の２つです。
+	unite-outline に同梱されている outline info ではなく、ユーザー独自の
+	outline info を作成／使用したい場合、その方法は以下の２つです。
 
     [A]	vimrc にてグローバル変数に設定する
 
@@ -433,6 +428,8 @@ extract_headings	関数（任意）	*unite-outline-info-extract_headings()*
 	* lnum		整数  （必須）
 			見出し行の行番号
 
+	TODO: ツリーの作り方の説明
+
 FORMATTING ~
 
 	TODO
@@ -562,15 +559,11 @@ TODO						*unite-outline-todo*
 		るか、を指定するための outline info の属性の仕様がまだ固まらな
 		いため本格実施は足踏み中。
 	
-	* キャッシュの改善
-
-		無駄に LRU などやっているのをやめる。
-
 	* JavaScript用 outline info の改善
 
 		jsctags を使えばよさげ。
 
-	* Erlang, Go, Haskell などの outline info
+	* D, Erlang, Go, Haskell などの outline info
 
 		作者にとって未知の言語なため対応が遅れています。
 		なんとかしなければ。
@@ -606,7 +599,10 @@ outline info 募集！
 
 https://github.com/h1mesuke/unite-outline/commits/master
 
-0.3.4	2011-04-xx
+0.3.4	2011-04-26
+
+	* キャッシュの管理ロジックを改善し、以下の変数を削除
+	  - g:unite_source_outline_cache_buffers
 
 	* outline info の仕様に not_match_patterns属性を追加
 
