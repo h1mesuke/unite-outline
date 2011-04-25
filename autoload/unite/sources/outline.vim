@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-23
+" Updated : 2011-04-25
 " Version : 0.3.3
 " License : MIT license {{{
 "
@@ -263,10 +263,6 @@ if !exists('g:unite_source_outline_max_headings')
   let g:unite_source_outline_max_headings = 1000
 endif
 
-if !exists('g:unite_source_outline_cache_buffers')
-  let g:unite_source_outline_cache_buffers = 100
-endif
-
 if !exists('g:unite_source_outline_cache_limit')
   let g:unite_source_outline_cache_limit = 1000
 endif
@@ -354,9 +350,9 @@ function! s:source.gather_candidates(args, context)
     let is_force = ((len(a:args) > 0 && a:args[0] == '!') || a:context.is_redraw)
     if is_force
       let s:context.outline_info = unite#sources#outline#get_outline_info(buffer.filetype)
-    elseif s:cache.has(buffer.path)
+    elseif s:cache.has(buffer)
       try
-        return s:cache.get(buffer.path)
+        return s:cache.get(buffer)
       catch /^CacheCompatibilityError:/
       catch /^unite-outline:/
         call unite#util#print_error(v:exception)
@@ -425,9 +421,9 @@ function! s:source.gather_candidates(args, context)
     let is_volatile = has_key(outline_info, 'is_volatile') && outline_info.is_volatile
     if !is_volatile && (num_lines > 100)
       let do_serialize = (num_lines > g:unite_source_outline_cache_limit)
-      call s:cache.set(buffer.path, candidates, do_serialize)
-    elseif s:cache.has(buffer.path)
-      call s:cache.remove(buffer.path)
+      call s:cache.set(buffer, candidates, do_serialize)
+    elseif s:cache.has(buffer)
+      call s:cache.remove(buffer)
     endif
 
     if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
