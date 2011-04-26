@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-25
+" Updated : 2011-04-26
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -182,9 +182,9 @@ function! s:serialize(data)
 
   " NOTE: Built-in string() function can't dump an object that has any cyclic
   " references because of E724, nested too deep error; therefore, we need to
-  " substitute direct references to the object's parent and children with
+  " substitute direct references to the candidate's parent and children with
   " their id numbers before serialization.
-  "
+
   let candidates = copy(a:data)
   let candidates = map(candidates, 'copy(v:val)')
   for cand in candidates
