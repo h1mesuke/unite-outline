@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_matcher_glob_tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-20
+" Updated : 2011-04-26
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -39,20 +39,16 @@ let s:matcher = {
 " unite/autoload/filters/matcher_glob.vim
 "
 function! s:matcher.filter(candidates, context)
-  " TEMPORALLY:
-  if !empty(a:candidates) && !has_key(a:candidates[0], 'is_filtered')
-    for cand in a:candidates
-      let cand.is_filtered = 0
-    endfor
-  endif
-
+  for cand in a:candidates
+    let cand.source__is_marked  = 1
+    let cand.source__is_matched = 0
+  endfor
   if a:context.input == ''
     let g:unite_source_outline_input = ''
     return a:candidates
   endif
 
   let tree = unite#sources#outline#import('tree')
-
   let candidates = copy(a:candidates)
 
   for input in split(a:context.input, '\\\@<! ')
@@ -88,7 +84,6 @@ function! s:matcher.filter(candidates, context)
         endfunction
       endif
     endif
-
     let candidates = tree.filter(candidates, pred)
   endfor
 

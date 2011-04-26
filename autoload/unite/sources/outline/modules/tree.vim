@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-21
+" Updated : 2011-04-26
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -65,27 +65,24 @@ function! s:Tree_has_children(node)
 endfunction
 call s:tree.bind('has_children')
 
-function! s:Tree_has_filtered_descendant(node, memo)
+function! s:Tree_has_marked_child(node, memo)
   let cand = has_key(a:node, 'candidate') ? a:node.candidate : a:node
-  return s:has_filtered_descendant(cand, a:memo)
-endfunction
-function! s:has_filtered_descendant(cand, memo)
-  if has_key(a:memo, a:cand.source__id)
-    return a:memo[a:cand.source__id]
+  if has_key(a:memo, cand.source__id)
+    return a:memo[cand.source__id]
   endif
   let result = 0
-  if has_key(a:cand, 'source__children')
-    for child in a:cand.source__children
-      if child.is_filtered || s:has_filtered_descendant(child, a:memo)
+  if has_key(cand, 'source__children')
+    for child in cand.source__children
+      if child.source__is_marked
         let result = 1
         break
       endif
     endfor
   endif
-  let a:memo[a:cand.source__id] = result
+  let a:memo[cand.source__id] = result
   return result
 endfunction
-call s:tree.bind('has_filtered_descendant')
+call s:tree.bind('has_marked_child')
 
 function! s:Tree_get_parent(node)
   if has_key(a:node, 'candidate')
@@ -138,47 +135,45 @@ endfunction
 call s:tree.bind('build')
 
 function! s:Tree_filter(treed_candidates, pred, ...)
-  if empty(a:treed_candidates) | return a:treed_candidates | endif
-
+  if empty(a:treed_candidates)
+    return a:treed_candidates
+  endif
   let do_remove_child = (a:0 ? a:1 : 0)
-  let contained = {}
-  for cand in a:treed_candidates
-    let contained[cand.source__id] = 1
-  endfor
-  let marked = {}
   for cand in a:treed_candidates
     if s:Tree_is_toplevel(cand)
-      call s:mark(cand, a:pred, contained, marked, do_remove_child)
+      call s:mark(cand, a:pred, do_remove_child)
     endif
   endfor
-  let filtered = filter(a:treed_candidates, 'marked[v:val.source__id]')
+  let filtered = filter(a:treed_candidates, 'v:val.source__is_marked')
   return filtered
 endfunction
 call s:tree.bind('filter')
 
-function! s:mark(cand, pred, contained, marked, do_remove_child)
+function! s:mark(cand, pred, do_remove_child)
+
+  " NOTE: A candidate is marked when it has any marked child or the given
+  " predicate yields True for the candidate. Marked candidates will be
+  " displayed as the results of narrowing.
+
   let child_marked = 0
   if has_key(a:cand, 'source__children')
     for child in a:cand.source__children
-      if !has_key(a:contained, child.source__id)
+      if !has_key(child, 'source__is_marked')
+        echomsg "child.word = " . string(child.word)
+      endif
+      if !child.source__is_marked
         continue
       endif
-      if s:mark(child, a:pred, a:contained, a:marked, a:do_remove_child)
+      if s:mark(child, a:pred, a:do_remove_child)
         let child_marked = 1
       elseif a:do_remove_child
         call s:Tree_remove_child(a:cand, child)
       endif
     endfor
   endif
-
-  " NOTE: A candidate is marked when it has any marked child or the given
-  " predicate yields True for the candidate. Marked candidates will be
-  " displayed as unite's narrowing results.
-  "
-  let a:cand.is_filtered = a:pred.call(a:cand) | " mark of self
-  let marked = (child_marked || a:cand.is_filtered)
-  let a:marked[a:cand.source__id] = marked
-  return marked
+  let a:cand.source__is_matched = a:pred.call(a:cand)
+  let a:cand.source__is_marked = (child_marked || a:cand.source__is_matched)
+  return a:cand.source__is_marked
 endfunction
 
 function! s:Tree_flatten(tree)

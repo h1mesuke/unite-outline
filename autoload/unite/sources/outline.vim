@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-25
+" Updated : 2011-04-26
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -611,16 +611,16 @@ function! s:normalize_heading(heading)
   else
     let heading = a:heading
   endif
-
   let heading.source__id = s:heading_id
   let heading.word = s:normalize_heading_word(heading.word)
   call extend(heading, {
         \ 'level': 1,
         \ 'type' : 'generic',
         \ 'lnum' : s:context.heading_lnum,
+        \ 'source__is_marked' : 1,
+        \ 'source__is_matched': 0,
         \ }, 'keep')
   let s:heading_id += 1
-
   return heading
 endfunction
 

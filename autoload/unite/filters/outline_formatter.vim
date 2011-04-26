@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_formatter.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-20
+" Updated : 2011-04-26
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -88,8 +88,8 @@ function! s:need_blank_between(head1, head2, memo)
       let group2 = s:get_heading_group(a:head2)
     endif
     return (group1 != group2 ||
-          \ s:tree.has_filtered_descendant(a:head1, a:memo) ||
-          \ s:tree.has_filtered_descendant(a:head2, a:memo))
+          \ s:tree.has_marked_child(a:head1, a:memo) ||
+          \ s:tree.has_marked_child(a:head2, a:memo))
   else
     return 1
   endif
