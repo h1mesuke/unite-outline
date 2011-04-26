@@ -1,5 +1,5 @@
 "=============================================================================
-" File    : autoload/unite/filters/outline_matcher_glob_tree.vim
+" File    : autoload/unite/filters/outline_matcher_glob.vim
 " Author  : h1mesuke <himesuke@gmail.com>
 " Updated : 2011-04-26
 " Version : 0.3.4
@@ -26,12 +26,12 @@
 " }}}
 "=============================================================================
 
-function! unite#filters#outline_matcher_glob_tree#define()
+function! unite#filters#outline_matcher_glob#define()
   return s:matcher
 endfunction
 
 let s:matcher = {
-      \ 'name'       : 'outline_matcher_glob_tree',
+      \ 'name'       : 'outline_matcher_glob',
       \ 'description': 'glob matcher for outline tree',
       \ }
 

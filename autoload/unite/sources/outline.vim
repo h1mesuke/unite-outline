@@ -864,6 +864,6 @@ let s:source.action_table.jump_list = s:action_table
 "---------------------------------------
 " Filters
 
-call unite#custom_filters('outline', ['outline_matcher_glob_tree', 'outline_formatter'])
+call unite#custom_filters('outline', ['outline_matcher_glob', 'outline_formatter'])
 
 " vim: filetype=vim
