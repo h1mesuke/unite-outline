@@ -11,7 +11,7 @@
 "=============================================================================
 
 " Default outline info for Ruby.RSpec
-" Version: 0.0.9
+" Version: 0.1.0
 
 function! unite#sources#outline#defaults#ruby_rspec#outline_info()
   return s:outline_info
