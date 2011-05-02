@@ -18,7 +18,7 @@ endfunction
 let s:util = unite#sources#outline#import('util')
 
 let headings  = ['module', 'class', 'def', 'BEGIN', 'END', '__END__']
-let headings += ['before', 'describe', 'it', 'after']
+let headings += ['before', 'describe', 'context', 'it', 'its', 'specify', 'after']
 
 let s:outline_info = {
       \ 'heading-1': s:util.shared_pattern('sh', 'heading-1'),
