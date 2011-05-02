@@ -1,7 +1,9 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/ruby_rspec.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-19
+" Updated : 2011-05-02
+"
+" Contributed by kenchan
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -18,11 +20,11 @@ endfunction
 let s:util = unite#sources#outline#import('util')
 
 let headings  = ['module', 'class', 'def', 'BEGIN', 'END', '__END__']
-let headings += ['let', 'let!', 'before', 'describe', 'context', 'it', 'its', 'specify', 'after']
+let headings += ['let!\=', 'before', 'describe', 'context', 'it', 'its', 'specify', 'after']
 
 let s:outline_info = {
       \ 'heading-1': s:util.shared_pattern('sh', 'heading-1'),
-      \ 'heading'  : '^\s*\(' . join(headings, '\|') . '\)\%(\s\|(\|$\)',
+      \ 'heading'  : '^\s*\zs\(' . join(headings, '\|') . '\)\>',
       \ 'skip': {
       \   'header': s:util.shared_pattern('sh', 'header'),
       \   'block' : ['^=begin', '^=end'],
@@ -45,7 +47,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     let heading.level = s:util.get_comment_heading_level(a:context, m_lnum)
   elseif a:which == 'heading'
     let heading.type = matchstr(a:heading_line, self.heading)
-    if a:heading_line =~ '^\s*\%(BEGIN\|END\)\>'
+    if heading.type =~ '^\%(BEGIN\|END\|let!\=\)$'
       let heading.word = substitute(heading.word, '\s*{.*$', '', '')
     endif
     let heading.word = substitute(heading.word, '\s*\%(do\|{\)\%(\s*|[^|]*|\)\=\s*$', '', '')
