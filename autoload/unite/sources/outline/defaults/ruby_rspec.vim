@@ -18,11 +18,11 @@ endfunction
 let s:util = unite#sources#outline#import('util')
 
 let headings  = ['module', 'class', 'def', 'BEGIN', 'END', '__END__']
-let headings += ['before', 'describe', 'it', 'after']
+let headings += ['let', 'let!', 'before', 'describe', 'context', 'it', 'its', 'specify', 'after']
 
 let s:outline_info = {
       \ 'heading-1': s:util.shared_pattern('sh', 'heading-1'),
-      \ 'heading'  : '^\s*\(' . join(headings, '\|') . '\)\%(\s\|$\)',
+      \ 'heading'  : '^\s*\(' . join(headings, '\|') . '\)\%(\s\|(\|$\)',
       \ 'skip': {
       \   'header': s:util.shared_pattern('sh', 'header'),
       \   'block' : ['^=begin', '^=end'],
