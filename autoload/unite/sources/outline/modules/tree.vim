@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-26
+" Updated : 2011-05-04
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -26,7 +26,7 @@
 " }}}
 "=============================================================================
 
-function! unite#sources#outline#modules#tree#module()
+function! unite#sources#outline#modules#tree#import()
   return s:tree
 endfunction
 

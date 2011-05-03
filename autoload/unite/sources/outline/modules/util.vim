@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-25
+" Updated : 2011-05-04
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -26,7 +26,7 @@
 " }}}
 "=============================================================================
 
-function! unite#sources#outline#modules#util#module()
+function! unite#sources#outline#modules#util#import()
   return s:util
 endfunction
 

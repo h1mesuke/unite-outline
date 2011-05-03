@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-26
+" Updated : 2011-05-04
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -181,7 +181,7 @@ function! s:init_heading_group_map(outline_info)
 endfunction
 
 function! unite#sources#outline#import(name)
-  return unite#sources#outline#modules#{a:name}#module()
+  return unite#sources#outline#modules#{a:name}#import()
 endfunction
 
 function! s:find_autoload_script(funcname)
