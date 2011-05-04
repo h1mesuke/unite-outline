@@ -19,7 +19,7 @@ function! unite#sources#outline#defaults#javascript#outline_info()
   return s:outline_info
 endfunction
 
-let s:util = unite#sources#outline#import('util')
+let s:Util = unite#sources#outline#import('Util')
 
 "---------------------------------------
 " Sub Patterns
@@ -39,29 +39,29 @@ let s:rvalue = '\(function\s*(\([^)]*\))\|{\)'
 " Outline Info
 
 let s:outline_info = {
-      \ 'heading-1': s:util.shared_pattern('cpp', 'heading-1'),
+      \ 'heading-1': s:Util.shared_pattern('cpp', 'heading-1'),
       \ 'heading'  : '^\s*\%(function\>\|\%(' . s:assign . '\|' . s:label . '\)\s*' . s:rvalue . '\)',
       \ 'skip': {
-      \   'header': s:util.shared_pattern('cpp', 'header'),
+      \   'header': s:Util.shared_pattern('cpp', 'header'),
       \ },
       \ 'not_match_patterns': [
-      \   s:util.shared_pattern('*', 'parameter_list'),
+      \   s:Util.shared_pattern('*', 'parameter_list'),
       \ ],
       \}
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
   let h_lnum = a:context.heading_lnum
-  let level = s:util.get_indent_level(a:context, h_lnum) + 3
+  let level = s:Util.get_indent_level(a:context, h_lnum) + 3
   let heading = {
         \ 'word' : a:heading_line,
         \ 'level': level,
         \ 'type' : 'generic',
         \ }
 
-  if a:which == 'heading-1' && s:util._cpp_is_in_comment(a:heading_line, a:matched_line)
+  if a:which == 'heading-1' && s:Util._cpp_is_in_comment(a:heading_line, a:matched_line)
     let m_lnum = a:context.matched_lnum
     let heading.type = 'comment'
-    let heading.level = s:util.get_comment_heading_level(a:context, m_lnum)
+    let heading.level = s:Util.get_comment_heading_level(a:context, m_lnum)
 
   elseif a:which ==# 'heading'
 

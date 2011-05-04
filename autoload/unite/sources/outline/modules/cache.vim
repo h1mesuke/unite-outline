@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-04
+" Updated : 2011-05-05
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -27,66 +27,65 @@
 "=============================================================================
 
 function! unite#sources#outline#modules#cache#import()
-  return s:cache
+  return s:Cache
 endfunction
 
 "-----------------------------------------------------------------------------
 
-let s:tree = unite#sources#outline#import('tree')
-let s:util = unite#sources#outline#import('util')
+let s:Util = unite#sources#outline#import('Util')
 
 function! s:get_SID()
-  return str2nr(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_'))
+  return matchstr(expand('<sfile>'), '<SNR>\d\+_')
 endfunction
-
-let s:cache = unite#sources#outline#modules#base#new(s:get_SID(), 'Cache')
+let s:SID = s:get_SID()
 delfunction s:get_SID
 
-let s:cache.DIR = g:unite_data_directory . '/.outline'
-let s:cache.VARNAME = 'unite_source_outline_cache'
+let s:Cache = unite#sources#outline#modules#base#new('Cache', s:SID)
+let s:Cache.DIR = g:unite_data_directory . '/.outline'
+let s:Cache.VARNAME = 'unite_source_outline_cache'
 
 if exists('g:unite_source_outline_debug') && g:unite_source_outline_debug
-  let s:cache.CLEANUP_FILE_COUNT = 10
-  let s:cache.CLEANUP_RATE = 1
-  let s:cache.EXPIRES = 60
+  let s:Cache.CLEANUP_FILE_COUNT = 10
+  let s:Cache.CLEANUP_RATE = 1
+  let s:Cache.EXPIRES = 60
 else
-  let s:cache.CLEANUP_FILE_COUNT = 100
-  let s:cache.CLEANUP_RATE = 10
-  let s:cache.EXPIRES = 60 * 60 * 24 * 30
+  let s:Cache.CLEANUP_FILE_COUNT = 100
+  let s:Cache.CLEANUP_RATE = 10
+  let s:Cache.EXPIRES = 60 * 60 * 24 * 30
 endif
 
 function! s:Cache_has(buffer) dict
   let bufvars = getbufvar(a:buffer.nr, '')
-  return (has_key(bufvars, s:cache.VARNAME) || s:exists_cache_file(a:buffer.path))
+  return (has_key(bufvars, s:Cache.VARNAME) || s:exists_cache_file(a:buffer.path))
 endfunction
-call s:cache.bind('has')
+call s:Cache.function('has')
 
 function! s:exists_cache_file(path)
-  return (s:check_cache_dir() && filereadable(s:cache_file_path(a:path)))
+  return (s:check_cache_dir() && filereadable(s:Cache_file_path(a:path)))
 endfunction
 
 function! s:check_cache_dir()
-  if isdirectory(s:cache.DIR)
+  if isdirectory(s:Cache.DIR)
     return 1
   else
     try
-      call mkdir(s:cache.DIR, 'p')
+      call mkdir(s:Cache.DIR, 'p')
     catch
       call unite#util#print_error("unite-outline: Couldn't create the cache directory.")
     endtry
-    return isdirectory(s:cache.DIR)
+    return isdirectory(s:Cache.DIR)
   endif
 endfunction
 
-function! s:cache_file_path(path)
-    return s:cache.DIR . '/' . s:encode_file_path(a:path)
+function! s:Cache_file_path(path)
+    return s:Cache.DIR . '/' . s:encode_file_path(a:path)
 endfunction
 
 " Original source from Shougo's neocomplcache
 " https://github.com/Shougo/neocomplcache
 "
 function! s:encode_file_path(path)
-  if len(s:cache.DIR) + len(a:path) < 150
+  if len(s:Cache.DIR) + len(a:path) < 150
     " encode the path to a base name
     return substitute(substitute(a:path, ':', '=-', 'g'), '[/\\]', '=+', 'g')
   else
@@ -101,27 +100,27 @@ endfunction
 
 function! s:Cache_get(buffer) dict
   let bufvars = getbufvar(a:buffer.nr, '')
-  if !has_key(bufvars, s:cache.VARNAME) && s:exists_cache_file(a:buffer.path)
+  if !has_key(bufvars, s:Cache.VARNAME) && s:exists_cache_file(a:buffer.path)
     let data = s:load_cache_file(a:buffer.path)
-    call setbufvar(a:buffer.nr, s:cache.VARNAME, data)
+    call setbufvar(a:buffer.nr, s:Cache.VARNAME, data)
   endif
-  let data = getbufvar(a:buffer.nr, s:cache.VARNAME)
+  let data = getbufvar(a:buffer.nr, s:Cache.VARNAME)
   return data
 endfunction
-call s:cache.bind('get')
+call s:Cache.function('get')
 
 function! s:load_cache_file(path)
-  let cache_file = s:cache_file_path(a:path)
+  let cache_file = s:Cache_file_path(a:path)
   let lines = readfile(cache_file)
   if !empty(lines)
     let dumped_data = lines[0]
-    call s:util.print_debug("[LOADED] cache file: " . cache_file)
+    call s:Util.print_debug("[LOADED] cache file: " . cache_file)
   else
     throw "unite-outline: Couldn't load the cache file: " . cache_file
   endif
   " touch; update the timestamp
   if writefile([dumped_data], cache_file) == 0
-    call s:util.print_debug("[TOUCHED] cache file: " . cache_file)
+    call s:Util.print_debug("[TOUCHED] cache file: " . cache_file)
   endif
   let data = s:deserialize(dumped_data)
   return data
@@ -145,8 +144,8 @@ function! s:deserialize(dumped_data)
       endif
     endfor
   catch
-    call s:util.print_debug(v:throwpoint)
-    call s:util.print_debug(v:exception)
+    call s:Util.print_debug(v:throwpoint)
+    call s:Util.print_debug(v:exception)
     throw "CacheCompatibilityError:"
   endtry
   return data
@@ -154,25 +153,25 @@ endfunction
 
 function! s:Cache_set(buffer, candidates, should_serialize) dict
   let data = a:candidates
-  call setbufvar(a:buffer.nr, s:cache.VARNAME, data)
+  call setbufvar(a:buffer.nr, s:Cache.VARNAME, data)
   try
     if a:should_serialize && s:check_cache_dir()
       call s:save_cache_file(a:buffer.path, data)
     elseif s:exists_cache_file(a:buffer.path)
-      call s:remove_file(s:cache_file_path(a:buffer.path))
+      call s:remove_file(s:Cache_file_path(a:buffer.path))
     endif
   catch /^unite-outline:/
     call unite#util#print_error(v:exception)
   endtry
   call s:cleanup_cache_files()
 endfunction
-call s:cache.bind('set')
+call s:Cache.function('set')
 
 function! s:save_cache_file(path, data)
-  let cache_file = s:cache_file_path(a:path)
+  let cache_file = s:Cache_file_path(a:path)
   let dumped_data = s:serialize(a:data)
   if writefile([dumped_data], cache_file) == 0
-    call s:util.print_debug("[SAVED] cache file: " . cache_file)
+    call s:Util.print_debug("[SAVED] cache file: " . cache_file)
   else
     throw "unite-outline: Couldn't save the cache to: " . cache_file
   endif
@@ -203,21 +202,21 @@ endfunction
 
 function! s:Cache_remove(buffer) dict
   let bufvars = getbufvar(a:buffer.nr, '')
-  call remove(bufvars, s:cache.VARNAME)
+  call remove(bufvars, s:Cache.VARNAME)
 
   if s:exists_cache_file(a:buffer.path)
     try
-      call s:remove_file(s:cache_file_path(a:buffer.path))
+      call s:remove_file(s:Cache_file_path(a:buffer.path))
     catch /^unite-outline:/
       call unite#util#print_error(v:exception)
     endtry
   endif
 endfunction
-call s:cache.bind('remove')
+call s:Cache.function('remove')
 
 function! s:remove_file(path)
     if delete(a:path) == 0
-      call s:util.print_debug("[DELETED] cache file: " . a:path)
+      call s:Util.print_debug("[DELETED] cache file: " . a:path)
     else
       throw "unite-outline: Couldn't delete the cache file: " . a:path
     endif
@@ -231,7 +230,7 @@ function! s:Cache_clear()
     call unite#util#print_error("unite-outline: Cache directory doesn't exist.")
   endif
 endfunction
-call s:cache.bind('clear')
+call s:Cache.function('clear')
 
 function! s:cleanup_all_cache_files()
   call s:cleanup_cache_files(1)
@@ -239,16 +238,16 @@ endfunction
 
 function! s:cleanup_cache_files(...)
   let do_all = (a:0 ? a:1 : 0)
-  let cache_files = split(globpath(s:cache.DIR, '*'), "\<NL>")
+  let cache_files = split(globpath(s:Cache.DIR, '*'), "\<NL>")
   let del_files = []
 
   if do_all
     let del_files = cache_files
-  elseif len(cache_files) > s:cache.CLEANUP_FILE_COUNT
+  elseif len(cache_files) > s:Cache.CLEANUP_FILE_COUNT
     let now = localtime()
-    if now % s:cache.CLEANUP_RATE == 0
+    if now % s:Cache.CLEANUP_RATE == 0
       for path in cache_files
-        if now - getftime(path) > s:cache.EXPIRES
+        if now - getftime(path) > s:Cache.EXPIRES
           call add(del_files, path)
         endif
       endfor

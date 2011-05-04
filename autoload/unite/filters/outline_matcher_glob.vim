@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_matcher_glob.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-26
+" Updated : 2011-05-05
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -30,6 +30,8 @@ function! unite#filters#outline_matcher_glob#define()
   return s:matcher
 endfunction
 
+let s:Tree = unite#sources#outline#import('Tree')
+
 let s:matcher = {
       \ 'name'       : 'outline_matcher_glob',
       \ 'description': 'glob matcher for outline tree',
@@ -48,7 +50,6 @@ function! s:matcher.filter(candidates, context)
     return a:candidates
   endif
 
-  let tree = unite#sources#outline#import('tree')
   let candidates = copy(a:candidates)
 
   for input in split(a:context.input, '\\\@<! ')
@@ -84,7 +85,7 @@ function! s:matcher.filter(candidates, context)
         endfunction
       endif
     endif
-    let candidates = tree.filter(candidates, pred)
+    let candidates = s:Tree.filter(candidates, pred)
   endfor
 
   return candidates

@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/base.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-11
+" Updated : 2011-05-05
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -26,17 +26,28 @@
 " }}}
 "=============================================================================
 
-function! unite#sources#outline#modules#base#new(sid, prefix)
-  let module = copy(s:module)
-  let module.__prefix__ = '<SNR>' . a:sid . '_' . a:prefix . '_'
+function! unite#sources#outline#modules#base#new(name, sid)
+  let module = copy(s:Module)
+  let module.__name__ = a:name
+  let module.__prefix__ = a:sid . a:name . '_'
+  " => <SNR>10_Fizz_
   return module
 endfunction
 
-let s:module = {}
+"-----------------------------------------------------------------------------
 
-function! s:module.__bind__(func) dict
-  let self[a:func] = function(self.__prefix__  . a:func)
+function! s:get_SID()
+  return matchstr(expand('<sfile>'), '<SNR>\d\+_')
 endfunction
-let s:module.bind = s:module.__bind__
+let s:SID = s:get_SID()
+delfunction s:get_SID
+
+let s:Module = {}
+
+function! s:Module_bind(func_name) dict
+  let self[a:func_name] = function(self.__prefix__  . a:func_name)
+endfunction
+let s:Module.__bind__ = function(s:SID . 'Module_bind')
+let s:Module.function = s:Module.__bind__ | " syntax sugar
 
 " vim: filetype=vim

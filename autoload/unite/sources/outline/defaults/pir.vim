@@ -15,13 +15,13 @@ function! unite#sources#outline#defaults#pir#outline_info()
   return s:outline_info
 endfunction
 
-let s:util = unite#sources#outline#import('util')
+let s:Util = unite#sources#outline#import('Util')
 
 let s:outline_info = {
-      \ 'heading-1': s:util.shared_pattern('sh', 'heading-1'),
+      \ 'heading-1': s:Util.shared_pattern('sh', 'heading-1'),
       \ 'heading'  : '^\.sub\>',
       \ 'skip': {
-      \   'header': s:util.shared_pattern('sh', 'header'),
+      \   'header': s:Util.shared_pattern('sh', 'header'),
       \   'block' : ['^=\%(cut\)\@!\w\+', '^=cut'],
       \ },
       \}

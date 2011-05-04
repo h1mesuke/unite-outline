@@ -15,7 +15,7 @@ function! unite#sources#outline#defaults#tex#outline_info()
   return s:outline_info
 endfunction
 
-let s:util = unite#sources#outline#import('util')
+let s:Util = unite#sources#outline#import('Util')
 
 let s:outline_info = {
       \ 'heading': '^\\\%(title\|part\|chapter\|\%(sub\)\{,2}section\|begin{thebibliography}\){',
@@ -46,7 +46,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   if a:heading_line =~ '^\\begin{thebibliography}{'
     " Bibliography
     let heading.level = s:bib_level
-    let bib_label = s:util.neighbor_matchstr(a:context, h_lnum,
+    let bib_label = s:Util.neighbor_matchstr(a:context, h_lnum,
           \ '\\renewcommand{\\bibname}{\zs.*\ze}\s*$', 3)
     let heading.word = (empty(bib_label) ? "Bibliography" : bib_label)
   else
@@ -58,7 +58,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
       let s:bib_level = heading.level
     endif
     let heading.word = s:normalize_heading_word(
-          \ s:util.join_to(a:context, h_lnum, '}\s*$'), unit)
+          \ s:Util.join_to(a:context, h_lnum, '}\s*$'), unit)
   endif
 
   if heading.level > 0
@@ -79,7 +79,7 @@ function! s:unit_seqnr_prefix(unit)
   if a:unit ==# 'title'
     let seqnr = []
   elseif a:unit ==# 'part'
-    let seqnr = [s:util.str.nr2roman(s:unit_count.part)]
+    let seqnr = [s:Util.Str.nr2roman(s:unit_count.part)]
   elseif a:unit ==# 'chapter'
     let seqnr = [s:unit_count.chapter]
   elseif a:unit ==# 'section'

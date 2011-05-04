@@ -15,7 +15,7 @@ function! unite#sources#outline#defaults#help#outline_info()
   return s:outline_info
 endfunction
 
-let s:util = unite#sources#outline#import('util')
+let s:Util = unite#sources#outline#import('Util')
 
 " HEADING SAMPLES:
 "
@@ -80,7 +80,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
         let heading.level = 3
       endif
     elseif a:heading_line =~ s:helptag ||
-          \ s:util.neighbor_match(a:context, h_lnum, s:helptag)
+          \ s:Util.neighbor_match(a:context, h_lnum, s:helptag)
       let heading.level = 4
     endif
   endif
@@ -100,7 +100,7 @@ function! s:normalize_heading_word(heading_word)
   let heading_word = substitute(a:heading_word, '\%(\~\|{{{\d\=\)\s*$', '', '')
   let heading_word = substitute(heading_word, s:helptag, '', 'g')
   if heading_word !~ '\l'
-    let heading_word = s:util.str.capitalize(heading_word, 'g')
+    let heading_word = s:Util.Str.capitalize(heading_word, 'g')
   endif
   return heading_word
 endfunction

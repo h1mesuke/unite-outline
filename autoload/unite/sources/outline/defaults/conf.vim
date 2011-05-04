@@ -15,12 +15,12 @@ function! unite#sources#outline#defaults#conf#outline_info()
   return s:outline_info
 endfunction
 
-let s:util = unite#sources#outline#import('util')
+let s:Util = unite#sources#outline#import('Util')
 
 let s:outline_info = {
-      \ 'heading-1': s:util.shared_pattern('sh', 'heading-1'),
+      \ 'heading-1': s:Util.shared_pattern('sh', 'heading-1'),
       \ 'skip': {
-      \   'header': s:util.shared_pattern('sh', 'header'),
+      \   'header': s:Util.shared_pattern('sh', 'header'),
       \ },
       \}
 
@@ -34,7 +34,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   if a:which ==# 'heading-1'
     let m_lnum = a:context.matched_lnum
     let heading.type = 'comment'
-    let heading.level = s:util.get_comment_heading_level(a:context, m_lnum, 4)
+    let heading.level = s:Util.get_comment_heading_level(a:context, m_lnum, 4)
   endif
 
   if heading.level > 0

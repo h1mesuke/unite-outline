@@ -15,7 +15,7 @@ function! unite#sources#outline#defaults#html#outline_info()
   return s:outline_info
 endfunction
 
-let s:util = unite#sources#outline#import('util')
+let s:Util = unite#sources#outline#import('Util')
 
 let s:outline_info = {
       \ 'heading': '<[hH][1-6][^>]*>',
@@ -33,7 +33,7 @@ endfunction
 
 function! s:get_text_content(level, context)
   let h_lnum = a:context.heading_lnum
-  let text = s:util.join_to(a:context, h_lnum, '</[hH]' . a:level . '[^>]*>')
+  let text = s:Util.join_to(a:context, h_lnum, '</[hH]' . a:level . '[^>]*>')
   let text = substitute(text, '\n', '', 'g')
   let text = substitute(text, '<[^>]*>', '', 'g')
   return text

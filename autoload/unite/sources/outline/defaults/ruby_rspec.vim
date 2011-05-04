@@ -17,16 +17,16 @@ function! unite#sources#outline#defaults#ruby_rspec#outline_info()
   return s:outline_info
 endfunction
 
-let s:util = unite#sources#outline#import('util')
+let s:Util = unite#sources#outline#import('Util')
 
 let headings  = ['module', 'class', 'def', 'BEGIN', 'END', '__END__']
 let headings += ['before', 'context', 'describe', 'its\=', 'let!\=', 'specify', 'subject', 'after']
 
 let s:outline_info = {
-      \ 'heading-1': s:util.shared_pattern('sh', 'heading-1'),
+      \ 'heading-1': s:Util.shared_pattern('sh', 'heading-1'),
       \ 'heading'  : '^\s*\zs\(' . join(headings, '\|') . '\)\>',
       \ 'skip': {
-      \   'header': s:util.shared_pattern('sh', 'header'),
+      \   'header': s:Util.shared_pattern('sh', 'header'),
       \   'block' : ['^=begin', '^=end'],
       \ },
       \}
@@ -34,7 +34,7 @@ unlet headings
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
   let h_lnum = a:context.heading_lnum
-  let level = s:util.get_indent_level(a:context, h_lnum) + 3
+  let level = s:Util.get_indent_level(a:context, h_lnum) + 3
   let heading = {
         \ 'word' : a:heading_line,
         \ 'level': level,
@@ -44,7 +44,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   if a:which == 'heading-1' && a:heading_line =~ '^\s*#'
     let m_lnum = a:context.matched_lnum
     let heading.type = 'comment'
-    let heading.level = s:util.get_comment_heading_level(a:context, m_lnum)
+    let heading.level = s:Util.get_comment_heading_level(a:context, m_lnum)
   elseif a:which == 'heading'
     let heading.type = matchstr(a:heading_line, self.heading)
     if heading.type =~ '^\%(BEGIN\|END\|let!\=\)$'

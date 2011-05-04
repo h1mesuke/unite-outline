@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-04
+" Updated : 2011-05-05
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -27,20 +27,21 @@
 "=============================================================================
 
 function! unite#sources#outline#modules#ctags#import()
-  return s:ctags
+  return s:Ctags
 endfunction
 
 "-----------------------------------------------------------------------------
 
-let s:tree = unite#sources#outline#import('tree')
-let s:util = unite#sources#outline#import('util')
+let s:Tree = unite#sources#outline#import('Tree')
+let s:Util = unite#sources#outline#import('Util')
 
 function! s:get_SID()
-  return str2nr(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_'))
+  return matchstr(expand('<sfile>'), '<SNR>\d\+_')
 endfunction
-
-let s:ctags = unite#sources#outline#modules#base#new(s:get_SID(), 'Ctags')
+let s:SID = s:get_SID()
 delfunction s:get_SID
+
+let s:Ctags = unite#sources#outline#modules#base#new('Ctags', s:SID)
 
 function! s:find_exuberant_ctags()
   let ctags_bin_names = [
@@ -63,8 +64,8 @@ function! s:find_exuberant_ctags()
   return ''
 endfunction 
 
-let s:ctags.bin = s:find_exuberant_ctags()
-let s:ctags.langs = {}
+let s:Ctags.bin = s:find_exuberant_ctags()
+let s:Ctags.langs = {}
 
 " C/C++
 "
@@ -83,13 +84,13 @@ let s:ctags.langs = {}
 "   v  variable definitions
 "   x  external and forward variable declarations
 "
-let s:ctags.langs.cpp = {
+let s:Ctags.langs.cpp = {
       \ 'name': 'C++',
       \ 'ctags_options': ' --c++-kinds=cdfgnstu ',
       \ 'scope_kinds'  : ['namespace', 'class', 'struct'],
       \ 'scope_delim'  : '::',
       \ }
-function! s:ctags.langs.cpp.create_heading(tag, context)
+function! s:Ctags.langs.cpp.create_heading(tag, context)
   let line = a:context.lines[a:tag.lnum]
   let heading = {
         \ 'word' : a:tag.name,
@@ -121,8 +122,8 @@ function! s:ctags.langs.cpp.create_heading(tag, context)
   return ignore ? {} : heading
 endfunction
 
-let s:ctags.langs.c = copy(s:ctags.langs.cpp)
-call extend(s:ctags.langs.c, { 'name': 'C', 'ctags_options': ' --c-kinds=cdfgnstu ' }, 'force')
+let s:Ctags.langs.c = copy(s:Ctags.langs.cpp)
+call extend(s:Ctags.langs.c, { 'name': 'C', 'ctags_options': ' --c-kinds=cdfgnstu ' }, 'force')
 
 " Java
 "
@@ -135,7 +136,7 @@ call extend(s:ctags.langs.c, { 'name': 'C', 'ctags_options': ' --c-kinds=cdfgnst
 "  [m] methods
 "  [p] packages
 "
-let s:ctags.langs.java = {
+let s:Ctags.langs.java = {
       \ 'name': 'Java',
       \ 'ctags_options': ' --java-kinds=cgimp ',
       \ 'scope_kinds'  : ['interface', 'class'],
@@ -150,13 +151,13 @@ let s:ctags.langs.java = {
 "   v  variables
 "   i  imports
 "
-let s:ctags.langs.python = {
+let s:Ctags.langs.python = {
       \ 'name': 'Python',
       \ 'ctags_options': ' --python-kinds=cfm ',
       \ 'scope_kinds'  : ['function', 'class', 'member'],
       \ 'scope_delim'  : '.',
       \ }
-function! s:ctags.langs.python.create_heading(tag, context)
+function! s:Ctags.langs.python.create_heading(tag, context)
   let heading = {
         \ 'word' : a:tag.name,
         \ 'type' : a:tag.kind,
@@ -177,32 +178,32 @@ endfunction
 "-----------------------------------------------------------------------------
 
 function! s:Ctags_exists()
-  return !empty(s:ctags.bin)
+  return !empty(s:Ctags.bin)
 endfunction
-call s:ctags.bind('exists')
+call s:Ctags.function('exists')
 
 function! s:Ctags_has(filetype)
-  if !has_key(s:ctags.langs, a:filetype)
+  if !has_key(s:Ctags.langs, a:filetype)
     return 0
   else
-    let lang = s:ctags.langs[a:filetype]
-    let ctags_out = unite#util#system(s:ctags.bin . ' --list-languages')
+    let lang = s:Ctags.langs[a:filetype]
+    let ctags_out = unite#util#system(s:Ctags.bin . ' --list-languages')
     return index(split(ctags_out, "\<NL>"), lang.name, 1) >= 0
   endif
 endfunction
-call s:ctags.bind('has')
+call s:Ctags.function('has')
 
 function! s:get_tags(context)
-  let lang = s:ctags.langs[a:context.buffer.major_filetype]
+  let lang = s:Ctags.langs[a:context.buffer.major_filetype]
   let path = a:context.buffer.path
 
   let opts  = ' -f - --excmd=number --fields=afiKmsSzt --sort=no '
   let opts .= ' --language-force=' . lang.name
   let opts .= lang.ctags_options
 
-  let path = s:util.path.normalize(path, 'shell')
+  let path = s:Util.Path.normalize(path, 'shell')
 
-  let ctags_out = unite#util#system(s:ctags.bin . opts . path)
+  let ctags_out = unite#util#system(s:Ctags.bin . opts . path)
   let status = unite#util#get_last_status()
 
   if status
@@ -264,7 +265,7 @@ function! s:Ctags_extract_headings(context)
     return []
   endif
 
-  let lang = s:ctags.langs[a:context.buffer.filetype]
+  let lang = s:Ctags.langs[a:context.buffer.filetype]
   let scope_kinds_pattern = '^\%(' . join(lang.scope_kinds, '\|') . '\)$'
 
   let tags = s:get_tags(a:context)
@@ -310,30 +311,30 @@ function! s:Ctags_extract_headings(context)
         let scope_table[tag.scope] = pseudo_heading
       endif
       let heading.word = s:get_tag_access_mark(tag) . heading.word
-      call s:tree.append_child(scope_table[tag.scope], heading)
+      call s:Tree.append_child(scope_table[tag.scope], heading)
 
     elseif !has_key(scope_table, tag.qualified_name)
       " the heading belongs to the toplevel (and doesn't have its scope)
-      call s:tree.append_child(tree_root, heading)
+      call s:Tree.append_child(tree_root, heading)
     endif
 
     if idx % 50 == 0
-      call s:util.print_progress("Extracting headings..." . idx * 100 / num_tags . "%")
+      call s:Util.print_progress("Extracting headings..." . idx * 100 / num_tags . "%")
     endif
 
     let idx += 1
   endwhile
-  call s:util.print_progress("Extracting headings...done.")
+  call s:Util.print_progress("Extracting headings...done.")
 
   " merge
-  for heading in filter(values(scope_table), 's:tree.is_toplevel(v:val)')
-    call s:tree.append_child(tree_root, heading)
+  for heading in filter(values(scope_table), 's:Tree.is_toplevel(v:val)')
+    call s:Tree.append_child(tree_root, heading)
   endfor
-  call s:util.list.sort_by_lnum(s:tree.get_children(tree_root))
+  call s:Util.List.sort_by_lnum(s:Tree.get_children(tree_root))
 
   return tree_root
 endfunction
-call s:ctags.bind('extract_headings')
+call s:Ctags.function('extract_headings')
 
 function! s:create_heading(tag, context)
   let line = a:context.lines[a:tag.lnum]
@@ -354,7 +355,7 @@ function! s:create_heading(tag, context)
 endfunction
 
 function! s:get_param_list(context, lnum)
-  let line = s:util.join_to_rparen(a:context, a:lnum)
+  let line = s:Util.join_to_rparen(a:context, a:lnum)
   return matchstr(line, '([^)]*)')
 endfunction
 

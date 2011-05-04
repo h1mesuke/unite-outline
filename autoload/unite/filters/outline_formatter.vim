@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_formatter.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-26
+" Updated : 2011-05-05
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -30,6 +30,8 @@ function! unite#filters#outline_formatter#define()
   return s:formatter
 endfunction
 
+let s:Tree = unite#sources#outline#import('Tree')
+
 let s:BLANK = {
       \ 'word': '',
       \ 'source': 'outline',
@@ -45,7 +47,6 @@ let s:formatter = {
 function! s:formatter.filter(candidates, context)
   if empty(a:candidates) | return [] | endif
 
-  let s:tree = unite#sources#outline#import('tree')
   let candidates = a:candidates
 
   let outline_context = a:context.source__outline_context
@@ -88,8 +89,8 @@ function! s:need_blank_between(head1, head2, memo)
       let group2 = s:get_heading_group(a:head2)
     endif
     return (group1 != group2 ||
-          \ s:tree.has_marked_child(a:head1, a:memo) ||
-          \ s:tree.has_marked_child(a:head2, a:memo))
+          \ s:Tree.has_marked_child(a:head1, a:memo) ||
+          \ s:Tree.has_marked_child(a:head2, a:memo))
   else
     return 1
   endif

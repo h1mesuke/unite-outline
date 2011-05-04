@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-04
+" Updated : 2011-05-05
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -27,17 +27,22 @@
 "=============================================================================
 
 function! unite#sources#outline#modules#tree#import()
-  return s:tree
+  return s:Tree
 endfunction
 
 "-----------------------------------------------------------------------------
 
 function! s:get_SID()
+  return matchstr(expand('<sfile>'), '<SNR>\d\+_')
+endfunction
+let s:SID = s:get_SID()
+delfunction s:get_SID
+
+function! s:get_SID()
   return str2nr(matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_'))
 endfunction
 
-let s:tree = unite#sources#outline#modules#base#new(s:get_SID(), 'Tree')
-delfunction s:get_SID
+let s:Tree = unite#sources#outline#modules#base#new('Tree', s:SID)
 
 function! s:Tree_append_child(parent, child)
   if !has_key(a:parent, 'source__children')
@@ -46,24 +51,24 @@ function! s:Tree_append_child(parent, child)
   call add(a:parent.source__children, a:child)
   let a:child.source__parent = a:parent
 endfunction
-call s:tree.bind('append_child')
+call s:Tree.function('append_child')
 
 function! s:Tree_remove_child(parent, child)
   call remove(a:parent.source__children, index(a:parent.source__children, a:child))
 endfunction
-call s:tree.bind('remove_child')
+call s:Tree.function('remove_child')
 
 function! s:Tree_has_parent(node)
   let cand = has_key(a:node, 'candidate') ? a:node.candidate : a:node
   return has_key(cand, 'source__parent')
 endfunction
-call s:tree.bind('has_parent')
+call s:Tree.function('has_parent')
 
 function! s:Tree_has_children(node)
   let cand = has_key(a:node, 'candidate') ? a:node.candidate : a:node
   return has_key(cand, 'source__children')
 endfunction
-call s:tree.bind('has_children')
+call s:Tree.function('has_children')
 
 function! s:Tree_has_marked_child(node, memo)
   let cand = has_key(a:node, 'candidate') ? a:node.candidate : a:node
@@ -82,7 +87,7 @@ function! s:Tree_has_marked_child(node, memo)
   let a:memo[cand.source__id] = result
   return result
 endfunction
-call s:tree.bind('has_marked_child')
+call s:Tree.function('has_marked_child')
 
 function! s:Tree_get_parent(node)
   if has_key(a:node, 'candidate')
@@ -92,7 +97,7 @@ function! s:Tree_get_parent(node)
     return get(a:node, 'source__parent')
   endif
 endfunction
-call s:tree.bind('get_parent')
+call s:Tree.function('get_parent')
 
 function! s:Tree_get_children(node)
   if has_key(a:node, 'candidate')
@@ -102,19 +107,19 @@ function! s:Tree_get_children(node)
     return get(a:node, 'source__children', [])
   endif
 endfunction
-call s:tree.bind('get_children')
+call s:Tree.function('get_children')
 
 function! s:Tree_is_toplevel(node)
   let cand = has_key(a:node, 'candidate') ? a:node.candidate : a:node
   return !has_key(cand, 'source__parent')
 endfunction
-call s:tree.bind('is_toplevel')
+call s:Tree.function('is_toplevel')
 
 function! s:Tree_is_leaf(node)
   let cand = has_key(a:node, 'candidate') ? a:node.candidate : a:node
   return !has_key(cand, 'source__children')
 endfunction
-call s:tree.bind('is_leaf')
+call s:Tree.function('is_leaf')
 
 function! s:Tree_build(headings)
   let root = { 'level': 0, 'source__children': [] }
@@ -132,7 +137,7 @@ function! s:Tree_build(headings)
   let root = s:Tree_normalize(root)
   return root
 endfunction
-call s:tree.bind('build')
+call s:Tree.function('build')
 
 function! s:Tree_filter(treed_candidates, pred, ...)
   if empty(a:treed_candidates)
@@ -147,7 +152,7 @@ function! s:Tree_filter(treed_candidates, pred, ...)
   let filtered = filter(a:treed_candidates, 'v:val.source__is_marked')
   return filtered
 endfunction
-call s:tree.bind('filter')
+call s:Tree.function('filter')
 
 function! s:mark(cand, pred, do_remove_child)
 
@@ -188,7 +193,7 @@ function! s:Tree_flatten(tree)
   endif
   return headings
 endfunction
-call s:tree.bind('flatten')
+call s:Tree.function('flatten')
 
 function! s:Tree_normalize(root)
   call extend(a:root, { 'source__id': 0, 'level': 0 })
@@ -202,6 +207,6 @@ function! s:Tree_normalize(root)
   endif
   return a:root
 endfunction
-call s:tree.bind('normalize')
+call s:Tree.function('normalize')
 
 " vim: filetype=vim

@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-04
+" Updated : 2011-05-05
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -181,7 +181,8 @@ function! s:init_heading_group_map(outline_info)
 endfunction
 
 function! unite#sources#outline#import(name)
-  return unite#sources#outline#modules#{a:name}#import()
+  let name = tolower(substitute(a:name, '\(\l\)\(\u\)', '\1_\2', 'g'))
+  return unite#sources#outline#modules#{name}#import()
 endfunction
 
 function! s:find_autoload_script(funcname)
@@ -209,7 +210,7 @@ function! s:find_autoload_script(funcname)
 endfunction
 
 function! unite#sources#outline#clear_cache()
-  call s:cache.clear()
+  call s:Cache.clear()
 endfunction
 
 "-----------------------------------------------------------------------------
@@ -293,9 +294,9 @@ call s:define_filetype_aliases()
 "-----------------------------------------------------------------------------
 " Source
 
-let s:cache = unite#sources#outline#import('cache')
-let s:tree  = unite#sources#outline#import('tree')
-let s:util  = unite#sources#outline#import('util')
+let s:Cache = unite#sources#outline#import('Cache')
+let s:Tree  = unite#sources#outline#import('Tree')
+let s:Util  = unite#sources#outline#import('Util')
 
 let s:source = {
       \ 'name'       : 'outline',
@@ -345,9 +346,9 @@ function! s:source.gather_candidates(args, context)
     let is_force = ((len(a:args) > 0 && a:args[0] == '!') || a:context.is_redraw)
     if is_force
       let s:context.outline_info = unite#sources#outline#get_outline_info(buffer.filetype)
-    elseif s:cache.has(buffer)
+    elseif s:Cache.has(buffer)
       try
-        return s:cache.get(buffer)
+        return s:Cache.get(buffer)
       catch /^CacheCompatibilityError:/
       catch /^unite-outline:/
         call unite#util#print_error(v:exception)
@@ -391,7 +392,7 @@ function! s:source.gather_candidates(args, context)
     " normalize and filter
     if type(headings) == type({})
       let tree_root = headings | unlet headings
-      let headings  = s:tree.flatten(s:tree.normalize(tree_root))
+      let headings  = s:Tree.flatten(s:Tree.normalize(tree_root))
       call s:filter_headings(headings, ignore_types, 1)
       call map(headings, 's:normalize_heading(v:val)')
     else
@@ -399,7 +400,7 @@ function! s:source.gather_candidates(args, context)
       if !normalized
         call map(headings, 's:normalize_heading(v:val)')
       endif
-      let tree_root = s:tree.build(headings)
+      let tree_root = s:Tree.build(headings)
     endif
     let headings = s:filter_headings(headings, ignore_types)
 
@@ -412,15 +413,15 @@ function! s:source.gather_candidates(args, context)
     let is_volatile = has_key(outline_info, 'is_volatile') && outline_info.is_volatile
     if !is_volatile && (num_lines > 100)
       let do_serialize = (num_lines > g:unite_source_outline_cache_limit)
-      call s:cache.set(buffer, candidates, do_serialize)
-    elseif s:cache.has(buffer)
-      call s:cache.remove(buffer)
+      call s:Cache.set(buffer, candidates, do_serialize)
+    elseif s:Cache.has(buffer)
+      call s:Cache.remove(buffer)
     endif
 
     if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
       let used_time = s:get_reltime() - start_time
       let used_time_100l = used_time * (str2float("100") / num_lines)
-      call s:util.print_progress("unite-outline: used=" . string(used_time) . "s, "
+      call s:Util.print_progress("unite-outline: used=" . string(used_time) . "s, "
             \ . "100l=". string(used_time_100l) . "s")
     endif
 
@@ -556,12 +557,12 @@ function! s:extract_headings()
               \ "unite-outline: Too many headings, the extraction was interrupted.")
         break
       else
-        call s:util.print_progress("Extracting headings..." . s:lnum * 100 / num_lines . "%")
+        call s:Util.print_progress("Extracting headings..." . s:lnum * 100 / num_lines . "%")
       endif
     endif
     let s:lnum += 1
   endwhile
-  call s:util.print_progress("Extracting headings...done.")
+  call s:Util.print_progress("Extracting headings...done.")
 
   return headings
 endfunction
@@ -593,7 +594,7 @@ endfunction
 function! s:normalize_heading(heading)
   if type(a:heading) == type("")
     " normalize to a Dictionary
-    let level = s:util.get_indent_level(s:context, s:context.heading_lnum)
+    let level = s:Util.get_indent_level(s:context, s:context.heading_lnum)
     let heading = {
           \ 'word' : a:heading,
           \ 'level': level,
@@ -639,7 +640,7 @@ function! s:filter_headings(headings, ignore_types, ...)
       function pred.call(heading)
         return (a:heading.type !~# self.ignore_types_pattern)
       endfunction
-      let headings = s:tree.filter(a:headings, pred, 1)
+      let headings = s:Tree.filter(a:headings, pred, 1)
     endif
   endif
   return headings
@@ -665,7 +666,7 @@ function! s:convert_headings_to_candidates(headings)
   endif
   let physical_levels = s:smooth_levels(a:headings)
   let candidates = []
-  for [heading, phys_level] in s:util.list.zip(a:headings, physical_levels)
+  for [heading, phys_level] in s:Util.List.zip(a:headings, physical_levels)
     let cand = s:create_candidate(heading, phys_level)
     let cand.word = substitute(cand.word, not_match_pattern, '', 'g')
     call add(candidates, cand)
@@ -718,13 +719,13 @@ function! s:smooth_levels(headings)
   return s:_smooth_levels(levels, 0)
 endfunction
 function! s:_smooth_levels(levels, base_level)
-  let splitted = s:util.list.split(a:levels, a:base_level)
+  let splitted = s:Util.List.split(a:levels, a:base_level)
   for sub_levels in splitted
     let shift = min(sub_levels) - a:base_level - 1
     call map(sub_levels, 'v:val - shift')
   endfor
   call map(splitted, 'empty(v:val) ? v:val : s:_smooth_levels(v:val, a:base_level + 1)')
-  return s:util.list.join(splitted, a:base_level)
+  return s:Util.List.join(splitted, a:base_level)
 endfunction
 
 function! s:source.calc_signature(lnum, ...)

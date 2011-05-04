@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-04-26
+Updated : 2011-05-05
 Version : 0.3.4
 License : MIT license {{{
 
@@ -476,7 +476,7 @@ finalize		関数（任意） 		*unite-outline-info-finalize()*
 						*unite#sources#outline#alias()*
 unite#sources#outline#alias( {alias}, {source})
 
-	ファイルタイプの別名を設定します。{source} の outline-info を別の
+	ファイルタイプの別名を設定します。{source} の outline info を別の
 	ファイルタイプでも利用したい場合に使用します。
 >
 	call unite#sources#outline#alias('xhtml', 'html')
@@ -506,21 +506,21 @@ UTILITY FUNCTIONS			*unite-outline-utility-functions*
 	使用する場合は以下のようにモジュールをインポートし、辞書関数として呼び
 	出して下さい。
 >
-	let s:util = unite#sources#outline#import('util')
-	call s:util.get_indent_level(a:context, h_lnum)
+	let s:Util = unite#sources#outline#import('Util')
+	call s:Util.get_indent_level(a:context, h_lnum)
 <
 	{context} には、create_heading() や extract_headings() が引数として
 	受け取った辞書|unite-outline-notation-{context}|を渡します。
 
 HEADINGS ~
-					*unite-outline-util.get_indent_level()*
-util.get_indent_level( {context}, {lnum})
+					*unite-outline-Util.get_indent_level()*
+Util.get_indent_level( {context}, {lnum})
 
 	行番号が {lnum} である行のインデントレベルを返します。
 
 MATCHING ~
-					*unite-outline-util.join_to()*
-util.join_to( {context}, {lnum}, {pattern} [, {limit}])
+					*unite-outline-Util.join_to()*
+Util.join_to( {context}, {lnum}, {pattern} [, {limit}])
 
 	行番号が {lnum} の行から {pattern} にマッチする行までを連結した文字列
 	を返します。連結される行と行の間には "\n" が挿入されます。
@@ -528,8 +528,8 @@ util.join_to( {context}, {lnum}, {pattern} [, {limit}])
 	場合は 3 になります。{limit} に負の値を指定すると、行番号が {lnum} の
 	行から前の行に対してマッチの試行と連結を行います。
 
-					*unite-outline-util.neighbor_match()*
-util.neighbor_match( {context}, {lnum}, {pattern} [, {range} [, {exclusive}]])
+					*unite-outline-Util.neighbor_match()*
+Util.neighbor_match( {context}, {lnum}, {pattern} [, {range} [, {exclusive}]])
 
 	行番号が {lnum} の行およびその前後の行が {pattern} にマッチするならば
 	真、そうでないなら偽を返します。
@@ -538,8 +538,8 @@ util.neighbor_match( {context}, {lnum}, {pattern} [, {range} [, {exclusive}]])
 	を前と後ろ、別々に設定できます。
 	{exclusive} に 1 を指定すると、行番号が {lnum} の行をマッチの試行対象
 	から除外します。
-					*unite-outline-util.neighbor_matchstr()*
-util.neighbor_matchstr( {context}, {lnum}, {pattern} [, {range} [, {exclusive}]])
+					*unite-outline-Util.neighbor_matchstr()*
+Util.neighbor_matchstr( {context}, {lnum}, {pattern} [, {range} [, {exclusive}]])
 
 	|unite-outline-util.neighbor_match()|の派生形。真偽値ではなく、マッチ
 	した部分文字列を返します。マッチしない場合は "" を返します。

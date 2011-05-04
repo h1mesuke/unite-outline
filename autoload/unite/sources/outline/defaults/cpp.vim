@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/cpp.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-23
+" Updated : 2011-05-05
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -15,7 +15,8 @@ function! unite#sources#outline#defaults#cpp#outline_info()
   return s:outline_info
 endfunction
 
-let s:util = unite#sources#outline#import('util')
+let s:Ctags = unite#sources#outline#import('Ctags')
+let s:Util  = unite#sources#outline#import('Util')
 
 let s:outline_info = {
       \ 'heading_groups': [
@@ -25,13 +26,12 @@ let s:outline_info = {
       \   ['function'],
       \ ],
       \ 'not_match_patterns': [
-      \   s:util.shared_pattern('*', 'parameter_list'),
+      \   s:Util.shared_pattern('*', 'parameter_list'),
       \ ],
       \}
 
 function! s:outline_info.extract_headings(context)
-  let ctags = unite#sources#outline#import('ctags')
-  return ctags.extract_headings(a:context)
+  return s:Ctags.extract_headings(a:context)
 endfunction
 
 function! s:outline_info.get_heading_group(heading)
