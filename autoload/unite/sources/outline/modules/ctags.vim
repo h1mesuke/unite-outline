@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-05
+" Updated : 2011-05-06
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -44,16 +44,16 @@ delfunction s:get_SID
 let s:Ctags = unite#sources#outline#modules#base#new('Ctags', s:SID)
 
 function! s:find_exuberant_ctags()
-  let ctags_bin_names = [
+  let ctags_exe_names = [
         \ 'ctags-exuberant',
         \ 'exctags',
         \ 'ctags',
         \ 'tags',
         \ ]
   if exists('g:neocomplcache_ctags_program')
-    let ctags_bin_names = [g:neocomplcache_ctags_program] + ctags_bin_names
+    let ctags_exe_names = [g:neocomplcache_ctags_program] + ctags_exe_names
   endif
-  for ctags in ctags_bin_names
+  for ctags in ctags_exe_names
     if executable(ctags)
       let ctags_out = unite#util#system(ctags . ' --version')
       if split(ctags_out, "\<NL>")[0] =~? '\<Exuberant Ctags\>'
@@ -64,7 +64,7 @@ function! s:find_exuberant_ctags()
   return ''
 endfunction 
 
-let s:Ctags.bin = s:find_exuberant_ctags()
+let s:Ctags.exe = s:find_exuberant_ctags()
 let s:Ctags.langs = {}
 
 " C/C++
@@ -178,7 +178,7 @@ endfunction
 "-----------------------------------------------------------------------------
 
 function! s:Ctags_exists()
-  return !empty(s:Ctags.bin)
+  return !empty(s:Ctags.exe)
 endfunction
 call s:Ctags.function('exists')
 
@@ -187,7 +187,7 @@ function! s:Ctags_has(filetype)
     return 0
   else
     let lang = s:Ctags.langs[a:filetype]
-    let ctags_out = unite#util#system(s:Ctags.bin . ' --list-languages')
+    let ctags_out = unite#util#system(s:Ctags.exe . ' --list-languages')
     return index(split(ctags_out, "\<NL>"), lang.name, 1) >= 0
   endif
 endfunction
@@ -203,7 +203,7 @@ function! s:get_tags(context)
 
   let path = s:Util.Path.normalize(path, 'shell')
 
-  let ctags_out = unite#util#system(s:Ctags.bin . opts . path)
+  let ctags_out = unite#util#system(s:Ctags.exe . opts . path)
   let status = unite#util#get_last_status()
 
   if status
