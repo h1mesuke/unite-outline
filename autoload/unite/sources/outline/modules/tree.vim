@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-05
+" Updated : 2011-05-06
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -163,9 +163,6 @@ function! s:mark(cand, pred, do_remove_child)
   let child_marked = 0
   if has_key(a:cand, 'source__children')
     for child in a:cand.source__children
-      if !has_key(child, 'source__is_marked')
-        echomsg "child.word = " . string(child.word)
-      endif
       if !child.source__is_marked
         continue
       endif
