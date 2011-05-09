@@ -411,7 +411,7 @@ function! s:source.gather_candidates(args, context)
     let candidates = s:convert_headings_to_candidates(headings)
 
     let is_volatile = has_key(outline_info, 'is_volatile') && outline_info.is_volatile
-    if !is_volatile && (num_lines > 100)
+    if !is_volatile && num_lines > 100 && !empty(headings)
       let do_serialize = (num_lines > g:unite_source_outline_cache_limit)
       call s:Cache.set(buffer, candidates, do_serialize)
     elseif s:Cache.has(buffer)
