@@ -290,7 +290,7 @@ function! s:Ctags_extract_headings(context)
 
     if tag.kind =~# scope_kinds_pattern
       " the heading has its scope
-      if !has_key(scope_table, tag.name)
+      if !has_key(scope_table, tag.qualified_name)
         let scope_table[tag.qualified_name] = heading
       elseif has_key(scope_table[tag.qualified_name], 'source__pseudo__')
         let heading.children = scope_table[tag.qualified_name].children
