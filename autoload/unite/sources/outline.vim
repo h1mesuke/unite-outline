@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-05
+" Updated : 2011-05-10
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -220,7 +220,7 @@ let g:unite_source_outline_input = ''
 
 function! s:jump_to_match(...)
   if unite#get_context().buffer_name !=# 'outline'
-    call unite#util#print_error("unite-outline: Invalid buffer name.")
+    call unite#print_error("unite-outline: Invalid buffer name.")
     return
   endif
   let flags = (a:0 ? a:1 : '')
@@ -358,9 +358,9 @@ function! s:source.gather_candidates(args, context)
     let outline_info = s:context.outline_info
     if empty(outline_info)
       if empty(buffer.filetype)
-        call unite#util#print_error("unite-outline: Please set the filetype.")
+        call unite#print_message("unite-outline: Please set the filetype.")
       else
-        call unite#util#print_error(
+        call unite#print_message(
               \ "unite-outline: Sorry, " . toupper(buffer.filetype) . " is not supported.")
       endif
       return []
@@ -553,7 +553,7 @@ function! s:extract_headings()
 
     if s:lnum % 500 == 0
       if len(headings) > g:unite_source_outline_max_headings
-        call unite#util#print_error(
+        call unite#print_message(
               \ "unite-outline: Too many headings, the extraction was interrupted.")
         break
       else
@@ -786,7 +786,7 @@ function! s:action_table.preview.func(candidate)
   " all, so prohibit it.
   let bufnr = bufnr(unite#util#escape_file_searching(cand.action__path))
   if getbufvar(bufnr, '&buftype') =~# '\<nofile\>'
-    call unite#util#print_error("unite-outline: Can't preview the nofile buffer.")
+    call unite#print_error("unite-outline: Can't preview the nofile buffer.")
     return
   endif
 
