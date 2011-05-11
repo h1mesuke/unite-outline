@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-10
+" Updated : 2011-05-11
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -139,7 +139,7 @@ call extend(s:Ctags.langs.c, { 'name': 'C', 'ctags_options': ' --c-kinds=cdfgnst
 let s:Ctags.langs.java = {
       \ 'name': 'Java',
       \ 'ctags_options': ' --java-kinds=cgimp ',
-      \ 'scope_kinds'  : ['interface', 'class'],
+      \ 'scope_kinds'  : ['interface', 'class', 'enum'],
       \ 'scope_delim'  : '.',
       \ }
 
