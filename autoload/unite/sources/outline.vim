@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-10
+" Updated : 2011-05-13
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -103,7 +103,9 @@ function! s:get_outline_info(filetype, is_default)
       continue
     endtry
     call s:check_update(scr_path)
-    return s:init_outline_info({load_func}())
+    let outline_info = {load_func}()
+    let outline_info = s:normalize_outline_info(outline_info)
+    return outline_info
   endfor
   return {}
 endfunction
@@ -130,12 +132,16 @@ function! s:check_update(path)
   return (new_ftime > old_ftime)
 endfunction
 
-function! s:init_outline_info(outline_info)
+function! s:normalize_outline_info(outline_info)
   if has_key(a:outline_info, 'skip')
     call s:normalize_skip_info(a:outline_info)
   endif
-  if has_key(a:outline_info, 'heading_groups')
-    call s:init_heading_group_map(a:outline_info)
+  call s:normalize_heading_groups(a:outline_info)
+  if has_key(a:outline_info, 'not_match_patterns')
+    let a:outline_info.__not_match_pattern__ =
+          \ '\%(' . join(a:outline_info.not_match_patterns, '\|') . '\)'
+  else
+    let a:outline_info.__not_match_pattern__ = ''
   endif
   return a:outline_info
 endfunction
@@ -168,15 +174,21 @@ function! s:normalize_block_patterns(patterns)
   return { 'begin': a:patterns[0], 'end': a:patterns[1] }
 endfunction
 
-function! s:init_heading_group_map(outline_info)
-  let groups = a:outline_info.heading_groups
-  let group_map = {} | let group_id = 1
-  for group_types in groups
-    for heading_type in group_types
-      let group_map[heading_type] = group_id
+function! s:normalize_heading_groups(outline_info)
+  if !has_key(a:outline_info, 'heading_groups')
+    let a:outline_info.heading_groups = {}
+    let group_map = {}
+  else
+    let groups = keys(a:outline_info.heading_groups)
+    let group_map = {}
+    for group in groups
+      let group_types = a:outline_info.heading_groups[group]
+      for heading_type in group_types
+        let group_map[heading_type] = group
+      endfor
     endfor
-    let group_id += 1
-  endfor
+  endif
+  let group_map.generic = 'generic'
   let a:outline_info.heading_group_map = group_map
 endfunction
 
@@ -308,8 +320,8 @@ let s:source = {
 function! s:source.hooks.on_init(args, context)
   let s:heading_id = 1
   let buffer = {
-        \ 'nr'        : bufnr('%'),
-        \ 'path'      : expand('%:p'),
+        \ 'nr'  : bufnr('%'),
+        \ 'path': expand('%:p'),
         \ 'filetype'  : getbufvar('%', '&filetype'),
         \ 'shiftwidth': getbufvar('%', '&shiftwidth'),
         \ 'tabstop'   : getbufvar('%', '&tabstop'),
@@ -338,87 +350,104 @@ function! s:source.gather_candidates(args, context)
   set cpoptions&vim
   set noignorecase
   try
-    if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
-      let start_time = s:get_reltime()
-    endif
-
-    let buffer = s:context.buffer
     let is_force = ((len(a:args) > 0 && a:args[0] == '!') || a:context.is_redraw)
-    if is_force
-      let s:context.outline_info = unite#sources#outline#get_outline_info(buffer.filetype)
-    elseif s:Cache.has(buffer)
+    let buffer = s:context.buffer
+
+    if exists('b:unite_source_outline_cache') && !is_force
+      " Path A: Get candidates from the buffer local cache and return them.
+      let candidates = b:unite_source_outline_cache
+      return candidates
+
+    elseif s:Cache.has(buffer) && !is_force
+      " Path B1: Get headings from the serialized cache.
       try
-        return s:Cache.get(buffer)
+        let headings = s:Cache.get(buffer)
       catch /^CacheCompatibilityError:/
       catch /^unite-outline:/
         call unite#util#print_error(v:exception)
       endtry
-    endif
 
-    let outline_info = s:context.outline_info
-    if empty(outline_info)
-      if empty(buffer.filetype)
-        call unite#print_message("unite-outline: Please set the filetype.")
+    else
+      " Path B2: Get headings by parsing the buffer.
+      if exists('g:unite_source_outline_profile') &&
+            \ g:unite_source_outline_profile && has("reltime")
+        let start_time = s:get_reltime()
+      endif
+
+      if is_force
+        " re-source the outline info if updated
+        let s:context.outline_info =
+              \ unite#sources#outline#get_outline_info(buffer.filetype)
+      endif
+
+      let outline_info = s:context.outline_info
+      if empty(outline_info)
+        if empty(buffer.filetype)
+          call unite#print_message("unite-outline: Please set the filetype.")
+        else
+          call unite#print_message("unite-outline: Sorry, " .
+                \ toupper(buffer.filetype) . " is not supported.")
+        endif
+        return []
+      endif
+
+      let lines = [""] + getbufline(s:context.buffer.nr, 1, '$')
+      let num_lines = len(lines) - 1
+      let s:context.lines = lines
+      let s:context.heading_lnum = 0
+      let s:context.matched_lnum = 0
+
+      if has_key(outline_info, 'initialize')
+        call outline_info.initialize(s:context)
+      endif
+      if has_key(outline_info, 'extract_headings')
+        let headings = outline_info.extract_headings(s:context)
+        let normalized = 0
       else
-        call unite#print_message(
-              \ "unite-outline: Sorry, " . toupper(buffer.filetype) . " is not supported.")
+        let headings = s:extract_headings()
+        let normalized = 1
       endif
-      return []
-    endif
+      if has_key(outline_info, 'finalize')
+        call outline_info.finalize(s:context)
+      endif
 
-    let lines = [""] + getbufline(s:context.buffer.nr, 1, '$')
-    let num_lines = len(lines) - 1
-    let s:context.outline_info = outline_info
-    let s:context.lines = lines
-    let s:context.heading_lnum = 0
-    let s:context.matched_lnum = 0
+      let ignore_types = unite#sources#outline#get_ignore_heading_types(buffer.filetype)
 
-    if has_key(outline_info, 'initialize')
-      call outline_info.initialize(s:context)
-    endif
-    if has_key(outline_info, 'extract_headings')
-      let headings = outline_info.extract_headings(s:context)
-      let normalized = 0
-    else
-      let headings = s:extract_headings()
-      let normalized = 1
-    endif
-    if has_key(outline_info, 'finalize')
-      call outline_info.finalize(s:context)
-    endif
-
-    let ignore_types = unite#sources#outline#get_ignore_heading_types(buffer.filetype)
-
-    " normalize and filter
-    if type(headings) == type({})
-      let tree_root = headings | unlet headings
-      let headings  = s:Tree.flatten(s:Tree.normalize(tree_root))
-      call s:filter_headings(headings, ignore_types, 1)
-      call map(headings, 's:normalize_heading(v:val)')
-    else
-      call s:filter_headings(headings, ignore_types, 1)
-      if !normalized
+      " normalize and filter headings
+      if type(headings) == type({})
+        let tree = headings | unlet headings
+        let tree = s:Tree.normalize(tree)
+        let headings  = s:Tree.flatten(tree)
+        call s:filter_headings(headings, ignore_types, 1)
         call map(headings, 's:normalize_heading(v:val)')
+      else
+        call s:filter_headings(headings, ignore_types, 1)
+        if !normalized
+          call map(headings, 's:normalize_heading(v:val)')
+        endif
+        let tree = s:Tree.build(headings)
       endif
-      let tree_root = s:Tree.build(headings)
-    endif
-    let headings = s:filter_headings(headings, ignore_types)
+      let headings = s:filter_headings(headings, ignore_types)
 
-    unlet s:context.heading_lnum
-    unlet s:context.matched_lnum
+      unlet s:context.heading_lnum
+      unlet s:context.matched_lnum
+
+      let is_volatile = has_key(outline_info, 'is_volatile') && outline_info.is_volatile
+      if !is_volatile && num_lines > 100 && !empty(headings)
+        let do_serialize = (num_lines > g:unite_source_outline_cache_limit)
+        call s:Cache.set(buffer, headings, do_serialize)
+      elseif s:Cache.has(buffer)
+        call s:Cache.remove(buffer)
+      endif
+    endif
 
     " headings -> candidates
     let candidates = s:convert_headings_to_candidates(headings)
+    let b:unite_source_outline_cache = candidates
 
-    let is_volatile = has_key(outline_info, 'is_volatile') && outline_info.is_volatile
-    if !is_volatile && num_lines > 100 && !empty(headings)
-      let do_serialize = (num_lines > g:unite_source_outline_cache_limit)
-      call s:Cache.set(buffer, candidates, do_serialize)
-    elseif s:Cache.has(buffer)
-      call s:Cache.remove(buffer)
-    endif
+    if exists('g:unite_source_outline_profile') &&
+          \ g:unite_source_outline_profile && has("reltime")
 
-    if exists('g:unite_source_outline_profile') && g:unite_source_outline_profile && has("reltime")
       let used_time = s:get_reltime() - start_time
       let used_time_100l = used_time * (str2float("100") / num_lines)
       call s:Util.print_progress("unite-outline: used=" . string(used_time) . "s, "
@@ -476,7 +505,7 @@ function! s:extract_headings()
   let has_create_heading_func  = has_key(outline_info, 'create_heading')
   " NOTE: outline info is allowed to update heading patterns dynamically on
   " the runtime, so attribute values for them must not be assigned to local
-  " variables.
+  " variables here.
 
   let headings = []
   let lines = s:context.lines | let num_lines = len(lines)
@@ -602,15 +631,28 @@ function! s:normalize_heading(heading)
   else
     let heading = a:heading
   endif
-  let heading.source__id = s:heading_id
+  let heading.id = s:heading_id
   let heading.word = s:normalize_heading_word(heading.word)
   call extend(heading, {
         \ 'level': 1,
         \ 'type' : 'generic',
         \ 'lnum' : s:context.heading_lnum,
-        \ 'source__is_marked' : 1,
-        \ 'source__is_matched': 0,
+        \ 'keyword': heading.word,
+        \ 'is_marked' : 1,
+        \ 'is_matched': 0,
         \ }, 'keep')
+  let heading.line = s:context.lines[heading.lnum]
+  let heading.pattern = s:make_search_pattern(heading.line)
+  let heading.signature = s:calc_signature(heading.lnum, s:context.lines)
+  let outline_info = s:context.outline_info
+  if !has_key(heading, 'group')
+    let group_map = outline_info.heading_group_map
+    let heading.group = get(group_map, heading.type, 'generic')
+  endif
+  if !has_key(heading, 'keyword') && !empty(outline_info.__not_match_pattern__)
+    let heading.keyword =
+          \ substitute(heading.word, outline_info.__not_match_pattern__, '', 'g')
+  endif
   let s:heading_id += 1
   return heading
 endfunction
@@ -621,130 +663,26 @@ function! s:normalize_heading_word(heading_word)
   return heading_word
 endfunction
 
-" Heading Type Filter
-function! s:filter_headings(headings, ignore_types, ...)
-  let headings = a:headings
-  if !empty(a:ignore_types)
-    let remove_comments = (a:0 ? a:1 : 0)
-    if remove_comments
-      if index(a:ignore_types, 'comment') >= 0
-        call filter(headings, 'v:val.type !=# "comment"')
-      endif
-    else
-      let ignore_types = map(copy(a:ignore_types), 'unite#util#escape_pattern(v:val)')
-      let ignore_types_pattern = '^\%(' . join(ignore_types, '\|') . '\)$'
-
-      " something like closure
-      let pred = {}
-      let pred.ignore_types_pattern = ignore_types_pattern
-      function pred.call(heading)
-        return (a:heading.type !~# self.ignore_types_pattern)
-      endfunction
-      let headings = s:Tree.filter(a:headings, pred, 1)
-    endif
-  endif
-  return headings
-endfunction
-
-function! unite#sources#outline#get_ignore_heading_types(filetype)
-  for filetype in [a:filetype, s:resolve_filetype_alias(a:filetype), '*']
-    if has_key(g:unite_source_outline_ignore_heading_types, filetype)
-      return g:unite_source_outline_ignore_heading_types[filetype]
-    endif
-  endfor
-  return []
-endfunction
-
-function! s:convert_headings_to_candidates(headings)
-  if empty(a:headings) | return a:headings | endif
-
-  let outline_info = s:context.outline_info
-  if has_key(outline_info, 'not_match_patterns')
-    let not_match_pattern = '\%(' . join(outline_info.not_match_patterns, '\|') . '\)'
-  else
-    let not_match_pattern = ''
-  endif
-  let physical_levels = s:smooth_levels(a:headings)
-  let candidates = []
-  for [heading, phys_level] in s:Util.List.zip(a:headings, physical_levels)
-    let cand = s:create_candidate(heading, phys_level)
-    let cand.word = substitute(cand.word, not_match_pattern, '', 'g')
-    call add(candidates, cand)
-  endfor
-  return candidates
-endfunction
-
-function! s:create_candidate(heading, physical_level)
-  let heading = {
-        \ 'word' : a:heading.word,
-        \ 'level': a:heading.level,
-        \ 'type' : a:heading.type,
-        \ 'lnum' : a:heading.lnum,
-        \
-        \ 'physical_level' : a:physical_level,
-        \ }
-
-  " NOTE: To keep the tree structure of the headings, convert a heading
-  " Dictionary to a candidate Dictionary in-place.
-  "
-  let cand = a:heading
-  let heading.candidate = cand
-  call extend(cand, {
-        \ 'word': s:make_indent(a:physical_level) . a:heading.word,
-        \ 'source': 'outline',
-        \ 'kind'  : 'jump_list',
-        \ 'action__path': s:context.buffer.path,
-        \ 'action__pattern'  : s:make_search_pattern(s:context.lines[a:heading.lnum]),
-        \ 'action__signature': s:source.calc_signature(a:heading.lnum, s:context.lines),
-        \
-        \ 'source__heading': heading,
-        \ })
-  let cand.abbr = cand.word
-  unlet cand.level
-  unlet cand.type
-  unlet cand.lnum
-  return cand
-endfunction
-
-function! s:make_indent(level)
-  return repeat(' ', (a:level - 1) * g:unite_source_outline_indent_width)
-endfunction
-
 function! s:make_search_pattern(line)
   return '^' . unite#util#escape_pattern(a:line) . '$'
 endfunction
 
-function! s:smooth_levels(headings)
-  let levels = map(copy(a:headings), 'v:val.level')
-  return s:_smooth_levels(levels, 0)
-endfunction
-function! s:_smooth_levels(levels, base_level)
-  let splitted = s:Util.List.split(a:levels, a:base_level)
-  for sub_levels in splitted
-    let shift = min(sub_levels) - a:base_level - 1
-    call map(sub_levels, 'v:val - shift')
-  endfor
-  call map(splitted, 'empty(v:val) ? v:val : s:_smooth_levels(v:val, a:base_level + 1)')
-  return s:Util.List.join(splitted, a:base_level)
-endfunction
+let s:SIGNATURE_RANGE = 10
+let s:SIGNATURE_PRECISION = 2
 
-function! s:source.calc_signature(lnum, ...)
-  let range = 10 | let precision = 2
-  if a:0
-    let lines = a:1
-    let from = max([1, a:lnum - range])
-    let to   = min([a:lnum + range, len(lines) - 1])
-    let bwd_lines = lines[from : a:lnum]
-    let fwd_lines = lines[a:lnum  : to]
-  else
-    let from = max([1, a:lnum - range])
-    let to   = min([a:lnum + range, line('$')])
-    let bwd_lines = getline(from, a:lnum)
-    let fwd_lines = getline(a:lnum, to)
-  endif
+function! s:calc_signature(lnum, lines)
+  let range = s:SIGNATURE_RANGE
+  let from = max([1, a:lnum - range])
+  let to   = min([a:lnum + range, len(a:lines) - 1])
+  let bwd_lines = a:lines[from : a:lnum]
+  let fwd_lines = a:lines[a:lnum  : to]
+  return s:_calc_signature(bwd_lines, fwd_lines)
+endfunction
+function! s:_calc_signature(bwd_lines, fwd_lines)
+  let precision = s:SIGNATURE_PRECISION
   let is_not_blank = 'v:val =~ "\\S"'
-  let bwd_lines = filter(bwd_lines, is_not_blank)[-precision-1 : -2]
-  let fwd_lines = filter(fwd_lines, is_not_blank)[1 : precision]
+  let bwd_lines = filter(a:bwd_lines, is_not_blank)[-precision-1 : -2]
+  let fwd_lines = filter(a:fwd_lines, is_not_blank)[1 : precision]
   return join(map(bwd_lines + fwd_lines, 's:digest_line(v:val)'), '')
 endfunction
 
@@ -769,6 +707,101 @@ else
     return strlen(substitute(a:str, '.', 'c', 'g'))
   endfunction
 endif
+
+" Heading Type Filter
+function! s:filter_headings(headings, ignore_types, ...)
+  let headings = a:headings
+  if !empty(a:ignore_types)
+    let remove_comments = (a:0 ? a:1 : 0)
+    if remove_comments
+      if index(a:ignore_types, 'comment') >= 0
+        call filter(headings, 'v:val.type !=# "comment"')
+      endif
+    else
+      let ignore_types = map(copy(a:ignore_types), 'unite#util#escape_pattern(v:val)')
+      let ignore_types_pattern = '^\%(' . join(ignore_types, '\|') . '\)$'
+
+      " something like closure
+      let predicate = {}
+      let predicate.ignore_types_pattern = ignore_types_pattern
+      function predicate.call(heading)
+        return (a:heading.type !~# self.ignore_types_pattern)
+      endfunction
+
+      let headings = s:Tree.filter(a:headings, predicate, 1)
+    endif
+  endif
+  return headings
+endfunction
+
+function! unite#sources#outline#get_ignore_heading_types(filetype)
+  for filetype in [a:filetype, s:resolve_filetype_alias(a:filetype), '*']
+    if has_key(g:unite_source_outline_ignore_heading_types, filetype)
+      return g:unite_source_outline_ignore_heading_types[filetype]
+    endif
+  endfor
+  return []
+endfunction
+
+function! s:convert_headings_to_candidates(headings)
+  if empty(a:headings) | return [] | endif
+
+  let outline_info = s:context.outline_info
+  let physical_levels = s:smooth_levels(a:headings)
+  let candidates = []
+  for [heading, physical_level] in s:Util.List.zip(a:headings, physical_levels)
+    let heading.physical_level = physical_level
+    let cand = s:create_candidate(heading, physical_level)
+    call add(candidates, cand)
+  endfor
+  return candidates
+endfunction
+
+function! s:create_candidate(heading, physical_level)
+  " NOTE:
+  "   abbr - String for displaying
+  "   word - String for narrowing
+  let cand = {
+        \ 'abbr': s:make_indent(a:physical_level) . a:heading.word,
+        \ 'word': a:heading.keyword,
+        \ 'source': 'outline',
+        \ 'kind'  : 'jump_list',
+        \ 'action__path': s:context.buffer.path,
+        \ 'action__pattern'  : a:heading.pattern,
+        \ 'action__signature': a:heading.signature,
+        \
+        \ 'source__heading'   : a:heading,
+        \ }
+  let a:heading.__unite_candidate__ = cand
+  return cand
+endfunction
+
+function! s:make_indent(level)
+  return repeat(' ', (a:level - 1) * g:unite_source_outline_indent_width)
+endfunction
+
+function! s:smooth_levels(headings)
+  let levels = map(copy(a:headings), 'v:val.level')
+  return s:_smooth_levels(levels, 0)
+endfunction
+function! s:_smooth_levels(levels, base_level)
+  let splitted = s:Util.List.split(a:levels, a:base_level)
+  for sub_levels in splitted
+    let shift = min(sub_levels) - a:base_level - 1
+    call map(sub_levels, 'v:val - shift')
+  endfor
+  call map(splitted, 'empty(v:val) ? v:val : s:_smooth_levels(v:val, a:base_level + 1)')
+  return s:Util.List.join(splitted, a:base_level)
+endfunction
+
+function! s:source.calc_signature(lnum)
+  let range = s:SIGNATURE_RANGE
+  let from = max([1, a:lnum - range])
+  let to   = min([a:lnum + range, line('$')])
+  let bwd_lines = getline(from, a:lnum)
+  let fwd_lines = getline(a:lnum, to)
+  return s:_calc_signature(bwd_lines, fwd_lines)
+endfunction
 
 "---------------------------------------
 " Actions

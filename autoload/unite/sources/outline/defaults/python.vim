@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/python.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-05
+" Updated : 2011-05-11
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -19,18 +19,17 @@ let s:Ctags = unite#sources#outline#import('Ctags')
 let s:Util  = unite#sources#outline#import('Util')
 
 let s:outline_info = {
-      \ 'heading_groups': [
-      \   ['class'],
-      \   ['function', 'member'],
-      \ ],
+      \ 'heading_groups': {
+      \   'type'     : ['class'],
+      \   'function' : ['function', 'member'],
+      \ },
       \ 'not_match_patterns': [
       \   s:Util.shared_pattern('*', 'parameter_list'),
       \ ],
       \}
 
 function! s:outline_info.extract_headings(context)
-  let Ctags = unite#sources#outline#import('Ctags')
-  return Ctags.extract_headings(a:context)
+  return s:Ctags.extract_headings(a:context)
 endfunction
 
 " vim: filetype=vim

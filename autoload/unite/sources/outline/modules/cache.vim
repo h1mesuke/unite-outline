@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-05
+" Updated : 2011-05-12
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -42,7 +42,7 @@ delfunction s:get_SID
 
 let s:Cache = unite#sources#outline#modules#base#new('Cache', s:SID)
 let s:Cache.DIR = g:unite_data_directory . '/.outline'
-let s:Cache.VARNAME = 'unite_source_outline_cache'
+let s:Cache.VAR = 'NuOutline_cache'
 
 if exists('g:unite_source_outline_debug') && g:unite_source_outline_debug
   let s:Cache.CLEANUP_FILE_COUNT = 10
@@ -56,12 +56,12 @@ endif
 
 function! s:Cache_has(buffer) dict
   let bufvars = getbufvar(a:buffer.nr, '')
-  return (has_key(bufvars, s:Cache.VARNAME) || s:exists_cache_file(a:buffer.path))
+  return (has_key(bufvars, s:Cache.VAR) || s:exists_cache_file(a:buffer.path))
 endfunction
 call s:Cache.function('has')
 
 function! s:exists_cache_file(path)
-  return (s:check_cache_dir() && filereadable(s:Cache_file_path(a:path)))
+  return (s:check_cache_dir() && filereadable(s:cache_file_path(a:path)))
 endfunction
 
 function! s:check_cache_dir()
@@ -77,7 +77,7 @@ function! s:check_cache_dir()
   endif
 endfunction
 
-function! s:Cache_file_path(path)
+function! s:cache_file_path(path)
     return s:Cache.DIR . '/' . s:encode_file_path(a:path)
 endfunction
 
@@ -100,17 +100,17 @@ endfunction
 
 function! s:Cache_get(buffer) dict
   let bufvars = getbufvar(a:buffer.nr, '')
-  if !has_key(bufvars, s:Cache.VARNAME) && s:exists_cache_file(a:buffer.path)
+  if !has_key(bufvars, s:Cache.VAR) && s:exists_cache_file(a:buffer.path)
     let data = s:load_cache_file(a:buffer.path)
-    call setbufvar(a:buffer.nr, s:Cache.VARNAME, data)
+    call setbufvar(a:buffer.nr, s:Cache.VAR, data)
   endif
-  let data = getbufvar(a:buffer.nr, s:Cache.VARNAME)
+  let data = getbufvar(a:buffer.nr, s:Cache.VAR)
   return data
 endfunction
 call s:Cache.function('get')
 
 function! s:load_cache_file(path)
-  let cache_file = s:Cache_file_path(a:path)
+  let cache_file = s:cache_file_path(a:path)
   let lines = readfile(cache_file)
   if !empty(lines)
     let dumped_data = lines[0]
@@ -129,18 +129,18 @@ endfunction
 function! s:deserialize(dumped_data)
   sandbox let data = eval(a:dumped_data)
   try
-    let candidates = data
-    let cand_table = {}
-    for cand in candidates
-      let cand_table[cand.source__id] = cand
+    " ids -> references
+    let headings = data
+    let heading_table = {}
+    for heading in headings
+      let heading_table[heading.id] = heading
     endfor
-    for cand in candidates
-      let cand.source__heading.candidate = cand
-      if has_key(cand, 'source__parent')
-        let cand.source__parent = cand_table[cand.source__parent]
+    for heading in headings
+      if has_key(heading, 'parent')
+        let heading.parent = heading_table[heading.parent]
       endif
-      if has_key(cand, 'source__children')
-        call map(cand.source__children, 'cand_table[v:val]')
+      if has_key(heading, 'children')
+        call map(heading.children, 'heading_table[v:val]')
       endif
     endfor
   catch
@@ -151,14 +151,13 @@ function! s:deserialize(dumped_data)
   return data
 endfunction
 
-function! s:Cache_set(buffer, candidates, should_serialize) dict
-  let data = a:candidates
-  call setbufvar(a:buffer.nr, s:Cache.VARNAME, data)
+function! s:Cache_set(buffer, data, should_serialize) dict
+  call setbufvar(a:buffer.nr, s:Cache.VAR, a:data)
   try
     if a:should_serialize && s:check_cache_dir()
-      call s:save_cache_file(a:buffer.path, data)
+      call s:save_cache_file(a:buffer.path, a:data)
     elseif s:exists_cache_file(a:buffer.path)
-      call s:remove_file(s:Cache_file_path(a:buffer.path))
+      call s:remove_file(s:cache_file_path(a:buffer.path))
     endif
   catch /^unite-outline:/
     call unite#util#print_error(v:exception)
@@ -168,7 +167,7 @@ endfunction
 call s:Cache.function('set')
 
 function! s:save_cache_file(path, data)
-  let cache_file = s:Cache_file_path(a:path)
+  let cache_file = s:cache_file_path(a:path)
   let dumped_data = s:serialize(a:data)
   if writefile([dumped_data], cache_file) == 0
     call s:Util.print_debug("[SAVED] cache file: " . cache_file)
@@ -178,35 +177,28 @@ function! s:save_cache_file(path, data)
 endfunction
 
 function! s:serialize(data)
-
-  " NOTE: Built-in string() function can't dump an object that has any cyclic
-  " references because of E724, nested too deep error; therefore, we need to
-  " substitute direct references to the candidate's parent and children with
-  " their id numbers before serialization.
-
-  let candidates = copy(a:data)
-  let candidates = map(candidates, 'copy(v:val)')
-  for cand in candidates
-    let cand.source__heading = copy(cand.source__heading)
-    unlet cand.source__heading.candidate
-    if has_key(cand, 'source__parent')
-      let cand.source__parent = cand.source__parent.source__id
+  " references -> ids
+  let headings = copy(a:data)
+  let headings = map(headings, 'copy(v:val)')
+  for heading in headings
+    if has_key(heading, 'parent')
+      let heading.parent = heading.parent.id
     endif
-    if has_key(cand, 'source__children')
-      let cand.source__children = map(copy(cand.source__children), 'v:val.source__id')
+    if has_key(heading, 'children')
+      let heading.children = map(copy(heading.children), 'v:val.id')
     endif
   endfor
-  let dumped_data = string(candidates)
+  let dumped_data = string(headings)
   return dumped_data
 endfunction
 
 function! s:Cache_remove(buffer) dict
   let bufvars = getbufvar(a:buffer.nr, '')
-  call remove(bufvars, s:Cache.VARNAME)
+  call remove(bufvars, s:Cache.VAR)
 
   if s:exists_cache_file(a:buffer.path)
     try
-      call s:remove_file(s:Cache_file_path(a:buffer.path))
+      call s:remove_file(s:cache_file_path(a:buffer.path))
     catch /^unite-outline:/
       call unite#util#print_error(v:exception)
     endtry

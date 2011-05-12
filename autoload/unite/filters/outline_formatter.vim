@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_formatter.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-05
+" Updated : 2011-05-12
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -45,60 +45,55 @@ let s:formatter = {
       \ }
 
 function! s:formatter.filter(candidates, context)
-  if empty(a:candidates) | return [] | endif
+  if empty(a:candidates) | return a:candidates | endif
 
   let candidates = a:candidates
-
   let outline_context = a:context.source__outline_context
-  let s:outline_info = outline_context.outline_info
+  let outline_info = outline_context.outline_info
 
-  let do_insert_blank = has_key(s:outline_info, 'heading_groups')    ||
-        \               has_key(s:outline_info, 'get_heading_group') ||
-        \               has_key(s:outline_info, 'need_blank_between')
+  let do_insert_blank = !empty(outline_info.heading_groups) ||
+        \ has_key(outline_info, 'need_blank_between')
 
   if do_insert_blank
+    if has_key(outline_info, 'need_blank_between')
+      let Need_blank_between = outline_info.need_blank_between
+    else
+      let Need_blank_between = function('s:need_blank_between')
+    endif
     let candidates = [a:candidates[0]]
     let prev_heading = a:candidates[0].source__heading
-
-    let memo = {}
+    let memo = {} | " for memoization
     for cand in a:candidates[1:]
       let heading = cand.source__heading
-      if do_insert_blank && s:need_blank_between(prev_heading, heading, memo)
+      if do_insert_blank && Need_blank_between(prev_heading, heading, memo)
         call add(candidates, s:BLANK)
       endif
       call add(candidates, cand)
       let prev_heading = heading
     endfor
   endif
-  unlet! s:outline_info
-
   return candidates
 endfunction
 
 function! s:need_blank_between(head1, head2, memo)
-  if has_key(s:outline_info, 'need_blank_between')
-    return s:outline_info.need_blank_between(a:head1, a:head2)
-  elseif a:head1.level < a:head2.level
+  if a:head1.level < a:head2.level
     return 0
   elseif a:head1.level == a:head2.level
-    if has_key(s:outline_info, 'get_heading_group')
-      let group1 = s:outline_info.get_heading_group(a:head1)
-      let group2 = s:outline_info.get_heading_group(a:head2)
-    else
-      let group1 = s:get_heading_group(a:head1)
-      let group2 = s:get_heading_group(a:head2)
-    endif
-    return (group1 != group2 ||
-          \ s:Tree.has_marked_child(a:head1, a:memo) ||
-          \ s:Tree.has_marked_child(a:head2, a:memo))
-  else
+    return (a:head1.group != a:head2.group ||
+          \ s:has_marked_child(a:head1, a:memo) ||
+          \ s:has_marked_child(a:head2, a:memo))
+  else " if a:head1.level > a:head2.level
     return 1
   endif
 endfunction
 
-function! s:get_heading_group(heading)
-  let group_map = s:outline_info.heading_group_map
-  return  get(group_map, a:heading.type, 0)
+function! s:has_marked_child(heading, memo)
+  if has_key(a:memo, a:heading.id)
+    return a:memo[a:heading.id]
+  endif
+  let result = s:Tree.has_marked_child(a:heading)
+  let a:memo[a:heading.id] = result
+  return result
 endfunction
 
 " vim: filetype=vim

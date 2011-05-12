@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/cpp.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-05
+" Updated : 2011-05-11
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for C++
-" Version: 0.1.5
+" Version: 0.1.6
 
 function! unite#sources#outline#defaults#cpp#outline_info()
   return s:outline_info
@@ -19,12 +19,12 @@ let s:Ctags = unite#sources#outline#import('Ctags')
 let s:Util  = unite#sources#outline#import('Util')
 
 let s:outline_info = {
-      \ 'heading_groups': [
-      \   ['macro'],
-      \   ['namespace'],
-      \   ['class', 'enum', 'struct', 'typedef'],
-      \   ['function'],
-      \ ],
+      \ 'heading_groups': {
+      \   'namespace': ['namespace'],
+      \   'type'     : ['class', 'enum', 'struct', 'typedef'],
+      \   'function' : ['function'],
+      \   'macro'    : ['macro'],
+      \ },
       \ 'not_match_patterns': [
       \   s:Util.shared_pattern('*', 'parameter_list'),
       \ ],
@@ -32,17 +32,6 @@ let s:outline_info = {
 
 function! s:outline_info.extract_headings(context)
   return s:Ctags.extract_headings(a:context)
-endfunction
-
-function! s:outline_info.get_heading_group(heading)
-  let group_of = self.heading_group_map
-  let group = get(group_of, a:heading.type, 0)
-  if group == group_of.macro
-    if matchstr(a:heading.word, '^\zs\h\w*\ze') =~# '\l'
-      return group_of.function
-    endif
-  endif
-  return group
 endfunction
 
 " vim: filetype=vim

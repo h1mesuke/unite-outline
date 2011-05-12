@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_matcher_glob.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-05
+" Updated : 2011-05-11
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -41,53 +41,54 @@ let s:matcher = {
 " unite/autoload/filters/matcher_glob.vim
 "
 function! s:matcher.filter(candidates, context)
-  for cand in a:candidates
-    let cand.source__is_marked  = 1
-    let cand.source__is_matched = 0
+  let headings = map(copy(a:candidates), 'v:val.source__heading')
+  for heading in headings
+    let heading.is_marked  = 1
+    let heading.is_matched = 0
   endfor
   if a:context.input == ''
     let g:unite_source_outline_input = ''
     return a:candidates
+  elseif empty(a:candidates)
+    return a:candidates
   endif
-
-  let candidates = copy(a:candidates)
 
   for input in split(a:context.input, '\\\@<! ')
     let input = substitute(input, '\\ ', ' ', 'g')
 
     " something like closure
-    let pred = {}
+    let predicate = {}
 
     if input =~ '^!'
-      " exclusion
-      let pred.input = unite#escape_match(input)
+      " Exclusion
+      let predicate.input = unite#escape_match(input)
       let g:unite_source_outline_input = ''
-      function pred.call(cand)
-        return (a:cand.word !~ self.input[1:])
+      function predicate.call(heading)
+        return (a:heading.keyword !~ self.input[1:])
       endfunction
     elseif input =~ '\\\@<!\*'
-      " wildcard
-      let pred.input = unite#escape_match(input)
-      let g:unite_source_outline_input = pred.input
-      function pred.call(cand)
-        return (a:cand.word =~ self.input)
+      " Wildcard
+      let predicate.input = unite#escape_match(input)
+      let g:unite_source_outline_input = predicate.input
+      function predicate.call(heading)
+        return (a:heading.keyword =~ self.input)
       endfunction
     else
-      let pred.input = substitute(input, '\\\(.\)', '\1', 'g')
-      let g:unite_source_outline_input = pred.input
+      let predicate.input = substitute(input, '\\\(.\)', '\1', 'g')
+      let g:unite_source_outline_input = predicate.input
       if &ignorecase
-        function pred.call(cand)
-          return (stridx(tolower(a:cand.word), self.input) != -1)
+        function predicate.call(heading)
+          return (stridx(tolower(a:heading.keyword), self.input) != -1)
         endfunction
       else
-        function pred.call(cand)
-          return (stridx(a:cand.word, self.input) != -1)
+        function predicate.call(heading)
+          return (stridx(a:heading.keyword, self.input) != -1)
         endfunction
       endif
     endif
-    let candidates = s:Tree.filter(candidates, pred)
+    let headings = s:Tree.filter(headings, predicate)
   endfor
-
+  let candidates = map(headings, 'v:val.__unite_candidate__')
   return candidates
 endfunction
 
