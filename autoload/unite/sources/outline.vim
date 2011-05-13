@@ -369,10 +369,7 @@ function! s:source.gather_candidates(args, context)
 
     else
       " Path B2: Get headings by parsing the buffer.
-      if exists('g:unite_source_outline_profile') &&
-            \ g:unite_source_outline_profile && has("reltime")
-        let start_time = s:get_reltime()
-      endif
+      let start_time = s:benchmark_start()
 
       if is_force
         " re-source the outline info if updated
@@ -411,7 +408,8 @@ function! s:source.gather_candidates(args, context)
         call outline_info.finalize(s:context)
       endif
 
-      let ignore_types = unite#sources#outline#get_ignore_heading_types(buffer.filetype)
+      let ignore_types = unite#sources#
+            \outline#get_ignore_heading_types(buffer.filetype)
 
       " normalize and filter headings
       if type(headings) == type({})
@@ -439,20 +437,13 @@ function! s:source.gather_candidates(args, context)
       elseif s:Cache.has(buffer)
         call s:Cache.remove(buffer)
       endif
+
+      call s:benchmark_stop(start_time)
     endif
 
     " headings -> candidates
     let candidates = s:convert_headings_to_candidates(headings)
     let b:unite_source_outline_cache = candidates
-
-    if exists('g:unite_source_outline_profile') &&
-          \ g:unite_source_outline_profile && has("reltime")
-
-      let used_time = s:get_reltime() - start_time
-      let used_time_100l = used_time * (str2float("100") / num_lines)
-      call s:Util.print_progress("unite-outline: used=" . string(used_time) . "s, "
-            \ . "100l=". string(used_time_100l) . "s")
-    endif
 
     return candidates
   catch
@@ -463,6 +454,24 @@ function! s:source.gather_candidates(args, context)
     let &cpoptions  = save_cpoptions
     let &ignorecase = save_ignorecase
   endtry
+endfunction
+
+function! s:benchmark_start()
+  if get(g:, 'unite_source_outline_profile', 0) && has("reltime")
+    return s:get_reltime()
+  else
+    return 0
+  endif
+endfunction
+
+function! s:benchmark_stop(start_time)
+  if get(g:, 'unite_source_outline_profile', 0) && has("reltime")
+    let num_lines = len(s:context.lines)
+    let used_time = s:get_reltime() - a:start_time
+    let used_time_100l = used_time * (str2float("100") / num_lines)
+    call s:Util.print_progress("unite-outline: used=" . string(used_time) .
+          \ "s, 100l=". string(used_time_100l) . "s")
+  endif
 endfunction
 
 function! s:get_reltime()
