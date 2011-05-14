@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-13
+" Updated : 2011-05-14
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -357,17 +357,20 @@ function! s:source.gather_candidates(args, context)
       " Path A: Get candidates from the buffer local cache and return them.
       let candidates = b:unite_source_outline_cache
       return candidates
+    endif
 
-    elseif s:Cache.has(buffer) && !is_force
+    let cache_loaded = 0
+    if s:Cache.has(buffer) && !is_force
       " Path B1: Get headings from the serialized cache.
       try
         let headings = s:Cache.get(buffer)
+        let cache_loaded = 1
       catch /^CacheCompatibilityError:/
       catch /^unite-outline:/
         call unite#util#print_error(v:exception)
       endtry
-
-    else
+    endif
+    if !cache_loaded
       " Path B2: Get headings by parsing the buffer.
       let start_time = s:benchmark_start()
 
