@@ -133,15 +133,19 @@ function! s:check_update(path)
 endfunction
 
 function! s:normalize_outline_info(outline_info)
-  if has_key(a:outline_info, 'skip')
-    call s:normalize_skip_info(a:outline_info)
-  endif
-  call s:normalize_heading_groups(a:outline_info)
-  if has_key(a:outline_info, 'not_match_patterns')
-    let a:outline_info.__not_match_pattern__ =
-          \ '\%(' . join(a:outline_info.not_match_patterns, '\|') . '\)'
-  else
-    let a:outline_info.__not_match_pattern__ = ''
+  if !has_key(a:outline_info, '__normalized__')
+    call extend(a:outline_info, { 'is_volatile': 0 }, 'keep' )
+    if has_key(a:outline_info, 'skip')
+      call s:normalize_skip_info(a:outline_info)
+    endif
+    call s:normalize_heading_groups(a:outline_info)
+    if has_key(a:outline_info, 'not_match_patterns')
+      let a:outline_info.__not_match_pattern__ =
+            \ '\%(' . join(a:outline_info.not_match_patterns, '\|') . '\)'
+    else
+      let a:outline_info.__not_match_pattern__ = ''
+    endif
+    let a:outline_info.__normalized__ = 1
   endif
   return a:outline_info
 endfunction
@@ -433,8 +437,7 @@ function! s:source.gather_candidates(args, context)
       unlet s:context.heading_lnum
       unlet s:context.matched_lnum
 
-      let is_volatile = has_key(outline_info, 'is_volatile') && outline_info.is_volatile
-      if !is_volatile && num_lines > 100 && !empty(headings)
+      if !outline_info.is_volatile && num_lines > 100 && !empty(headings)
         let do_serialize = (num_lines > g:unite_source_outline_cache_limit)
         call s:Cache.set(buffer, headings, do_serialize)
       elseif s:Cache.has(buffer)
