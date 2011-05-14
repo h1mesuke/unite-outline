@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-05
+" Updated : 2011-05-14
 " Version : 0.3.4
 " License : MIT license {{{
 "
@@ -350,7 +350,7 @@ unlet Str
 " Misc
 
 function! s:Util_print_debug(msg)
-  if exists('g:unite_source_outline_debug') && g:unite_source_outline_debug
+  if get(g:, 'unite_source_outline_debug', 0)
     echomsg "unite-outline: " . a:msg
   endif
 endfunction
