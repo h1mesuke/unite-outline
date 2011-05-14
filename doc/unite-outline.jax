@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-05-05
+Updated : 2011-05-14
 Version : 0.3.4
 License : MIT license {{{
 
@@ -219,7 +219,7 @@ outline info の作成				*unite-outline-info-create*
 	$HOME/.vim/autoload/outline/ に {filetype}.vim を作成し、
 	そこに outline#{filetype}#outline_info() を定義します。
 
-	その関数の返値として、outline info を返します。
+	その関数の返値として、outline info（辞書）を返します。
 
 	こちらは遅延ロードになるため必要になるまでロードされません。 vimrc を
 	肥大化させることもないので、outline info を作り込むのであればこちらの
@@ -358,8 +358,8 @@ create_heading		関数（任意） 	*unite-outline-info-create_heading()*
 
 skip			辞書（任意）		*unite-outline-info-skip*
 
-	見出し抽出の対象としない領域を指定するための辞書です。以下の属性を設定
-	することで、指定の領域を見出し抽出の対象外にできます。
+	見出し抽出の対象としない領域を指定するための辞書です。
+	以下の属性を設定することで、指定の領域を見出し抽出の対象外にできます。
 
 						*unite-outline-info-skip-header*
 	header	文字列、リスト、辞書のいずれか（任意）
@@ -432,11 +432,49 @@ extract_headings	関数（任意）	*unite-outline-info-extract_headings()*
 
 FORMATTING ~
 
+heading_groups		辞書（任意）	*unite-outline-info-heading_groups*
+
+	見出しのグループ分けを行うための辞書
+	設定されていると、見出し一覧を表示する際、互いに異なるグループに属する
+	見出しの間に空行が挿入されるようになります。
+
+	個々のグループは見出しの type のリストです。
+
+	見出しの抽出に際しては、この属性に設定された辞書を元に、所属するグルー
+	プの名前が見出しの group 属性に設定されます。
+
+	定義例（C++用）： >
+	let s:outline_info = {
+	  \ 'heading_groups': {
+	  \   'namespace': ['namespace'],
+	  \   'type'     : ['class', 'enum', 'struct', 'typedef'],
+	  \   'function' : ['function'],
+	  \   'macro'    : ['macro'],
+	  \ },
+	  \}
+<
+
+need_blank_between	関数（任意）	*unite-outline-info-need_blank_between()*
+
+	need_blank_between( {heading-1}, {heading-2}, {memo})
+
+	設定されていると、見出し一覧の表示に先立って順次呼び出されます。
+	真を返すと {heading-1} と {heading-2} の間に空行が挿入されます。
+
+	この関数を定義することで、見出し一覧における空行の挿入を制御できます。
+	heading_groups属性の設定による空行の挿入結果が期待通りにならない場合、
+	この関数を定義してその振舞いを変更できます。
+
+	{memo} はメモ化のための辞書で、一連の呼び出しの間、同じ辞書が使い回さ
+	れます。見出しについて何らかの計算を行う場合は、結果をメモ化することで
+	同じ計算を２回行わずに済みます。
+
+	定義例（Python用）：
 	TODO
 
 NARROWING ~
 
-not_match_patterns	リスト（任意）		*unite-outline-info-not_match_patterns*
+not_match_patterns	リスト（任意）	*unite-outline-info-not_match_patterns*
 
 	絞り込みの対象にしない部分を指定するパターンのリスト
 	見出しの word のうち、このリストに指定したパターンにマッチする部分は絞
@@ -552,12 +590,6 @@ TODO						*unite-outline-todo*
 		unite.vim に候補一覧のハイライト機能が実装されたので、それを利
 		用して見出し一覧をカラフルにする。また、重要でない情報を目立た
 		なくする。
-
-	* 空行を入れてみやすく！
-
-		一部のファイルタイプで試験的に実施しているが、空行をどこに入れ
-		るか、を指定するための outline info の属性の仕様がまだ固まらな
-		いため本格実施は足踏み中。
 	
 	* JavaScript用 outline info の改善
 
@@ -599,18 +631,26 @@ outline info 募集！
 
 https://github.com/h1mesuke/unite-outline/commits/master
 
+0.3.5	2011-05-14
+
+	* outline info の仕様に以下の属性を追加
+	  - heading_groups
+	  - need_blank_between()
+
 0.3.4	2011-04-26
 
 	* キャッシュの管理ロジックを改善し、以下の変数を削除
 	  - g:unite_source_outline_cache_buffers
 
-	* outline info の仕様に not_match_patterns属性を追加
+	* outline info の仕様に以下の属性を追加
+	  - not_match_patterns
 
 	* 親子関係に配慮した matcher を実装
 
 0.3.3	2011-03-19
 
-	* outline info の仕様から skip_header() を削除
+	* outline info の仕様から以下の属性を削除
+	  - skip_header()
 
 	* キャッシュの保存ディレクトリを g:unite_data_directory以下に固定し、
 	  以下の変数を削除
