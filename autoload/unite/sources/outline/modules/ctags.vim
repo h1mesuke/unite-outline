@@ -155,13 +155,15 @@ function! s:Ctags_extract_headings(context)
     return []
   endif
 
+  let tags = s:get_tags(a:context)
+  let num_tags = len(tags)
+
   let lang = s:Ctags.langs[a:context.buffer.filetype]
   let scope_kinds_pattern = '^\%(' . join(lang.scope_kinds, '\|') . '\)$'
-
-  let tags = s:get_tags(a:context) | let num_tags = len(tags)
-  let tag_name_counter = {}
   let scope_table = {}
-  let root = {}
+  let tag_name_counter = {}
+
+  let root = s:Tree.new()
 
   let idx = 0
   while idx < num_tags

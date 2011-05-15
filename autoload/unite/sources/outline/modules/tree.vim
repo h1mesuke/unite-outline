@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-13
+" Updated : 2011-05-15
 " Version : 0.3.5
 " License : MIT license {{{
 "
@@ -40,6 +40,11 @@ delfunction s:get_SID
 
 let s:Tree = unite#sources#outline#modules#base#new('Tree', s:SID)
 
+function! s:Tree_new()
+  return { 'id': 0, 'level': 0, 'children': [] }
+endfunction
+call s:Tree.function('new')
+
 function! s:Tree_append_child(heading, child)
   if !has_key(a:heading, 'children')
     let a:heading.children = []
@@ -65,7 +70,7 @@ endfunction
 call s:Tree.function('is_leaf')
 
 function! s:Tree_build(headings)
-  let root = { 'level': 0, 'children': [] }
+  let root = s:Tree_new()
   if empty(a:headings) | return root | endif
 
   let context = [root] | " stack
@@ -149,7 +154,6 @@ endfunction
 call s:Tree.function('has_marked_child')
 
 function! s:Tree_normalize(root)
-  call extend(a:root, { 'id': 0, 'level': 0 })
   if has_key(a:root, 'children')
     " unlink the references to the root node
     for node in a:root.children
