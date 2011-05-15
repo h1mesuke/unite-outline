@@ -255,37 +255,14 @@ unlet s:List
 let Path = unite#sources#outline#modules#base#new('Path', s:SID)
 let s:Util.Path = Path
 
+" Path.normalize( {path} [, {mods}])
 function! s:Path_normalize(path, ...)
-  let path = a:path | let sep = '/'
-  let do_shellescape = 0 | let do_iconv = 0
-
-  for opt in a:000
-    if opt =~ '^:'
-      let mods = opt
-      let path = fnamemodify(path, mods)
-    elseif opt =~# '^shell\%[escape]$'
-      let do_shellescape = 1
-    elseif opt =~# '^term\%[encoding]$'
-      let do_iconv = 1
-    elseif opt == '\'
-      let sep = '\'
-    endif
-  endfor
-
-  let path = substitute(path, '[/\\]', sep, 'g')
-
-  if do_shellescape
-    let path = s:String_shellescape(path)
+  let path = a:path
+  if a:0
+    let mods = a:0
+    let path = fnamemodify(path, mods)
   endif
-
-  if do_iconv && &termencoding != '' && &termencoding != &encoding
-    let path = iconv(path, &encoding, &termencoding)
-    if empty(path)
-      throw "unite-outline: iconv() from " . &encoding . " to " . &termencoding .
-            \ " failed for " . string(path)
-    endif
-  endif
-
+  let path = substitute(path, '[/\\]', '/', 'g')
   return path
 endfunction
 call Path.function('normalize')
