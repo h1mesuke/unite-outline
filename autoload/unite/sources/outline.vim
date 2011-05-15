@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-14
+" Updated : 2011-05-15
 " Version : 0.3.5
 " License : MIT license {{{
 "
@@ -314,14 +314,20 @@ let s:Cache = unite#sources#outline#import('Cache')
 let s:Tree  = unite#sources#outline#import('Tree')
 let s:Util  = unite#sources#outline#import('Util')
 
+function! s:get_SID()
+  return matchstr(expand('<sfile>'), '<SNR>\d\+_')
+endfunction
+let s:SID = s:get_SID()
+delfunction s:get_SID
+
 let s:source = {
       \ 'name'       : 'outline',
       \ 'description': 'candidates from heading list',
       \
-      \ 'hooks': {}, 'action_table'  : {}, 'alias_table': {}, 'default_action': {},
+      \ 'hooks': {}, 'action_table': {}, 'alias_table': {}, 'default_action': {},
       \ }
 
-function! s:source.hooks.on_init(args, context)
+function! s:Source_Hooks_on_init(args, context)
   let s:heading_id = 1
   let buffer = {
         \ 'nr'  : bufnr('%'),
@@ -343,12 +349,14 @@ function! s:source.hooks.on_init(args, context)
         \ }
   let a:context.source__outline_context = s:context
 endfunction
+let s:source.hooks.on_init = function(s:SID . 'Source_Hooks_on_init')
 
-function! s:source.hooks.on_close(args, context)
+function! s:Source_Hooks_on_close(args, context)
   unlet! s:context
 endfunction
+let s:source.hooks.on_close = function(s:SID . 'Source_Hooks_on_close')
 
-function! s:source.gather_candidates(args, context)
+function! s:Source_gather_candidates(args, context)
   let save_cpoptions  = &cpoptions
   let save_ignorecase = &ignorecase
   set cpoptions&vim
@@ -461,6 +469,7 @@ function! s:source.gather_candidates(args, context)
     let &ignorecase = save_ignorecase
   endtry
 endfunction
+let s:source.gather_candidates = function(s:SID . 'Source_gather_candidates')
 
 function! s:benchmark_start()
   if get(g:, 'unite_source_outline_profile', 0) && has("reltime")
@@ -809,7 +818,7 @@ function! s:_smooth_levels(levels, base_level)
   return s:Util.List.join(splitted, a:base_level)
 endfunction
 
-function! s:source.calc_signature(lnum)
+function! s:Source_calc_signature(lnum)
   let range = s:SIGNATURE_RANGE
   let from = max([1, a:lnum - range])
   let to   = min([a:lnum + range, line('$')])
@@ -817,6 +826,7 @@ function! s:source.calc_signature(lnum)
   let fwd_lines = getline(a:lnum, to)
   return s:_calc_signature(bwd_lines, fwd_lines)
 endfunction
+let s:source.calc_signature = function(s:SID . 'Source_calc_signature')
 
 "---------------------------------------
 " Actions
@@ -827,7 +837,7 @@ let s:action_table.preview = {
       \ 'is_selectable': 0,
       \ 'is_quit'      : 0,
       \ }
-function! s:action_table.preview.func(candidate)
+function! s:Action_preview(candidate)
   let cand = a:candidate
 
   " NOTE: Executing :pedit for a nofile buffer clears the buffer content at
@@ -848,6 +858,7 @@ function! s:action_table.preview.func(candidate)
   wincmd p
   call s:restore_window_cursors(save_cursors, preview_winnr, (winnr('$') > n_wins))
 endfunction
+let s:action_table.preview.func = function(s:SID . 'Action_preview')
 
 function! s:save_window_cursors(bufnr)
   let save_cursors = {}
