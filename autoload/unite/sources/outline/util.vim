@@ -77,15 +77,15 @@ endfunction
 " Strings
 
 function! unite#sources#outline#util#capitalize(...)
-  return call(s:Util.Str.capitalize, a:000)
+  return call(s:Util.String.capitalize, a:000)
 endfunction
 
 function! unite#sources#outline#util#nr2roman(...)
-  return call(s:Util.Str.nr2roman, a:000)
+  return call(s:Util.String.nr2roman, a:000)
 endfunction
 
 function! unite#sources#outline#util#shellescape(...)
-  return call(s:Util.Str.shellescape, a:000)
+  return call(s:Util.String.shellescape, a:000)
 endfunction
 
 "-----------------------------------------------------------------------------

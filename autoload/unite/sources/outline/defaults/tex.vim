@@ -79,7 +79,7 @@ function! s:unit_seqnr_prefix(unit)
   if a:unit ==# 'title'
     let seqnr = []
   elseif a:unit ==# 'part'
-    let seqnr = [s:Util.Str.nr2roman(s:unit_count.part)]
+    let seqnr = [s:Util.String.nr2roman(s:unit_count.part)]
   elseif a:unit ==# 'chapter'
     let seqnr = [s:unit_count.chapter]
   elseif a:unit ==# 'section'

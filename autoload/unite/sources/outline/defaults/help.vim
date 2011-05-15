@@ -100,7 +100,7 @@ function! s:normalize_heading_word(heading_word)
   let heading_word = substitute(a:heading_word, '\%(\~\|{{{\d\=\)\s*$', '', '')
   let heading_word = substitute(heading_word, s:helptag, '', 'g')
   if heading_word !~ '\l'
-    let heading_word = s:Util.Str.capitalize(heading_word, 'g')
+    let heading_word = s:Util.String.capitalize(heading_word, 'g')
   endif
   return heading_word
 endfunction

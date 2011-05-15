@@ -278,7 +278,7 @@ function! s:Path_normalize(path, ...)
   let path = substitute(path, '[/\\]', sep, 'g')
 
   if do_shellescape
-    let path = s:Str_shellescape(path)
+    let path = s:String_shellescape(path)
   endif
 
   if do_iconv && &termencoding != '' && &termencoding != &encoding
@@ -298,21 +298,21 @@ unlet Path
 "-----------------------------------------------------------------------------
 " Strings
 
-let Str = unite#sources#outline#modules#base#new('Str', s:SID)
-let s:Util.Str = Str
+let String = unite#sources#outline#modules#base#new('String', s:SID)
+let s:Util.String = String
 
 " capitalize( {str} [, {flag}])
 "
-function! s:Str_capitalize(str, ...)
+function! s:String_capitalize(str, ...)
   let flag = (a:0 ? a:1 : '')
   return substitute(a:str, '\<\(\h\)\(\w\+\)\>', '\u\1\L\2', flag)
 endfunction
-call Str.function('capitalize')
+call String.function('capitalize')
 
 " Ported from:
 " Sample code from Programing Ruby, page 145
 "
-function! s:Str_nr2roman(nr)
+function! s:String_nr2roman(nr)
   if a:nr <= 0 || 4999 < a:nr
     return string(a:nr)
   endif
@@ -333,18 +333,18 @@ function! s:Str_nr2roman(nr)
   endfor
   return roman
 endfunction
-call Str.function('nr2roman')
+call String.function('nr2roman')
 
-function! s:Str_shellescape(str)
+function! s:String_shellescape(str)
   if &shell =~? '^\%(cmd\%(\.exe\)\=\|command\.com\)\%(\s\|$\)'
     return '"' . substitute(a:str, '"', '""', 'g') . '"'
   else
     return "'" . substitute(a:str, "'", "'\\\\''", 'g') . "'"
   endif
 endfunction
-call Str.function('shellescape')
+call String.function('shellescape')
 
-unlet Str
+unlet String
 
 "-----------------------------------------------------------------------------
 " Misc
