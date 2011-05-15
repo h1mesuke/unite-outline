@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-14
+" Updated : 2011-05-15
 " Version : 0.3.5
 " License : MIT license {{{
 "
@@ -41,7 +41,7 @@ delfunction s:get_SID
 let s:Util = unite#sources#outline#modules#base#new('Util', s:SID)
 
 "-----------------------------------------------------------------------------
-" Headings
+" Heading
 
 function! s:Util_get_indent_level(context, lnum)
   let line = a:context.lines[a:lnum]
@@ -68,7 +68,6 @@ call s:Util.function('get_comment_heading_level')
 " Matching
 
 " join_to( {context}, {lnum}, {pattern} [, {limit}])
-"
 function! s:Util_join_to(context, lnum, pattern, ...)
   let lines = a:context.lines
   let limit = (a:0 ? a:1 : 3)
@@ -111,7 +110,6 @@ endfunction
 call s:Util.function('join_to_rparen')
 
 " neighbor_match( {context}, {lnum}, {pattern} [, {range} [, {exclusive}])
-"
 function! s:Util_neighbor_match(context, lnum, pattern, ...)
   let lines = a:context.lines
   let range = get(a:000, 0, 1)
@@ -144,7 +142,6 @@ function! s:neighbor_ranges(context, lnum, prev, next, exclusive)
 endfunction
 
 " neighbor_matchstr( {context}, {lnum}, {pattern} [, {range} [, {exclusive}])
-"
 function! s:Util_neighbor_matchstr(context, lnum, pattern, ...)
   let lines = a:context.lines
   let range = get(a:000, 0, 1)
@@ -253,7 +250,7 @@ call s:List.function('zip')
 unlet s:List
 
 "-----------------------------------------------------------------------------
-" Paths
+" Path
 
 let Path = unite#sources#outline#modules#base#new('Path', s:SID)
 let s:Util.Path = Path
@@ -296,13 +293,12 @@ call Path.function('normalize')
 unlet Path
 
 "-----------------------------------------------------------------------------
-" Strings
+" String
 
 let String = unite#sources#outline#modules#base#new('String', s:SID)
 let s:Util.String = String
 
-" capitalize( {str} [, {flag}])
-"
+" String.capitalize( {str} [, {flag}])
 function! s:String_capitalize(str, ...)
   let flag = (a:0 ? a:1 : '')
   return substitute(a:str, '\<\(\h\)\(\w\+\)\>', '\u\1\L\2', flag)
