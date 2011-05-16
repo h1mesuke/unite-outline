@@ -23,7 +23,7 @@ let s:outline_info = {
 
 function! s:outline_info.initialize(context)
   let s:adornment_levels = {}
-  let s:adornment_id = 1
+  let s:adornment_id = 2
 endfunction
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
