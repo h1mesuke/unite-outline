@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/rst.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-16
+" Updated : 2011-05-17
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -47,7 +47,11 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     let heading.level = s:adornment_levels[adchar]
   endif
 
-  return heading
+  if heading.level > 0
+    return heading
+  else
+    return {}
+  endif
 endfunction
 
 " vim: filetype=vim
