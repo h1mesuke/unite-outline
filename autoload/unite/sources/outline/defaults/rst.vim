@@ -15,8 +15,6 @@ function! unite#sources#outline#defaults#rst#outline_info()
   return s:outline_info
 endfunction
 
-let s:Util = unite#sources#outline#import('Util')
-
 let s:outline_info = {
       \ 'heading+1': '^\([[:punct:]]\)\1\{3,}$',
       \ }
