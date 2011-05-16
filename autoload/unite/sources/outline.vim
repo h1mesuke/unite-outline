@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-15
+" Updated : 2011-05-16
 " Version : 0.3.5
 " License : MIT license {{{
 "
@@ -44,6 +44,8 @@ let s:OUTLINE_ALIASES = [
       \ ['xhtml',    'html'    ],
       \ ['zsh',      'sh'      ],
       \]
+
+let s:OUTLINE_CACHE_VAR = 'unite_source_outline_cache'
 
 "-----------------------------------------------------------------------------
 " Functions
@@ -365,9 +367,10 @@ function! s:Source_gather_candidates(args, context)
     let is_force = ((len(a:args) > 0 && a:args[0] == '!') || a:context.is_redraw)
     let buffer = s:context.buffer
 
-    if exists('b:unite_source_outline_cache') && !is_force
+    let bufvars = getbufvar(buffer.nr, '')
+    if has_key(bufvars, s:OUTLINE_CACHE_VAR) && !is_force
       " Path A: Get candidates from the buffer local cache and return them.
-      let candidates = b:unite_source_outline_cache
+      let candidates = getbufvar(buffer.nr, s:OUTLINE_CACHE_VAR)
       return candidates
     endif
 
@@ -457,7 +460,7 @@ function! s:Source_gather_candidates(args, context)
 
     " headings -> candidates
     let candidates = s:convert_headings_to_candidates(headings)
-    let b:unite_source_outline_cache = candidates
+    call setbufvar(buffer.nr, s:OUTLINE_CACHE_VAR, candidates)
 
     return candidates
   catch
