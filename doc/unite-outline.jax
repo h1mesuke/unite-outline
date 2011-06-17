@@ -150,6 +150,7 @@ g:unite_source_outline_max_headings	*g:unite_source_outline_max_headings*
 g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
 
 	キャッシュ永続化の行数しきい値
+
 	見出しのキャッシュは通常バッファローカル変数に保存されますが、見出し抽
 	出の対象バッファの行数がこの値より大きい場合、キャッシュをファイルにも
 	保存します。

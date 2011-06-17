@@ -151,10 +151,10 @@ function! s:deserialize(dumped_data)
   return data
 endfunction
 
-function! s:Cache_set(buffer, data, should_serialize) dict
+function! s:Cache_set(buffer, data, is_persistent) dict
   call setbufvar(a:buffer.nr, s:Cache.VAR, a:data)
   try
-    if a:should_serialize && s:check_cache_dir()
+    if a:is_persistent && s:check_cache_dir()
       call s:save_cache_file(a:buffer.path, a:data)
     elseif s:exists_cache_file(a:buffer.path)
       call s:remove_file(s:cache_file_path(a:buffer.path))
