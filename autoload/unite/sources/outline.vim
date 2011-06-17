@@ -449,8 +449,8 @@ function! s:Source_gather_candidates(args, context)
       unlet s:context.matched_lnum
 
       if !outline_info.is_volatile && num_lines > 100 && !empty(headings)
-        let do_serialize = (num_lines > g:unite_source_outline_cache_limit)
-        call s:Cache.set(buffer, headings, do_serialize)
+        let is_persistant = (num_lines > g:unite_source_outline_cache_limit)
+        call s:Cache.set(buffer, headings, is_persistant)
       elseif s:Cache.has(buffer)
         call s:Cache.remove(buffer)
       endif
