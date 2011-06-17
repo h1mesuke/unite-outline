@@ -26,7 +26,8 @@
 " }}}
 "=============================================================================
 
-function! unite#sources#outline#modules#cache#import()
+function! unite#sources#outline#modules#cache#import(dir)
+  let s:Cache.DIR = a:dir
   return s:Cache
 endfunction
 
@@ -41,7 +42,6 @@ let s:SID = s:get_SID()
 delfunction s:get_SID
 
 let s:Cache = unite#sources#outline#modules#base#new('Cache', s:SID)
-let s:Cache.DIR = g:unite_data_directory . '/.outline'
 let s:Cache.VAR = 'NuOutline_cache'
 
 if get(g:, 'unite_source_outline_debug', 0)

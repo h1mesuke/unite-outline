@@ -198,9 +198,9 @@ function! s:normalize_heading_groups(outline_info)
   let a:outline_info.heading_group_map = group_map
 endfunction
 
-function! unite#sources#outline#import(name)
+function! unite#sources#outline#import(name, ...)
   let name = tolower(substitute(a:name, '\(\l\)\(\u\)', '\1_\2', 'g'))
-  return unite#sources#outline#modules#{name}#import()
+  return call('unite#sources#outline#modules#' . name . '#import', a:000)
 endfunction
 
 function! s:find_autoload_script(funcname)
@@ -312,7 +312,7 @@ call s:define_filetype_aliases()
 "-----------------------------------------------------------------------------
 " Source
 
-let s:Cache = unite#sources#outline#import('Cache')
+let s:Cache = unite#sources#outline#import('Cache', g:unite_data_directory . '/.outline')
 let s:Tree  = unite#sources#outline#import('Tree')
 let s:Util  = unite#sources#outline#import('Util')
 
