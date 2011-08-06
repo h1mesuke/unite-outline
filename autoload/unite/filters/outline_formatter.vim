@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_formatter.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-12
+" Updated : 2011-08-06
 " Version : 0.3.5
 " License : MIT license {{{
 "
@@ -55,17 +55,16 @@ function! s:formatter.filter(candidates, context)
         \ has_key(outline_info, 'need_blank_between')
 
   if do_insert_blank
-    if has_key(outline_info, 'need_blank_between')
-      let Need_blank_between = outline_info.need_blank_between
-    else
-      let Need_blank_between = function('s:need_blank_between')
+    if !has_key(outline_info, 'need_blank_between')
+      " Use the default implementation.
+      let outline_info.need_blank_between = function('s:need_blank_between')
     endif
     let candidates = [a:candidates[0]]
     let prev_heading = a:candidates[0].source__heading
     let memo = {} | " for memoization
     for cand in a:candidates[1:]
       let heading = cand.source__heading
-      if do_insert_blank && Need_blank_between(prev_heading, heading, memo)
+      if do_insert_blank && outline_info.need_blank_between(prev_heading, heading, memo)
         call add(candidates, s:BLANK)
       endif
       call add(candidates, cand)
@@ -75,7 +74,7 @@ function! s:formatter.filter(candidates, context)
   return candidates
 endfunction
 
-function! s:need_blank_between(head1, head2, memo)
+function! s:need_blank_between(head1, head2, memo) dict
   if a:head1.level < a:head2.level
     return 0
   elseif a:head1.level == a:head2.level
