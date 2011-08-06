@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-15
+" Updated : 2011-08-07
 " Version : 0.3.5
 " License : MIT license {{{
 "
@@ -318,6 +318,22 @@ endfunction
 call String.function('shellescape')
 
 unlet String
+
+"-----------------------------------------------------------------------------
+" Tree
+
+let s:Tree = unite#sources#outline#import('Tree')
+
+" Memoized version:
+function! s:Util_has_marked_child(heading, memo)
+  if has_key(a:memo, a:heading.id)
+    return a:memo[a:heading.id]
+  endif
+  let result = s:Tree.has_marked_child(a:heading)
+  let a:memo[a:heading.id] = result
+  return result
+endfunction
+call s:Util.function('has_marked_child')
 
 "-----------------------------------------------------------------------------
 " Misc

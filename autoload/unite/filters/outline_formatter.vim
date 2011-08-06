@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_formatter.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-06
+" Updated : 2011-08-07
 " Version : 0.3.5
 " License : MIT license {{{
 "
@@ -30,7 +30,7 @@ function! unite#filters#outline_formatter#define()
   return s:formatter
 endfunction
 
-let s:Tree = unite#sources#outline#import('Tree')
+let s:Util = unite#sources#outline#import('Util')
 
 let s:BLANK = {
       \ 'word': '',
@@ -79,20 +79,11 @@ function! s:need_blank_between(head1, head2, memo) dict
     return 0
   elseif a:head1.level == a:head2.level
     return (a:head1.group != a:head2.group ||
-          \ s:has_marked_child(a:head1, a:memo) ||
-          \ s:has_marked_child(a:head2, a:memo))
+          \ s:Util.has_marked_child(a:head1, a:memo) ||
+          \ s:Util.has_marked_child(a:head2, a:memo))
   else " if a:head1.level > a:head2.level
     return 1
   endif
-endfunction
-
-function! s:has_marked_child(heading, memo)
-  if has_key(a:memo, a:heading.id)
-    return a:memo[a:heading.id]
-  endif
-  let result = s:Tree.has_marked_child(a:heading)
-  let a:memo[a:heading.id] = result
-  return result
 endfunction
 
 " vim: filetype=vim
