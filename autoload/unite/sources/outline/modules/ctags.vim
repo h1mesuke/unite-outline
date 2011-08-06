@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-06
+" Updated : 2011-08-07
 " Version : 0.3.5
 " License : MIT license {{{
 "
@@ -320,8 +320,6 @@ function! s:Ctags.langs.cpp.create_heading(tag, context)
       elseif line =~# a:tag.name . '('
         let heading.word .= ' ' . s:get_param_list(a:context, a:tag.lnum)
         let heading.group = 'function'
-      else
-        let heading.group = 'type'
       endif
     endif
     let heading.word .= ' : ' . a:tag.kind
