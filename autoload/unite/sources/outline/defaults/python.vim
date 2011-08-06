@@ -37,7 +37,7 @@ function! s:outline_info.need_blank_between(head1, head2, memo)
   if a:head1.level < a:head2.level
     return 0
   elseif a:head1.level == a:head2.level
-    if a:head1.group == 'function' && a:head2.group == 'function'
+    if a:head2.group == 'function'
       " Don't insert a blank line above a heading of a nested function.
       return 0
     else
