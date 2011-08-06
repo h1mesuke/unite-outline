@@ -33,17 +33,16 @@ function! s:outline_info.extract_headings(context)
 endfunction
 
 function! s:outline_info.need_blank_between(head1, head2, memo)
+  if a:head1.group == 'function' && a:head2.group == 'function'
+    " Don't insert a blank between two headings of functions.
+    return 0
+  endif
   if a:head1.level < a:head2.level
     return 0
   elseif a:head1.level == a:head2.level
-    if a:head2.group == 'function'
-      " Don't insert a blank line above a heading of a nested function.
-      return 0
-    else
-      return (a:head1.group != a:head2.group ||
-            \ s:Util.has_marked_child(a:head1, a:memo) ||
-            \ s:Util.has_marked_child(a:head2, a:memo))
-    endif
+    return (a:head1.group != a:head2.group ||
+          \ s:Util.has_marked_child(a:head1, a:memo) ||
+          \ s:Util.has_marked_child(a:head2, a:memo))
   else " if a:head1.level > a:head2.level
     return 1
   endif
