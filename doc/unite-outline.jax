@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-05-14
+Updated : 2011-08-06
 Version : 0.3.5
 License : MIT license {{{
 
@@ -423,13 +423,47 @@ extract_headings	関数（任意）	*unite-outline-info-extract_headings()*
 			詳細は|unite-outline-notation-{context}|を参照
 
 	返値は見出し（辞書）のリストまたはツリーであり、個々の見出しには
-	|unite-outline-notation-{heading}|の属性に加え、以下の属性を設定する必
+	|unite-outline-notation-{heading}|の属性に加え、以下の属性も設定する必
 	要があります。
 
 	* lnum		整数  （必須）
 			見出し行の行番号
 
-	TODO: ツリーの作り方の説明
+	見出しのツリーを返す場合
+
+	アウトラインを解析する過程で outline info が見出しのツリー構造を把握で
+	きる場合には、extract_headings() は抽出された見出しのツリーを返すこと
+	ができます。
+
+	見出しのツリーは以下のように作成します。
+
+	例： >
+	let s:Tree = unite#sources#outline#import('Tree')
+
+	let root = s:Tree.new()
+	call s:Tree.append_child(root, heading_A)
+	call s:Tree.append_child(root, heading_B)
+	call s:Tree.append_child(heading_A, heading_1)
+	call s:Tree.append_child(heading_A, heading_2)
+	call s:Tree.append_child(heading_B, heading_3)
+<
+	トップレベルの見出しは new() で生成した root の子となるようにし、以
+	下、見出し間の親子関係を append_child() にて設定します。
+
+	これにより、下図のような見出しのツリーができます。extract_headings()
+	からは root を返します。（見出し一覧には root は表示されません）
+>
+	root
+	 |
+	 +--heading_A
+	 |   +--heading_1
+	 |   +--heading_2
+	 |
+	 +--heading_B
+	     +--heading_3
+<
+	見出しをツリーで返す場合、見出しの親子関係から見出しレベルを決定できる
+	ため、個々の見出しに level属性を設定する必要はありません。
 
 FORMATTING ~
 
@@ -442,7 +476,7 @@ heading_groups		辞書（任意）	*unite-outline-info-heading_groups*
 	個々のグループは見出しの type のリストです。
 
 	見出しの抽出に際しては、この属性に設定された辞書を元に、所属するグルー
-	プの名前が見出しの group 属性に設定されます。
+	プの名前が見出しの group属性に設定されます。
 
 	定義例（C++用）： >
 	let s:outline_info = {
@@ -470,9 +504,24 @@ need_blank_between	関数（任意）	*unite-outline-info-need_blank_between()*
 	れます。見出しについて何らかの計算を行う場合は、結果をメモ化することで
 	同じ計算を２回行わずに済みます。
 
-	定義例（Python用）：
-	TODO
-
+	定義例（Python用、抜粋）： >
+	function! s:outline_info.need_blank_between(head1, head2, memo)
+	  if a:head1.level < a:head2.level
+	    return 0
+	  elseif a:head1.level == a:head2.level
+	    if a:head1.group == 'function' && a:head2.group == 'function'
+	      " Don't insert a blank line above a heading of a nested function.
+	      return 0
+	    else
+	      return (a:head1.group != a:head2.group ||
+	            \ s:has_marked_child(a:head1, a:memo) ||
+	            \ s:has_marked_child(a:head2, a:memo))
+	    endif
+	  else " if a:head1.level > a:head2.level
+	    return 1
+	  endif
+	endfunction
+<
 NARROWING ~
 
 not_match_patterns	リスト（任意）	*unite-outline-info-not_match_patterns*
@@ -595,6 +644,11 @@ TODO						*unite-outline-todo*
 	* JavaScript用 outline info の改善
 
 		jsctags を使えばよさげ。
+
+	*　見出し一覧の自動更新
+
+		バッファの変更を検出し、見出し一覧の更新を自動で行う仕組み。
+		できれば非同期にやりたいが……
 
 	* D, Erlang, Go, Haskell などの outline info
 
