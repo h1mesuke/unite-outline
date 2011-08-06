@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-16
+" Updated : 2011-08-06
 " Version : 0.3.5
 " License : MIT license {{{
 "
@@ -398,9 +398,9 @@ function! s:Source_gather_candidates(args, context)
       let outline_info = s:context.outline_info
       if empty(outline_info)
         if empty(buffer.filetype)
-          call unite#print_message("unite-outline: Please set the filetype.")
+          call unite#print_message("[unite-outline] Please set the filetype.")
         else
-          call unite#print_message("unite-outline: Sorry, " .
+          call unite#print_message("[unite-outline] Sorry, " .
                 \ toupper(buffer.filetype) . " is not supported.")
         endif
         return []
@@ -610,7 +610,7 @@ function! s:extract_headings()
     if s:lnum % 500 == 0
       if len(headings) > g:unite_source_outline_max_headings
         call unite#print_message(
-              \ "unite-outline: Too many headings, the extraction was interrupted.")
+              \ "[unite-outline] Too many headings, the extraction was interrupted.")
         break
       else
         call s:Util.print_progress("Extracting headings..." . s:lnum * 100 / num_lines . "%")
