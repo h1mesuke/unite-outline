@@ -55,6 +55,7 @@ let s:outline_info = {
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
   let h_lnum = a:context.heading_lnum
+  " Level 1 to 3 are reserved for comment headings.
   let level = s:Util.get_indent_level(a:context, h_lnum) + 3
   let heading = {
         \ 'word' : a:heading_line,
