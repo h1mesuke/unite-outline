@@ -11,7 +11,7 @@
 "=============================================================================
 
 " Default outline info for PHP
-" Version: 0.0.9
+" Version: 0.1.0
 
 function! unite#sources#outline#defaults#php#outline_info()
   return s:outline_info
@@ -34,6 +34,16 @@ let s:outline_info = {
       \ },
       \ 'not_match_patterns': [
       \   s:Util.shared_pattern('*', 'parameter_list'),
+      \ ],
+      \ 'highlight_rules': [
+      \   { 'name'   : 'comment',
+      \     'pattern': "'/[/*].*'" },
+      \   { 'name'   : 'type',
+      \     'pattern': '/.*\ze: \%(interface\|class\)/' },
+      \   { 'name'   : 'function',
+      \     'pattern': '/\h\w*\ze\s*(/' },
+      \   { 'name'   : 'parameter_list',
+      \     'pattern': '/(.*)/' },
       \ ],
       \}
 
@@ -73,6 +83,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
       elseif heading.level > 3
         let heading.word = substitute(heading.word, '\%(&\|\h\)\@=', '+ ', '')
       endif
+      let heading.word = substitute(heading.word, '\S(', ' (', '')
     endif
   endif
 

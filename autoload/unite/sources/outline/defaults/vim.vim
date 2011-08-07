@@ -25,6 +25,17 @@ let s:outline_info = {
       \   '^\s*fu\%[nction]!\=\s',
       \   s:Util.shared_pattern('*', 'parameter_list'),
       \ ],
+      \ 'highlight_rules': [
+      \   { 'name'     : 'comment',
+      \     'pattern'  : '/".*/' },
+      \   { 'name'     : 'augroup',
+      \     'pattern'  : '/.*\ze: augroup/',
+      \     'highlight': g:unite_source_outline_highlight.type },
+      \   { 'name'     : 'function',
+      \     'pattern'  : '/\S\+\ze\s*(/' },
+      \   { 'name'     : 'parameter_list',
+      \     'pattern'  : '/(.*)/' },
+      \ ],
       \}
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
@@ -46,6 +57,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     else
       let heading.type = 'function'
       let heading.word = substitute(heading.word, '^\s*fu\%[nction]!\=', '', '')
+      let heading.word = substitute(heading.word, '\S(', ' (', '')
     endif
   endif
 

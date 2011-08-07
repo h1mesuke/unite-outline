@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/sh.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-19
+" Updated : 2011-08-07
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for Shell Scripts
-" Version: 0.0.8
+" Version: 0.1.0
 
 function! unite#sources#outline#defaults#sh#outline_info()
   return s:outline_info
@@ -19,10 +19,17 @@ let s:Util = unite#sources#outline#import('Util')
 
 let s:outline_info = {
       \ 'heading-1': s:Util.shared_pattern('sh', 'heading-1'),
-      \ 'heading'  : '^\s*\%(\w\+()\|function\>\)',
+      \ 'heading'  : '^\s*\%(\w\+\s*()\|function\>\)',
       \ 'skip': {
       \   'header': s:Util.shared_pattern('sh', 'header'),
       \ },
+      \ 'highlight_rules': [
+      \   { 'name'     : 'comment',
+      \     'pattern'  : '/#.*/' },
+      \   { 'name'     : 'function',
+      \     'pattern'  : '/\h\w*/',
+      \     'highlight': g:unite_source_outline_highlight.function },
+      \ ],
       \}
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
@@ -39,7 +46,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   elseif a:which ==# 'heading'
     let heading.level = 4
     let heading.type = 'function'
-    let heading.word = substitute(heading.word, '\s*{.*$', '', '')
+    let heading.word = substitute(heading.word, '\s*\((.*)\s*\)\={.*$', '', '')
   endif
 
   if heading.level > 0

@@ -31,6 +31,22 @@ let s:outline_info = {
       \ 'not_match_patterns': [
       \   s:Util.shared_pattern('*', 'parameter_list'),
       \ ],
+      \ 'highlight_rules': [
+      \   { 'name'     : 'comment',
+      \     'pattern'  : '/#.*/' },
+      \   { 'name'     : 'type',
+      \     'pattern'  : '/.*\ze: \%(module\|class\)/' },
+      \   { 'name'     : 'eigen_class',
+      \     'pattern'  : '/  \<class\s\+<<\s\+.*/',
+      \     'highlight': g:unite_source_outline_highlight.special },
+      \   { 'name'     : 'method',
+      \     'pattern'  : '/:\@<! [_[:alnum:]=\[\]<>!?.]\+/' },
+      \   { 'name'     : 'meta_method',
+      \     'pattern'  : '/  \<def\s\+[^(]*/',
+      \     'highlight': g:unite_source_outline_highlight.special },
+      \   { 'name'     : 'parameter_list',
+      \     'pattern'  : '/(.*)/' },
+      \ ],
       \}
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)

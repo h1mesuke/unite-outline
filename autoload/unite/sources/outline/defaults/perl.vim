@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/perl.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-19
+" Updated : 2011-08-07
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for Perl
-" Version: 0.0.8
+" Version: 0.0.9
 
 function! unite#sources#outline#defaults#perl#outline_info()
   return s:outline_info
@@ -24,6 +24,19 @@ let s:outline_info = {
       \   'header': s:Util.shared_pattern('sh', 'header'),
       \   'block' : ['^=\%(cut\)\@!\w\+', '^=cut'],
       \ },
+      \ 'highlight_rules': [
+      \   { 'name'     : 'comment',
+      \     'pattern'  : '/#.*/' },
+      \   { 'name'     : 'package',
+      \     'pattern'  : '/.*: package/',
+      \     'highlight': 'Normal' },
+      \   { 'name'     : 'sub',
+      \     'pattern'  : '/\h\w*/',
+      \     'highlight': g:unite_source_outline_highlight.function },
+      \   { 'name'     : 'block',
+      \     'pattern'  : '/\<\%(BEGIN\|CHECK\|INIT\|END\|__\%(DATA\|END\)__\)\>/',
+      \     'highlight': g:unite_source_outline_highlight.macro },
+      \ ],
       \}
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
@@ -42,7 +55,9 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   elseif a:which == 'heading'
     if a:heading_line =~ '^\s*package\>'
       let heading.word = substitute(heading.word, ';\s*$', '', '')
+      let heading.word = substitute(heading.word, '^\s*\zspackage\s\+', '', '') . ' : package'
     else
+      let heading.word = substitute(heading.word, '\<sub\>', '', '')
       let heading.word = substitute(heading.word, '\s*{.*$', '', '')
       let heading.level += 1
     endif

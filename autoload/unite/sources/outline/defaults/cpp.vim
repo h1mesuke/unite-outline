@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/cpp.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-11
+" Updated : 2011-08-07
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for C++
-" Version: 0.1.6
+" Version: 0.1.7
 
 function! unite#sources#outline#defaults#cpp#outline_info()
   return s:outline_info
@@ -27,6 +27,16 @@ let s:outline_info = {
       \ },
       \ 'not_match_patterns': [
       \   s:Util.shared_pattern('*', 'parameter_list'),
+      \ ],
+      \ 'highlight_rules': [
+      \   { 'name'   : 'type',
+      \     'pattern': '/.*\ze: \(class\|enum\|struct\|typedef\)/' },
+      \   { 'name'   : 'function',
+      \     'pattern': '/\(operator\s\+\S\+\|\h\w*\)\ze\s*(/' },
+      \   { 'name'   : 'macro',
+      \     'pattern': '/.*\ze: macro/' },
+      \   { 'name'   : 'parameter_list',
+      \     'pattern': '/(.*)/' },
       \ ],
       \}
 

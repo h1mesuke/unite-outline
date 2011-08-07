@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for Python
-" Version: 0.1.2
+" Version: 0.1.5
 
 function! unite#sources#outline#defaults#python#outline_info()
   return s:outline_info
@@ -25,6 +25,14 @@ let s:outline_info = {
       \ },
       \ 'not_match_patterns': [
       \   s:Util.shared_pattern('*', 'parameter_list'),
+      \ ],
+      \ 'highlight_rules': [
+      \   { 'name'   : 'type',
+      \     'pattern': '/.*\ze: class/' },
+      \   { 'name'   : 'function',
+      \     'pattern': '/\h\w*\ze\s*(/' },
+      \   { 'name'   : 'parameter_list',
+      \     'pattern': '/(.*)/' },
       \ ],
       \}
 
