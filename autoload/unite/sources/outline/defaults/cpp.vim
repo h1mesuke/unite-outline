@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/cpp.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-07
+" Updated : 2011-08-08
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -25,9 +25,11 @@ let s:outline_info = {
       \   'function' : ['function'],
       \   'macro'    : ['macro'],
       \ },
+      \
       \ 'not_match_patterns': [
       \   s:Util.shared_pattern('*', 'parameter_list'),
       \ ],
+      \
       \ 'highlight_rules': [
       \   { 'name'   : 'type',
       \     'pattern': '/.*\ze: \(class\|enum\|struct\|typedef\)/' },

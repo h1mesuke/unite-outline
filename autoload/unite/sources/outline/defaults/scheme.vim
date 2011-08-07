@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/scheme.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-19
+" Updated : 2011-08-08
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -20,6 +20,7 @@ let s:Util = unite#sources#outline#import('Util')
 let s:outline_info = {
       \ 'heading-1': '^\s*;\+\s*[-=]\{10,}\s*$',
       \ 'heading'  : '^\s*(define\>',
+      \
       \ 'skip': { 'header': '^;' },
       \}
 

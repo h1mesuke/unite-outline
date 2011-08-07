@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/vim.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-07
+" Updated : 2011-08-08
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -20,11 +20,14 @@ let s:Util = unite#sources#outline#import('Util')
 let s:outline_info = {
       \ 'heading-1': '^\s*"\s*[-=]\{10,}\s*$',
       \ 'heading'  : '^\(augroup\s\+\%(END\>\)\@!\|\s*fu\%[nction]!\= \)',
+      \
       \ 'skip': { 'header': '^"' },
+      \
       \ 'not_match_patterns': [
       \   '^\s*fu\%[nction]!\=\s',
       \   s:Util.shared_pattern('*', 'parameter_list'),
       \ ],
+      \
       \ 'highlight_rules': [
       \   { 'name'     : 'comment',
       \     'pattern'  : '/".*/' },
@@ -57,7 +60,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     else
       let heading.type = 'function'
       let heading.word = substitute(heading.word, '^\s*fu\%[nction]!\=', '', '')
-      let heading.word = substitute(heading.word, '\S(', ' (', '')
+      let heading.word = substitute(heading.word, '\S\zs(', ' (', '')
     endif
   endif
 

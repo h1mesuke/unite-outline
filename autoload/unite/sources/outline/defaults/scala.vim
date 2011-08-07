@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/scala.vim
 " Author  : thinca <thinca+vim@gmail.com>
-" Updated : 2011-04-23
+" Updated : 2011-08-08
 "
 " License : Creative Commons Attribution 2.1 Japan License
 "           <http://creativecommons.org/licenses/by/2.1/jp/deed.en>
@@ -21,9 +21,11 @@ let s:header_pattern = '\v^\s*%(\w+\s+)*\zs<%(class|object|trait|def)>'
 let s:outline_info = {
       \  'heading-1': s:Util.shared_pattern('cpp', 'heading-1'),
       \  'heading'  : s:header_pattern,
+      \
       \  'skip': {
       \    'header': s:Util.shared_pattern('cpp', 'header'),
       \  },
+      \
       \ 'not_match_patterns': [
       \   s:Util.shared_pattern('*', 'after_lbracket'),
       \   s:Util.shared_pattern('*', 'after_lparen'),
