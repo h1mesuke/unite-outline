@@ -37,7 +37,7 @@ let s:outline_info = {
       \     'highlight': g:unite_source_outline_highlight.function },
       \   { 'name'     : 'block',
       \     'pattern'  : '/\<\%(BEGIN\|CHECK\|INIT\|END\|__\%(DATA\|END\)__\)\>/',
-      \     'highlight': g:unite_source_outline_highlight.macro },
+      \     'highlight': g:unite_source_outline_highlight.special },
       \ ],
       \}
 
