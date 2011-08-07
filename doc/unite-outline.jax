@@ -2,7 +2,7 @@
 
 Author  : h1mesuke <himesuke@gmail.com>
 Updated : 2011-08-08
-Version : 0.3.5
+Version : 0.3.6
 License : MIT license {{{
 
 	Permission is hereby granted, free of charge, to any person obtaining
@@ -759,7 +759,7 @@ outline info 募集！
 
 https://github.com/h1mesuke/unite-outline/commits/master
 
-0.3.6	2011-08-xx
+0.3.6	2011-08-08
 
 	* 見出し一覧のシンタックスハイライトに対応し、以下の変数を追加
 	  -|g:unite_source_outline_highlight|
