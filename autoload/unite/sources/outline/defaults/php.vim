@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/php.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-23
+" Updated : 2011-08-07
 "
 " Contributed by hamaco
 "
@@ -11,7 +11,7 @@
 "=============================================================================
 
 " Default outline info for PHP
-" Version: 0.0.8
+" Version: 0.0.9
 
 function! unite#sources#outline#defaults#php#outline_info()
   return s:outline_info
@@ -21,12 +21,16 @@ let s:Util = unite#sources#outline#import('Util')
 
 let s:outline_info = {
       \ 'heading-1': s:Util.shared_pattern('cpp', 'heading-1'),
-      \ 'heading'  : '^\s*[a-z ]*\%(interface\|class\|function\)\>',
+      \ 'heading'  : '^\s*\%(interface\|class\|\%(\h\w*\s\+\)\=function\)\>',
       \ 'skip': {
       \   'header': {
       \     'leading': '^\%(<?php\|//\)',
       \     'block'  : s:Util.shared_pattern('c', 'header'),
       \   },
+      \ },
+      \ 'heading_groups': {
+      \   'type'     : ['interface', 'class'],
+      \   'function' : ['function'],
       \ },
       \ 'not_match_patterns': [
       \   s:Util.shared_pattern('*', 'parameter_list'),
@@ -46,8 +50,30 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     let m_lnum = a:context.matched_lnum
     let heading.type = 'comment'
     let heading.level = s:Util.get_comment_heading_level(a:context, m_lnum)
-  else
+  elseif a:which == 'heading'
     let heading.word = substitute(a:heading_line, '\s*{.*$', '', '')
+    if heading.word =~ '^\s*interface\>'
+      " interface
+      let heading.type = 'interface'
+      let heading.word = matchstr(heading.word, '^\s*interface\s\+\zs\h\w*') . ' : interface'
+    elseif heading.word =~ '^\s*class\>'
+      " class
+      let heading.type = 'class'
+      let heading.word = matchstr(heading.word, '^\s*class\s\+\zs\h\w*') . ' : class'
+    else
+      " function or method
+      let heading.type = 'function'
+      let heading.word = substitute(heading.word, '\<function\s*', '', '')
+      if heading.word =~ '^\s*public\>'
+        let heading.word = substitute(heading.word, '\<public\s*', '+ ', '')
+      elseif heading.word =~ '^\s*protected\>'
+        let heading.word = substitute(heading.word, '\<protected\s*', '# ', '')
+      elseif heading.word =~ '^\s*private\>'
+        let heading.word = substitute(heading.word, '\<private\s*', '- ', '')
+      elseif heading.level > 3
+        let heading.word = substitute(heading.word, '\%(&\|\h\)\@=', '+ ', '')
+      endif
+    endif
   endif
 
   return heading
