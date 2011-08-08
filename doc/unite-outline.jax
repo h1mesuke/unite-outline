@@ -183,7 +183,7 @@ g:unite_source_outline_highlight	*g:unite_source_outline_highlight*
 	ハイライトを適用する部分を指定するためのパターンは、個々のファイルタイ
 	プに対応した outline info で定義します。
 
-	参照：|unite-outline-info-syntax|
+	参照：|unite-outline-info-highlight_rules|
 
 ------------------------------------------------------------------------------
 設定例					*unite-outline-settings-examples*
