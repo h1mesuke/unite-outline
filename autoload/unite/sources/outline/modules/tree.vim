@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-15
+" Updated : 2011-08-10
 " Version : 0.3.6
 " License : MIT license {{{
 "
@@ -41,7 +41,7 @@ delfunction s:get_SID
 let s:Tree = unite#sources#outline#modules#base#new('Tree', s:SID)
 
 function! s:Tree_new()
-  return { 'id': 0, 'level': 0, 'children': [] }
+  return { '__root__': 1, 'id': 0, 'level': 0, 'children': [] }
 endfunction
 call s:Tree.function('new')
 
@@ -60,18 +60,25 @@ endfunction
 call s:Tree.function('remove_child')
 
 function! s:Tree_is_toplevel(heading)
-  return !has_key(a:heading, 'parent')
+  return !has_key(a:heading, 'parent') || has_key(a:heading.parent, '__root__')
 endfunction
 call s:Tree.function('is_toplevel')
 
 function! s:Tree_is_leaf(heading)
-  return !has_key(a:heading, 'children')
+  return !has_key(a:heading, 'children') || empty(a:heading.children)
 endfunction
 call s:Tree.function('is_leaf')
 
-function! s:Tree_build(headings)
+" Builds the tree structure from a list of headings and then returns the root
+" node of the tree.
+"
+function! s:Tree_build(headings, ...)
   let root = s:Tree_new()
   if empty(a:headings) | return root | endif
+
+  for heading in a:headings
+    let heading.children = []
+  endfor
 
   let context = [root] | " stack
   let prev_heading =  a:headings[0]
@@ -82,42 +89,46 @@ function! s:Tree_build(headings)
     call s:Tree_append_child(context[-1], heading)
     call add(context, heading)
   endfor
-  let root = s:Tree_normalize(root)
   return root
 endfunction
 call s:Tree.function('build')
 
-function! s:Tree_filter(headings, predicate, ...)
-  if empty(a:headings)
-    return a:headings
-  endif
-  let do_remove_child = (a:0 ? a:1 : 0)
+" Tree-aware Filter
+"
+" NOTE: This function filters the given list of headings, that've been
+" tree-structrued, but doesn't destroy the tree structure of them. The
+" filtering process only set `is_marked' and `is_matched' flags for each
+" headings.
+"
+" unite-outline's matcher see these flags to accomplish its tree-aware
+" filtering task.
+"
+function! s:Tree_filter(headings, predicate)
+  if empty(a:headings) | return a:headings | endif
   for heading in a:headings
     if s:Tree_is_toplevel(heading)
-      call s:mark(heading, a:predicate, do_remove_child)
+      call s:mark(heading, a:predicate)
     endif
   endfor
+  " The given list is filtered, but the tree structure is kept.
   let filtered = filter(a:headings, 'v:val.is_marked')
   return filtered
 endfunction
 call s:Tree.function('filter')
 
-function! s:mark(heading, predicate, do_remove_child)
-
-  " NOTE: A heading is marked when it has any marked child or the given
-  " predicate yields True for the heading. Marked headings will be displayed
-  " at the unite.vim's buffer as the results of narrowing.
-
+" NOTE: A heading is marked when it has any marked child or the given
+" predicate yields True for the heading. Marked headings will be displayed at
+" the unite.vim's buffer as the results of narrowing.
+"
+function! s:mark(heading, predicate)
   let child_marked = 0
   if has_key(a:heading, 'children')
     for child in a:heading.children
       if !child.is_marked
         continue
       endif
-      if s:mark(child, a:predicate, a:do_remove_child)
+      if s:mark(child, a:predicate)
         let child_marked = 1
-      elseif a:do_remove_child
-        call s:Tree_remove_child(a:heading, child)
       endif
     endfor
   endif
@@ -126,6 +137,11 @@ function! s:mark(heading, predicate, do_remove_child)
   return a:heading.is_marked
 endfunction
 
+" Flatten a tree into a List.
+"
+" NOTE: This function resets heading levels in accordance with the given
+" tree's structure.
+"
 function! s:Tree_flatten(tree)
   let headings = []
   if has_key(a:tree, 'children')
@@ -138,6 +154,27 @@ function! s:Tree_flatten(tree)
   return headings
 endfunction
 call s:Tree.function('flatten')
+
+" Returns the root node of the tree that consists of the given headings.
+"
+function! s:Tree_get_root(headings)
+  if empty(a:headings) | return s:Tree_new() | endif
+  let heading = a:headings[0]
+  while 1
+    if !has_key(heading, 'parent')
+      break
+    elseif has_key(heading.parent, '__root__')
+      return heading.parent
+    endif
+  endwhile
+  let root = s:Tree.new()
+  let top_headings = filter(copy(a:headings), 's:Tree_is_toplevel(v:val)')
+  for heading in top_headings
+    call s:Tree_append_child(root, heading)
+  endfor
+  return root
+endfunction
+call s:Tree.function('get_root')
 
 function! s:Tree_has_marked_child(heading)
   let result = 0
@@ -153,17 +190,29 @@ function! s:Tree_has_marked_child(heading)
 endfunction
 call s:Tree.function('has_marked_child')
 
-function! s:Tree_normalize(root)
-  if has_key(a:root, 'children')
-    " unlink the references to the root node
-    for node in a:root.children
-      if has_key(node, 'parent')
-        unlet node.parent
+" Remove headings for which the given predicate returns True WITH their
+" children.
+"
+function! s:Tree_remove(headings, predicate, ...)
+  if empty(a:headings) | return a:headings | endif
+  let root = s:Tree_get_root(a:headings)
+  call s:remove(root, a:predicate)
+  let headings = s:Tree_flatten(root)
+  return headings
+endfunction
+call s:Tree.function('remove')
+
+function! s:remove(heading, predicate)
+  if has_key(a:heading, 'children')
+    let children = copy(a:heading.children)
+    for child in children
+      if a:predicate.call(child)
+        call s:Tree_remove_child(a:heading, child)
+        continue
       endif
+      call s:remove(child, a:predicate)
     endfor
   endif
-  return a:root
 endfunction
-call s:Tree.function('normalize')
 
 " vim: filetype=vim

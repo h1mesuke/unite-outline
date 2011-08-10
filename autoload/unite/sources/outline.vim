@@ -315,6 +315,7 @@ function! s:define_filetype_aliases()
 
   for [alias, src_filetype] in s:OUTLINE_ALIASES
     if !has_key(oinfos, alias)
+
       call unite#sources#outline#alias(alias, src_filetype)
     endif
   endfor
@@ -528,10 +529,10 @@ function! s:extract_filetype_headings()
   endif
   if has_key(outline_info, 'extract_headings')
     let headings = outline_info.extract_headings(s:context)
-    let normalized = 0
+    let is_normalized = 0
   else
     let headings = s:_builtin_extract_headings()
-    let normalized = 1
+    let is_normalized = 1
   endif
   if has_key(outline_info, 'finalize')
     call outline_info.finalize(s:context)
@@ -540,23 +541,20 @@ function! s:extract_filetype_headings()
   let ignore_types = unite#sources#
         \outline#get_ignore_heading_types(buffer.filetype)
 
-  " Normalize and filter headings.
   if type(headings) == type({})
     let tree = headings | unlet headings
-    let tree = s:Tree.normalize(tree)
-    let headings  = s:Tree.flatten(tree)
-    call s:filter_headings(headings, ignore_types, 1)
-    call map(headings, 's:normalize_heading(v:val)')
+    let headings = s:Tree.flatten(tree)
   else
-    call s:filter_headings(headings, ignore_types, 1)
-    if !normalized
-      call map(headings, 's:normalize_heading(v:val)')
-    endif
     let tree = s:Tree.build(headings)
+    let headings = s:Tree.flatten(tree) | " smooth levels
+  endif
+  if !is_normalized
+    call map(headings, 's:normalize_heading(v:val)')
   endif
   unlet s:context.heading_lnum
   unlet s:context.matched_lnum
 
+  " Filter headings.
   let headings = s:filter_headings(headings, ignore_types)
 
   let num_lines = len(s:context.lines) - 1
@@ -816,28 +814,27 @@ else
 endif
 
 " Heading Type Filter
-function! s:filter_headings(headings, ignore_types, ...)
+function! s:filter_headings(headings, ignore_types)
+  if empty(a:ignore_types) | return a:headings | endif
   let headings = a:headings
-  if !empty(a:ignore_types)
-    let remove_comments = (a:0 ? a:1 : 0)
-    if remove_comments
-      if index(a:ignore_types, 'comment') >= 0
-        call filter(headings, 'v:val.type !=# "comment"')
-      endif
-    else
-      let ignore_types = map(copy(a:ignore_types), 'unite#util#escape_pattern(v:val)')
-      let ignore_types_pattern = '^\%(' . join(ignore_types, '\|') . '\)$'
 
-      " something like closure
-      let predicate = {}
-      let predicate.ignore_types_pattern = ignore_types_pattern
-      function predicate.call(heading)
-        return (a:heading.type !~# self.ignore_types_pattern)
-      endfunction
-
-      let headings = s:Tree.filter(a:headings, predicate, 1)
-    endif
+  if index(a:ignore_types, 'comment') >= 0
+    " Remove comment headings.
+    call filter(headings, 'v:val.type !=# "comment"')
+    let headings = s:Tree.flatten(s:Tree.build(headings))
   endif
+
+  let ignore_types = map(copy(a:ignore_types), 'unite#util#escape_pattern(v:val)')
+  let ignore_types_pattern = '^\%(' . join(ignore_types, '\|') . '\)$'
+
+  " Use something like closure.
+  let predicate = {}
+  let predicate.ignore_types_pattern = ignore_types_pattern
+  function predicate.call(heading)
+    return (a:heading.type =~# self.ignore_types_pattern)
+  endfunction
+  let headings = s:Tree.remove(headings, predicate)
+
   return headings
 endfunction
 
@@ -887,6 +884,7 @@ function! s:make_indent(level)
   return repeat(' ', (a:level - 1) * g:unite_source_outline_indent_width)
 endfunction
 
+" DEPRECATED:
 function! s:smooth_levels(headings)
   let levels = map(copy(a:headings), 'v:val.level')
   return s:_smooth_levels(levels, 0)
