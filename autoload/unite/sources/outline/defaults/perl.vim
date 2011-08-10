@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/perl.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-08
+" Updated : 2011-08-10
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for Perl
-" Version: 0.0.9
+" Version: 0.1.0
 
 function! unite#sources#outline#defaults#perl#outline_info()
   return s:outline_info
@@ -30,14 +30,14 @@ let s:outline_info = {
       \   { 'name'     : 'comment',
       \     'pattern'  : '/#.*/' },
       \   { 'name'     : 'sub',
-      \     'pattern'  : '/  \h\w*/',
+      \     'pattern'  : '/  \zs\h\w*/',
       \     'highlight': g:unite_source_outline_highlight.function },
-      \   { 'name'     : 'package',
-      \     'pattern'  : '/.*: package/',
-      \     'highlight': 'Normal' },
       \   { 'name'     : 'block',
-      \     'pattern'  : '/\<\%(BEGIN\|CHECK\|INIT\|END\|__\%(DATA\|END\)__\)\>/',
+      \     'pattern'  : '/  \zs\<\%(BEGIN\|CHECK\|INIT\|END\|__\%(DATA\|END\)__\)\>/',
       \     'highlight': g:unite_source_outline_highlight.special },
+      \   { 'name'     : 'package',
+      \     'pattern'  : '/.*\ze : package/',
+      \     'highlight': g:unite_source_outline_highlight.type },
       \ ],
       \}
 

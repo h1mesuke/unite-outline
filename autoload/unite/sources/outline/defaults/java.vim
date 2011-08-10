@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/java.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-08
+" Updated : 2011-08-10
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for Java
-" Version: 0.1.5
+" Version: 0.1.6
 
 function! unite#sources#outline#defaults#java#outline_info()
   return s:outline_info
@@ -30,8 +30,10 @@ let s:outline_info = {
       \ ],
       \
       \ 'highlight_rules': [
+      \   { 'name'   : 'package',
+      \     'pattern': '/.*\ze : package/' },
       \   { 'name'   : 'type',
-      \     'pattern': '/.*\ze: \(interface\|class\|enum\)/' },
+      \     'pattern': '/\S\+\ze : \(interface\|class\|enum\)/' },
       \   { 'name'   : 'method',
       \     'pattern': '/\h\w*\ze\s*(/' },
       \   { 'name'   : 'parameter_list',

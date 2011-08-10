@@ -291,8 +291,15 @@ call extend(g:unite_source_outline_highlight, {
       \ 'function': 'Function',
       \ 'macro'   : 'Macro',
       \ 'method'  : 'Function',
+      \ 'package' : 'Normal',
       \ 'special' : 'Macro',
       \ 'type'    : 'Type',
+      \ 'level_1' : 'Type',
+      \ 'level_2' : 'PreProc',
+      \ 'level_3' : 'Identifier',
+      \ 'level_4' : 'Constant',
+      \ 'level_5' : 'Special',
+      \ 'level_6' : 'Normal',
       \ 'parameter_list': 'Normal',
       \ }, 'keep')
 

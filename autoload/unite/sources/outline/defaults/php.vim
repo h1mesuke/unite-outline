@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/php.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-08
+" Updated : 2011-08-10
 "
 " Contributed by hamaco
 "
@@ -43,7 +43,7 @@ let s:outline_info = {
       \   { 'name'   : 'comment',
       \     'pattern': "'/[/*].*'" },
       \   { 'name'   : 'type',
-      \     'pattern': '/.*\ze: \%(interface\|class\)/' },
+      \     'pattern': '/.*\ze : \%(interface\|class\)/' },
       \   { 'name'   : 'function',
       \     'pattern': '/\h\w*\ze\s*(/' },
       \   { 'name'   : 'parameter_list',

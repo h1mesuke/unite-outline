@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/vim.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-08
+" Updated : 2011-08-10
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -24,7 +24,6 @@ let s:outline_info = {
       \ 'skip': { 'header': '^"' },
       \
       \ 'not_match_patterns': [
-      \   '^\s*fu\%[nction]!\=\s',
       \   s:Util.shared_pattern('*', 'parameter_list'),
       \ ],
       \
@@ -32,7 +31,7 @@ let s:outline_info = {
       \   { 'name'     : 'comment',
       \     'pattern'  : '/".*/' },
       \   { 'name'     : 'augroup',
-      \     'pattern'  : '/.*\ze: augroup/',
+      \     'pattern'  : '/.*\ze : augroup/',
       \     'highlight': g:unite_source_outline_highlight.type },
       \   { 'name'     : 'function',
       \     'pattern'  : '/\S\+\ze\s*(/' },
