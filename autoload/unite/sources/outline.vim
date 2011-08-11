@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-10
+" Updated : 2011-08-11
 " Version : 0.3.6
 " License : MIT license {{{
 "
@@ -367,8 +367,6 @@ function! s:Source_Hooks_on_init(args, context)
         \ 'minor_filetype': get(compound_filetypes, 1, ''),
         \ 'compound_filetypes': compound_filetypes,
         \ })
-  " TODO: context should not hold outline_info, it can be got from the
-  " buffer's filetype.
   let outline_info = unite#sources#outline#get_outline_info(buffer.filetype)
   let s:context = {
         \ 'buffer': buffer,
@@ -385,17 +383,31 @@ endfunction
 let s:source.hooks.on_close = function(s:SID . 'Source_Hooks_on_close')
 
 function! s:Source_Hooks_on_syntax(args, context)
-  let outline_info = a:context.source__outline_context.outline_info
+  let outline_context = a:context.source__outline_context
+  let outline_info = outline_context.outline_info
+
+  let hl_rules = []
   if has_key(outline_info, 'highlight_rules')
-    for syn_rule in outline_info.highlight_rules
-      if !has_key(syn_rule, 'highlight')
-        let syn_rule.highlight = g:unite_source_outline_highlight[syn_rule.name]
+    let _hl_rules = outline_info.highlight_rules
+    if type(_hl_rules) == type({})
+      if has_key(_hl_rules, outline_context.method)
+        let hl_rules = _hl_rules[outline_context.method]
       endif
-      execute 'syntax match uniteSource__Outline_' . syn_rule.name syn_rule.pattern
-            \ 'contained containedin=uniteSource__Outline'
-      execute 'highlight default link uniteSource__Outline_' . syn_rule.name syn_rule.highlight
-    endfor
+    else
+      if outline_context.method ==# 'filetype'
+        let hl_rules = _hl_rules
+      endif
+    endif
   endif
+
+  for hl_rule in hl_rules
+    if !has_key(hl_rule, 'highlight')
+      let hl_rule.highlight = g:unite_source_outline_highlight[hl_rule.name]
+    endif
+    execute 'syntax match uniteSource__Outline_' . hl_rule.name hl_rule.pattern
+          \ 'contained containedin=uniteSource__Outline'
+    execute 'highlight default link uniteSource__Outline_' . hl_rule.name hl_rule.highlight
+  endfor
 endfunction
 let s:source.hooks.on_syntax = function(s:SID . 'Source_Hooks_on_syntax')
 
@@ -409,12 +421,19 @@ function! s:Source_gather_candidates(args, context)
     call extend(s:context, opts)
 
     let buffer = s:context.buffer
-
     let bufvars = getbufvar(buffer.nr, '')
     if has_key(bufvars, s:OUTLINE_CACHE_VAR) && !s:context.is_force
       " Path A: Get candidates from the buffer local cache and return them.
       let candidates = getbufvar(buffer.nr, s:OUTLINE_CACHE_VAR)
-      return candidates
+      let method = (candidates[0].source__heading.type ==# 'folding' ? 'folding' : 'filetype')
+      if s:context.method ==# 'last'
+        let s:context.method = method
+      endif
+      if s:context.method ==# method
+        " The cached candidates are reusable because they were extracted by
+        " the same method as s:context.method.
+        return candidates
+      endif
     endif
 
     " Path B: Candidates haven't been cached, so try to get headings.
@@ -437,12 +456,14 @@ let s:source.gather_candidates = function(s:SID . 'Source_gather_candidates')
 
 function! s:parse_options(args, context)
   let opts = {
-        \ 'method'  : 'filetype',
+        \ 'method'  : 'last',
         \ 'is_force': 0,
         \ }
   for value in a:args
-    if value =~# '^fold\%[level]$'
-      let opts.method = 'foldlevel'
+    if value =~# '^\%(ft\|fi\%[letype]\)$'
+      let opts.method = 'filetype'
+    elseif value =~# '^fo\%[lding]$'
+      let opts.method = 'folding'
     elseif value =~# '^\%(update\|!\)$'
       let opts.is_force = 1
     endif
@@ -455,33 +476,56 @@ endfunction
 
 function! s:gather_headings()
   let buffer = s:context.buffer
-  let cache_loaded = 0
-
+  let cache_reusable = 0
   if s:Cache.has(buffer) && !s:context.is_force
     " Path B_1: Get headings from the persistent cache.
     try
       let headings = s:Cache.get(buffer)
-      let cache_loaded = 1
+      let method = (headings[0].type ==# 'folding' ? 'folding' : 'filetype')
+      if s:context.method ==# 'last'
+        let s:context.method = method
+      endif
+      if s:context.method ==# method
+        " The cached headings are reusable because they were extracted by the
+        " same method as s:context.method.
+        let cache_reusable = 1
+      endif
     catch /^CacheCompatibilityError:/
     catch /^unite-outline:/
       call unite#util#print_error(v:exception)
     endtry
   endif
-  if !cache_loaded
+  if !cache_reusable
     " Path B_2: Get headings by parsing the buffer.
     let start_time = s:benchmark_start()
 
     let lines = [""] + getbufline(s:context.buffer.nr, 1, '$')
     let s:context.lines = lines
+    let s:context.heading_lnum = 0
+    let s:context.matched_lnum = 0
 
-    if s:context.method == 'filetype'
+    if s:context.method !=# 'folding'
       " Path B_2_a: Extract headings in filetype-specific way using the
       " filetype's outline info.
+      let s:context.method = 'filetype'
       let headings = s:extract_filetype_headings()
     else
       " Path B_2_b: Extract headings using folds' information.
-      let headings = s:extract_foldlevel_headings()
+      let s:context.method = 'folding'
+      let headings = s:extract_folding_headings()
     endif
+    unlet s:context.heading_lnum
+    unlet s:context.matched_lnum
+
+    let num_lines = len(lines) - 1
+    let is_volatile = get(s:context.outline_info, 'is_volatile', 0)
+    if !is_volatile && num_lines > 100 && !empty(headings)
+      let is_persistant = (num_lines > g:unite_source_outline_cache_limit)
+      call s:Cache.set(buffer, headings, is_persistant)
+    elseif s:Cache.has(buffer)
+      call s:Cache.remove(buffer)
+    endif
+
     call s:benchmark_stop(start_time)
   endif
   return headings
@@ -528,9 +572,6 @@ function! s:extract_filetype_headings()
     return []
   endif
 
-  let s:context.heading_lnum = 0
-  let s:context.matched_lnum = 0
-
   if has_key(outline_info, 'initialize')
     call outline_info.initialize(s:context)
   endif
@@ -558,19 +599,10 @@ function! s:extract_filetype_headings()
   if !is_normalized
     call map(headings, 's:normalize_heading(v:val)')
   endif
-  unlet s:context.heading_lnum
-  unlet s:context.matched_lnum
 
   " Filter headings.
   let headings = s:filter_headings(headings, ignore_types)
 
-  let num_lines = len(s:context.lines) - 1
-  if !outline_info.is_volatile && num_lines > 100 && !empty(headings)
-    let is_persistant = (num_lines > g:unite_source_outline_cache_limit)
-    call s:Cache.set(buffer, headings, is_persistant)
-  elseif s:Cache.has(buffer)
-    call s:Cache.remove(buffer)
-  endif
   return headings
 endfunction
 
@@ -726,10 +758,49 @@ function! s:skip_to(pattern)
   endwhile
 endfunction
 
-function! s:extract_foldlevel_headings()
-  " TODO
-  call unite#print_message("[unite-outline] Not implemented yet.")
-  return []
+function! s:extract_folding_headings()
+  let headings = []
+  let lines = s:context.lines | let num_lines = len(lines)
+
+  " current window -> context window
+  let winnr = bufwinnr(s:context.buffer.nr)
+  execute winnr . 'wincmd w'
+
+  let current_level = 0
+  let lnum = 1
+  while lnum < num_lines
+    let foldlevel = foldlevel(lnum)
+    if foldlevel > current_level
+      let heading = {
+            \ 'word' : lines[lnum],
+            \ 'level': foldlevel,
+            \ 'type' : 'folding',
+            \ 'lnum' : lnum,
+            \ }
+      call add(headings, heading)
+    endif
+    let current_level = foldlevel
+
+    if lnum % 500 == 0
+      if len(headings) > g:unite_source_outline_max_headings
+        call unite#print_message(
+              \ "[unite-outline] Too many headings, the extraction was interrupted.")
+        break
+      else
+        call s:Util.print_progress("Extracting headings..." . lnum * 100 / num_lines . "%")
+      endif
+    endif
+    let lnum += 1
+  endwhile
+  call s:Util.print_progress("Extracting headings...done.")
+
+  " current window <- context window
+  wincmd p
+
+  call map(headings, 's:normalize_heading(v:val)')
+  call s:Tree.build(headings)
+
+  return headings
 endfunction
 
 function! s:normalize_heading(heading)

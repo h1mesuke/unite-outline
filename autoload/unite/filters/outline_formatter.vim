@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_formatter.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-07
+" Updated : 2011-08-11
 " Version : 0.3.6
 " License : MIT license {{{
 "
@@ -45,10 +45,12 @@ let s:formatter = {
       \ }
 
 function! s:formatter.filter(candidates, context)
-  if empty(a:candidates) | return a:candidates | endif
+  let outline_context = a:context.source__outline_context
+  if empty(a:candidates) || outline_context.method !=# 'filetype'
+    return a:candidates
+  endif
 
   let candidates = a:candidates
-  let outline_context = a:context.source__outline_context
   let outline_info = outline_context.outline_info
 
   let do_insert_blank = !empty(outline_info.heading_groups) ||
