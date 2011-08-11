@@ -412,10 +412,18 @@ endfunction
 let s:source.hooks.on_syntax = function(s:SID . 'Source_Hooks_on_syntax')
 
 function! s:Source_gather_candidates(args, context)
+  " Save and set Vim options.
   let save_cpoptions  = &cpoptions
   let save_ignorecase = &ignorecase
+  let save_winheight  = &winheight
+  let save_winwidth   = &winwidth
   set cpoptions&vim
   set noignorecase
+  set winheight=1
+  set winwidth=1
+  " NOTE: To keep the window size on :wincmd, set 'winheight' and 'winwidth'
+  " to a small value.
+
   try
     let opts = s:parse_options(a:args, a:context)
     call extend(s:context, opts)
@@ -448,8 +456,11 @@ function! s:Source_gather_candidates(args, context)
     call unite#util#print_error(v:exception)
     return []
   finally
+    " Restore Vim options.
     let &cpoptions  = save_cpoptions
     let &ignorecase = save_ignorecase
+    let &winheight  = save_winheight
+    let &winwidth   = save_winwidth
   endtry
 endfunction
 let s:source.gather_candidates = function(s:SID . 'Source_gather_candidates')
