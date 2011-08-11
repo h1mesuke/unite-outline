@@ -428,7 +428,7 @@ function! s:Source_gather_candidates(args, context)
 
     let buffer = s:context.buffer
     let bufvars = getbufvar(buffer.nr, '')
-    if has_key(bufvars, s:OUTLINE_CACHE_VAR) && !s:context.is_force
+    if has_key(bufvars, s:OUTLINE_CACHE_VAR)
       " Path A: Get candidates from the buffer local cache and return them.
       let candidates = getbufvar(buffer.nr, s:OUTLINE_CACHE_VAR)
       let method = (!empty(candidates) &&
@@ -436,7 +436,7 @@ function! s:Source_gather_candidates(args, context)
       if s:context.method ==# 'last'
         let s:context.method = method
       endif
-      if s:context.method ==# method
+      if !s:context.is_force && s:context.method ==# method
         " The cached candidates are reusable because they were extracted by
         " the same method as s:context.method.
         return candidates
@@ -487,7 +487,7 @@ endfunction
 function! s:gather_headings()
   let buffer = s:context.buffer
   let cache_reusable = 0
-  if s:Cache.has(buffer) && !s:context.is_force
+  if s:Cache.has(buffer)
     " Path B_1: Get headings from the persistent cache.
     try
       let headings = s:Cache.get(buffer)
@@ -496,7 +496,7 @@ function! s:gather_headings()
       if s:context.method ==# 'last'
         let s:context.method = method
       endif
-      if s:context.method ==# method
+      if !s:context.is_force && s:context.method ==# method
         " The cached headings are reusable because they were extracted by the
         " same method as s:context.method.
         let cache_reusable = 1
