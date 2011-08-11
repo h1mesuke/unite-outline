@@ -101,7 +101,7 @@ function! s:get_outline_info(filetype, is_default)
     try
       let scr_path = s:find_autoload_script(load_func)
     catch /^ScriptNotFoundError:/
-      " the user moved his/her outline info somewhere!
+      " The user moved his/her outline info somewhere!
       continue
     endtry
     call s:check_update(scr_path)
@@ -210,7 +210,7 @@ function! s:find_autoload_script(funcname)
     if filereadable(path)
       return s:autoload_scripts[a:funcname]
     else
-      " the script was moved somewhere for some reason...
+      " The script was moved somewhere for some reason...
       unlet s:autoload_scripts[a:funcname]
     endif
   endif
@@ -419,6 +419,7 @@ function! s:Source_gather_candidates(args, context)
   set noignorecase
   set winheight=1
   set winwidth=1
+  "
   " NOTE: To keep the window size on :wincmd, set 'winheight' and 'winwidth'
   " to a small value.
 
@@ -667,7 +668,7 @@ function! s:_builtin_extract_headings()
   call s:skip_header()
   let outline_info = s:context.outline_info
 
-  " eval once
+  " Eval once.
   let skip_block = has_key(outline_info, 'skip') && has_key(outline_info.skip, 'block')
   let has_heading_pattern      = has_key(outline_info, 'heading')
   let has_heading_prev_pattern = has_key(outline_info, 'heading-1')
@@ -685,11 +686,11 @@ function! s:_builtin_extract_headings()
     let line = lines[s:lnum]
 
     if skip_block && line =~# outline_info.skip.block.begin
-      " skip a documentation block
+      " Skip a documentation block.
       call s:skip_to(outline_info.skip.block.end)
 
     elseif has_heading_prev_pattern && line =~# outline_info['heading-1'] && s:lnum < num_lines - 3
-      " matched: heading-1
+      " Matched: heading-1
       let next_line = lines[s:lnum + 1]
       if next_line =~ '[[:punct:]]\@!\S'
         let s:context.heading_lnum = s:lnum + 1
@@ -704,7 +705,7 @@ function! s:_builtin_extract_headings()
           let s:lnum += 1
         endif
       elseif next_line =~ '\S' && s:lnum < num_lines - 4
-        " see one more next
+        " See one more next
         let next_line = lines[s:lnum + 2]
         if next_line =~ '[[:punct:]]\@!\S'
           let s:context.heading_lnum = s:lnum + 2
@@ -722,7 +723,7 @@ function! s:_builtin_extract_headings()
       endif
 
     elseif has_heading_pattern && line =~# outline_info.heading
-      " matched: heading
+      " Matched: heading
       let s:context.heading_lnum = s:lnum
       let s:context.matched_lnum = s:lnum
       if has_create_heading_func
@@ -735,7 +736,7 @@ function! s:_builtin_extract_headings()
       endif
 
     elseif has_heading_next_pattern && line =~# outline_info['heading+1'] && s:lnum > 0
-      " matched: heading+1
+      " Matched: heading+1
       let prev_line = lines[s:lnum - 1]
       if prev_line =~ '[[:punct:]]\@!\S'
         let s:context.heading_lnum = s:lnum - 1
@@ -772,7 +773,7 @@ function! s:skip_header()
   let lines = s:context.lines | let num_lines = len(lines)
 
   if has_key(outline_info, 'skip') && has_key(outline_info.skip, 'header')
-    " eval once
+    " Eval once.
     let skip_header_leading = has_key(outline_info.skip.header, 'leading')
     let skip_header_block   = has_key(outline_info.skip.header, 'block')
 
@@ -864,7 +865,7 @@ endfunction
 
 function! s:normalize_heading(heading)
   if type(a:heading) == type("")
-    " normalize to a Dictionary
+    " Normalize to a Dictionary.
     let level = s:Util.get_indent_level(s:context, s:context.heading_lnum)
     let heading = {
           \ 'word' : a:heading,
@@ -924,7 +925,7 @@ function! s:_calc_signature(bwd_lines, fwd_lines)
   return join(map(bwd_lines + fwd_lines, 's:digest_line(v:val)'), '')
 endfunction
 
-" quick and dirty digest
+" Quick and Dirty Digest
 function! s:digest_line(line)
   let line = substitute(a:line, '\s*', '', 'g')
   if s:strchars(line) <= 20
@@ -1090,7 +1091,7 @@ function! s:adjust_scroll(best_winline)
   normal! zt
   let save_cursor = getpos('.')
   let winl = 1
-  " scroll the cursor line down
+  " Scroll the cursor line down.
   while winl <= a:best_winline
     let prev_winl = winl
     execute "normal! \<C-y>"

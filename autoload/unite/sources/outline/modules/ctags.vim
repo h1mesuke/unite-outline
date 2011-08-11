@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-07
+" Updated : 2011-08-12
 " Version : 0.3.6
 " License : MIT license {{{
 "
@@ -180,7 +180,7 @@ function! s:Ctags_extract_headings(context)
     let heading.word .= s:get_tag_name_id_suffix(tag, tag_name_counter)
 
     if tag.kind =~# scope_kinds_pattern
-      " the heading has its scope
+      " The heading has its scope.
       if !has_key(scope_table, tag.qualified_name)
         let scope_table[tag.qualified_name] = heading
       elseif has_key(scope_table[tag.qualified_name], 'source__pseudo__')
@@ -190,7 +190,7 @@ function! s:Ctags_extract_headings(context)
     endif
 
     if has_key(tag, 'scope')
-      " the heading belongs to a scope
+      " The heading belongs to a scope.
       if !has_key(scope_table, tag.scope)
         let pseudo_heading = {
               \ 'word' : '(' . tag.scope . ') : ' . tag.scope_kind,
@@ -205,7 +205,7 @@ function! s:Ctags_extract_headings(context)
       call s:Tree.append_child(scope_table[tag.scope], heading)
 
     elseif !has_key(scope_table, tag.qualified_name)
-      " the heading belongs to the toplevel (and doesn't have its scope)
+      " The heading belongs to the toplevel (and doesn't have its scope)
       call s:Tree.append_child(root, heading)
     endif
 

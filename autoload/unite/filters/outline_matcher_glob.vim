@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_matcher_glob.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-11
+" Updated : 2011-08-11
 " Version : 0.3.6
 " License : MIT license {{{
 "
@@ -56,7 +56,7 @@ function! s:matcher.filter(candidates, context)
   for input in split(a:context.input, '\\\@<! ')
     let input = substitute(input, '\\ ', ' ', 'g')
 
-    " something like closure
+    " Use something like closure.
     let predicate = {}
 
     if input =~ '^!'
