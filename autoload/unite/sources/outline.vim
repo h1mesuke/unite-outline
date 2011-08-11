@@ -826,11 +826,15 @@ function! s:extract_folding_headings()
   while lnum < num_lines
     let foldlevel = foldlevel(lnum)
     if foldlevel > current_level
+      let heading_lnum = lnum
+      if &l:foldmethod ==# 'indent'
+        let heading_lnum -=1
+      endif
       let heading = {
-            \ 'word' : lines[lnum],
+            \ 'word' : lines[heading_lnum],
             \ 'level': foldlevel,
             \ 'type' : 'folding',
-            \ 'lnum' : lnum,
+            \ 'lnum' : heading_lnum,
             \ }
       call add(headings, heading)
     endif
