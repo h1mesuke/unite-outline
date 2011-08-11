@@ -882,7 +882,7 @@ function! s:normalize_heading(heading)
         \ 'is_matched': 0,
         \ }, 'keep')
   let heading.line = s:context.lines[heading.lnum]
-  let heading.pattern = s:make_search_pattern(heading.line)
+  let heading.pattern = '^' . unite#util#escape_pattern(heading.line) . '$'
   let heading.signature = s:calc_signature(heading.lnum, s:context.lines)
   let outline_info = s:context.outline_info
   if !has_key(heading, 'group')
@@ -901,10 +901,6 @@ function! s:normalize_heading_word(heading_word)
   let heading_word = substitute(substitute(a:heading_word, '^\s*', '', ''), '\s*$', '', '')
   let heading_word = substitute(heading_word, '\s\+', ' ', 'g')
   return heading_word
-endfunction
-
-function! s:make_search_pattern(line)
-  return '^' . unite#util#escape_pattern(a:line) . '$'
 endfunction
 
 let s:SIGNATURE_RANGE = 10
@@ -991,8 +987,9 @@ function! s:create_candidate(heading)
   " NOTE:
   "   abbr - String for displaying
   "   word - String for narrowing
+  let indent = repeat(' ', (a:heading.level - 1) * g:unite_source_outline_indent_width)
   let cand = {
-        \ 'abbr': s:make_indent(a:heading.level) . a:heading.word,
+        \ 'abbr': indent . a:heading.word,
         \ 'word': a:heading.keyword,
         \ 'source': 'outline',
         \ 'kind'  : 'jump_list',
@@ -1004,10 +1001,6 @@ function! s:create_candidate(heading)
         \ }
   let a:heading.__unite_candidate__ = cand
   return cand
-endfunction
-
-function! s:make_indent(level)
-  return repeat(' ', (a:level - 1) * g:unite_source_outline_indent_width)
 endfunction
 
 function! s:Source_calc_signature(lnum)
