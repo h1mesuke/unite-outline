@@ -500,6 +500,7 @@ function! s:gather_headings()
         " The cached headings are reusable because they were extracted by the
         " same method as s:context.method.
         let cache_reusable = 1
+        call s:ids_to_refs(headings)
       endif
     catch /^CacheCompatibilityError:/
     catch /^unite-outline:/
@@ -532,7 +533,7 @@ function! s:gather_headings()
     let is_volatile = get(s:context.outline_info, 'is_volatile', 0)
     if !is_volatile && num_lines > 100 && !empty(headings)
       let is_persistant = (num_lines > g:unite_source_outline_cache_limit)
-      call s:Cache.set(buffer, headings, is_persistant)
+      call s:Cache.set(buffer, s:refs_to_ids(headings), is_persistant)
     elseif s:Cache.has(buffer)
       call s:Cache.remove(buffer)
     endif
@@ -562,6 +563,48 @@ endfunction
 
 function! s:get_reltime()
   return str2float(reltimestr(reltime()))
+endfunction
+
+" NOTE: Built-in string() function can't dump an object that has any cyclic
+" references because of E724, nested too deep error; therefore, we need to
+" substitute references to each heading's parent and children with their id
+" numbers before their serialization.
+"
+function! s:refs_to_ids(headings)
+  let headings = copy(a:headings)
+  let headings = map(headings, 'copy(v:val)')
+  for heading in headings
+    let heading.parent = heading.parent.id
+    if has_key(heading, 'children')
+      let heading.children = map(copy(heading.children), 'v:val.id')
+    endif
+  endfor
+  return headings
+endfunction
+
+function! s:ids_to_refs(headings)
+  try
+    let root = s:Tree.new()
+    let heading_table = {}
+    for heading in a:headings
+      let heading_table[heading.id] = heading
+    endfor
+    for heading in a:headings
+      if heading.parent == 0
+        call s:Tree.append_child(root, heading)
+      else
+        let heading.parent = heading_table[heading.parent]
+      endif
+      if has_key(heading, 'children')
+        call map(heading.children, 'heading_table[v:val]')
+      endif
+    endfor
+  catch
+    call s:Util.print_debug(v:throwpoint)
+    call s:Util.print_debug(v:exception)
+    throw "CacheCompatibilityError:"
+  endtry
+  return a:headings
 endfunction
 
 function! s:extract_filetype_headings()

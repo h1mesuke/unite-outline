@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-06
+" Updated : 2011-08-11
 " Version : 0.3.6
 " License : MIT license {{{
 "
@@ -86,10 +86,10 @@ endfunction
 "
 function! s:encode_file_path(path)
   if len(s:Cache.DIR) + len(a:path) < 150
-    " encode the path to a base name
+    " Encode the path to a base name.
     return substitute(substitute(a:path, ':', '=-', 'g'), '[/\\]', '=+', 'g')
   else
-    " simple hash
+    " Calculate a simple hash.
     let sum = 0
     for idx in range(len(a:path))
       let sum += char2nr(a:path[idx]) * (idx + 1)
@@ -118,36 +118,11 @@ function! s:load_cache_file(path)
   else
     throw "unite-outline: Couldn't load the cache file: " . cache_file
   endif
-  " touch; update the timestamp
+  " Touch; Update the timestamp.
   if writefile([dumped_data], cache_file) == 0
     call s:Util.print_debug("[TOUCHED] cache file: " . cache_file)
   endif
-  let data = s:deserialize(dumped_data)
-  return data
-endfunction
-
-function! s:deserialize(dumped_data)
-  sandbox let data = eval(a:dumped_data)
-  try
-    " ids -> references
-    let headings = data
-    let heading_table = {}
-    for heading in headings
-      let heading_table[heading.id] = heading
-    endfor
-    for heading in headings
-      if has_key(heading, 'parent')
-        let heading.parent = heading_table[heading.parent]
-      endif
-      if has_key(heading, 'children')
-        call map(heading.children, 'heading_table[v:val]')
-      endif
-    endfor
-  catch
-    call s:Util.print_debug(v:throwpoint)
-    call s:Util.print_debug(v:exception)
-    throw "CacheCompatibilityError:"
-  endtry
+  sandbox let data = eval(dumped_data)
   return data
 endfunction
 
@@ -168,28 +143,12 @@ call s:Cache.function('set')
 
 function! s:save_cache_file(path, data)
   let cache_file = s:cache_file_path(a:path)
-  let dumped_data = s:serialize(a:data)
+  let dumped_data = string(a:data)
   if writefile([dumped_data], cache_file) == 0
     call s:Util.print_debug("[SAVED] cache file: " . cache_file)
   else
     throw "unite-outline: Couldn't save the cache to: " . cache_file
   endif
-endfunction
-
-function! s:serialize(data)
-  " references -> ids
-  let headings = copy(a:data)
-  let headings = map(headings, 'copy(v:val)')
-  for heading in headings
-    if has_key(heading, 'parent')
-      let heading.parent = heading.parent.id
-    endif
-    if has_key(heading, 'children')
-      let heading.children = map(copy(heading.children), 'v:val.id')
-    endif
-  endfor
-  let dumped_data = string(headings)
-  return dumped_data
 endfunction
 
 function! s:Cache_remove(buffer) dict
@@ -229,23 +188,23 @@ function! s:cleanup_all_cache_files()
 endfunction
 
 function! s:cleanup_cache_files(...)
-  let do_all = (a:0 ? a:1 : 0)
+  let delete_all = (a:0 ? a:1 : 0)
   let cache_files = split(globpath(s:Cache.DIR, '*'), "\<NL>")
-  let del_files = []
+  let dlt_files = []
 
-  if do_all
-    let del_files = cache_files
+  if delete_all
+    let dlt_files = cache_files
   elseif len(cache_files) > s:Cache.CLEANUP_FILE_COUNT
     let now = localtime()
     if now % s:Cache.CLEANUP_RATE == 0
       for path in cache_files
         if now - getftime(path) > s:Cache.EXPIRES
-          call add(del_files, path)
+          call add(dlt_files, path)
         endif
       endfor
     endif
   endif
-  for path in del_files
+  for path in dlt_files
     try
       call s:remove_file(path)
     catch /^unite-outline:/
