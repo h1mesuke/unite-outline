@@ -384,28 +384,19 @@ function! s:Source_Hooks_on_syntax(args, context)
   let outline_context = a:context.source__outline_context
   let outline_info = outline_context.outline_info
 
-  let hl_rules = []
-  if has_key(outline_info, 'highlight_rules')
-    let _hl_rules = outline_info.highlight_rules
-    if type(_hl_rules) == type({})
-      if has_key(_hl_rules, outline_context.method)
-        let hl_rules = _hl_rules[outline_context.method]
-      endif
-    else
-      if outline_context.method ==# 'filetype'
-        let hl_rules = _hl_rules
-      endif
+  if outline_context.method ==# 'filetype'
+    " Filetype
+    if has_key(outline_info, 'highlight_rules')
+      for hl_rule in outline_info.highlight_rules
+        if !has_key(hl_rule, 'highlight')
+          let hl_rule.highlight = g:unite_source_outline_highlight[hl_rule.name]
+        endif
+        execute 'syntax match uniteSource__Outline_' . hl_rule.name hl_rule.pattern
+              \ 'contained containedin=uniteSource__Outline'
+        execute 'highlight default link uniteSource__Outline_' . hl_rule.name hl_rule.highlight
+      endfor
     endif
   endif
-
-  for hl_rule in hl_rules
-    if !has_key(hl_rule, 'highlight')
-      let hl_rule.highlight = g:unite_source_outline_highlight[hl_rule.name]
-    endif
-    execute 'syntax match uniteSource__Outline_' . hl_rule.name hl_rule.pattern
-          \ 'contained containedin=uniteSource__Outline'
-    execute 'highlight default link uniteSource__Outline_' . hl_rule.name hl_rule.highlight
-  endfor
 endfunction
 let s:source.hooks.on_syntax = function(s:SID . 'Source_Hooks_on_syntax')
 
