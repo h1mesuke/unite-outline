@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-07
+" Updated : 2011-08-11
 " Version : 0.3.6
 " License : MIT license {{{
 "
@@ -214,38 +214,6 @@ function! s:compare_by_lnum(d1, d2)
   return n1 == n2 ? 0 : n1 > n2 ? 1 : -1
 endfunction
 call s:List.function('sort_by_lnum')
-
-function! s:List_split(list, sep)
-  let result = []
-  let sub_list = []
-  for value in a:list
-    if value == a:sep
-      call add(result, sub_list)
-      let sub_list = []
-    else
-      call add(sub_list, value)
-    endif
-  endfor
-  call add(result, sub_list)
-  return result
-endfunction
-call s:List.function('split')
-
-function! s:List_join(lists, sep)
-  let result = []
-  for sub_list in a:lists
-    let result += sub_list
-    let result += [a:sep]
-  endfor
-  call remove(result, -1)
-  return result
-endfunction
-call s:List.function('join')
-
-function! s:List_zip(list1, list2)
-  return map(range(len(a:list1)), '[a:list1[v:val], a:list2[v:val]]')
-endfunction
-call s:List.function('zip')
 
 unlet s:List
 

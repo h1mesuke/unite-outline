@@ -980,25 +980,16 @@ function! unite#sources#outline#get_ignore_heading_types(filetype)
 endfunction
 
 function! s:convert_headings_to_candidates(headings)
-  if empty(a:headings) | return [] | endif
-
-  let outline_info = s:context.outline_info
-  let physical_levels = s:smooth_levels(a:headings)
-  let candidates = []
-  for [heading, physical_level] in s:Util.List.zip(a:headings, physical_levels)
-    let heading.physical_level = physical_level
-    let cand = s:create_candidate(heading, physical_level)
-    call add(candidates, cand)
-  endfor
+  let candidates = map(copy(a:headings), 's:create_candidate(v:val)')
   return candidates
 endfunction
 
-function! s:create_candidate(heading, physical_level)
+function! s:create_candidate(heading)
   " NOTE:
   "   abbr - String for displaying
   "   word - String for narrowing
   let cand = {
-        \ 'abbr': s:make_indent(a:physical_level) . a:heading.word,
+        \ 'abbr': s:make_indent(a:heading.level) . a:heading.word,
         \ 'word': a:heading.keyword,
         \ 'source': 'outline',
         \ 'kind'  : 'jump_list',
@@ -1014,21 +1005,6 @@ endfunction
 
 function! s:make_indent(level)
   return repeat(' ', (a:level - 1) * g:unite_source_outline_indent_width)
-endfunction
-
-" DEPRECATED:
-function! s:smooth_levels(headings)
-  let levels = map(copy(a:headings), 'v:val.level')
-  return s:_smooth_levels(levels, 0)
-endfunction
-function! s:_smooth_levels(levels, base_level)
-  let splitted = s:Util.List.split(a:levels, a:base_level)
-  for sub_levels in splitted
-    let shift = min(sub_levels) - a:base_level - 1
-    call map(sub_levels, 'v:val - shift')
-  endfor
-  call map(splitted, 'empty(v:val) ? v:val : s:_smooth_levels(v:val, a:base_level + 1)')
-  return s:Util.List.join(splitted, a:base_level)
 endfunction
 
 function! s:Source_calc_signature(lnum)
