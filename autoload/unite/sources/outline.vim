@@ -526,8 +526,6 @@ function! s:gather_headings()
       let s:context.method = 'folding'
       let headings = s:extract_folding_headings()
     endif
-    unlet s:context.heading_lnum
-    unlet s:context.matched_lnum
 
     let num_lines = len(lines) - 1
     let is_volatile = get(s:context.outline_info, 'is_volatile', 0)
@@ -538,7 +536,10 @@ function! s:gather_headings()
       call s:Cache.remove(buffer)
     endif
 
-    call s:benchmark_stop(start_time)
+    call s:benchmark_stop(start_time) | " use s:context.lines
+    unlet s:context.lines
+    unlet s:context.heading_lnum
+    unlet s:context.matched_lnum
   endif
   return headings
 endfunction
