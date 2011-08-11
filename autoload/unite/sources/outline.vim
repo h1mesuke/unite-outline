@@ -433,7 +433,8 @@ function! s:Source_gather_candidates(args, context)
     if has_key(bufvars, s:OUTLINE_CACHE_VAR) && !s:context.is_force
       " Path A: Get candidates from the buffer local cache and return them.
       let candidates = getbufvar(buffer.nr, s:OUTLINE_CACHE_VAR)
-      let method = (candidates[0].source__heading.type ==# 'folding' ? 'folding' : 'filetype')
+      let method = (!empty(candidates) &&
+            \ candidates[0].source__heading.type ==# 'folding' ? 'folding' : 'filetype')
       if s:context.method ==# 'last'
         let s:context.method = method
       endif
@@ -492,7 +493,8 @@ function! s:gather_headings()
     " Path B_1: Get headings from the persistent cache.
     try
       let headings = s:Cache.get(buffer)
-      let method = (headings[0].type ==# 'folding' ? 'folding' : 'filetype')
+      let method = (!empty(headings) &&
+            \ headings[0].type ==# 'folding' ? 'folding' : 'filetype')
       if s:context.method ==# 'last'
         let s:context.method = method
       endif
