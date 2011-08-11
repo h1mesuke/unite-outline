@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-11
+" Updated : 2011-08-12
 " Version : 0.3.6
 " License : MIT license {{{
 "
@@ -144,8 +144,6 @@ function! s:normalize_outline_info(outline_info)
     if has_key(a:outline_info, 'not_match_patterns')
       let a:outline_info.__not_match_pattern__ =
             \ '\%(' . join(a:outline_info.not_match_patterns, '\|') . '\)'
-    else
-      let a:outline_info.__not_match_pattern__ = ''
     endif
     let a:outline_info.__normalized__ = 1
   endif
@@ -885,11 +883,11 @@ function! s:normalize_heading(heading)
   let heading.pattern = '^' . unite#util#escape_pattern(heading.line) . '$'
   let heading.signature = s:calc_signature(heading.lnum, s:context.lines)
   let outline_info = s:context.outline_info
-  if !has_key(heading, 'group')
+  if s:context.method !=# 'folding' && !has_key(heading, 'group')
     let group_map = outline_info.heading_group_map
     let heading.group = get(group_map, heading.type, 'generic')
   endif
-  if !has_key(heading, 'keyword') && !empty(outline_info.__not_match_pattern__)
+  if has_key(outline_info, '__not_match_pattern__')
     let heading.keyword =
           \ substitute(heading.word, outline_info.__not_match_pattern__, '', 'g')
   endif
