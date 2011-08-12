@@ -235,8 +235,9 @@ endfunction
 let g:unite_source_outline_input = ''
 
 function! s:jump_to_match(...)
-  if unite#get_context().buffer_name !=# 'outline'
-    call unite#print_error("unite-outline: Invalid buffer name.")
+  if &l:filetype !=# 'unite' || unite#get_context().buffer_name !~# '^outline'
+    call unite#print_error(
+          \ "unite-outline: The key-mapping was used on the unexpected buffer.")
     return
   endif
   let flags = (a:0 ? a:1 : '')
