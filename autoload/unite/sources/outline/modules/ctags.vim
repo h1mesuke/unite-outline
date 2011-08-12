@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-12
+" Updated : 2011-08-13
 " Version : 0.3.6
 " License : MIT license {{{
 "
@@ -167,7 +167,6 @@ function! s:Ctags_extract_headings(context)
   let idx = 0
   while idx < num_tags
     let tag = tags[idx]
-
     if has_key(lang, 'create_heading')
       let heading = lang.create_heading(tag, a:context)
     else
@@ -207,13 +206,8 @@ function! s:Ctags_extract_headings(context)
       " The heading belongs to the toplevel (and doesn't have its scope)
       call s:Tree.append_child(root, heading)
     endif
-
-    if idx % 50 == 0
-      call s:Util.print_progress("Extracting headings..." . idx * 100 / num_tags . "%")
-    endif
     let idx += 1
   endwhile
-  call s:Util.print_progress("Extracting headings...done.")
 
   " Merge
   for heading in filter(values(scope_table), '!has_key(v:val, "parent")')

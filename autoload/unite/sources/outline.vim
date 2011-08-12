@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-12
+" Updated : 2011-08-13
 " Version : 0.3.6
 " License : MIT license {{{
 "
@@ -405,16 +405,8 @@ function! s:Source_gather_candidates(args, context)
   " Save and set Vim options.
   let save_cpoptions  = &cpoptions
   let save_ignorecase = &ignorecase
-  let save_winheight  = &winheight
-  let save_winwidth   = &winwidth
   set cpoptions&vim
   set noignorecase
-  set winheight=1
-  set winwidth=1
-  "
-  " NOTE: To keep the window size on :wincmd, set 'winheight' and 'winwidth'
-  " to a small value.
-
   try
     let opts = s:parse_options(a:args, a:context)
     call extend(s:context, opts)
@@ -443,6 +435,9 @@ function! s:Source_gather_candidates(args, context)
     call setbufvar(buffer.nr, s:OUTLINE_CACHE_VAR, candidates)
 
     return candidates
+  catch /^NoWindowError:/
+    call unite#print_message("[unite-outline] The context buffer has no window.")
+    return []
   catch
     call unite#util#print_error(v:throwpoint)
     call unite#util#print_error(v:exception)
@@ -451,8 +446,6 @@ function! s:Source_gather_candidates(args, context)
     " Restore Vim options.
     let &cpoptions  = save_cpoptions
     let &ignorecase = save_ignorecase
-    let &winheight  = save_winheight
-    let &winwidth   = save_winwidth
   endtry
 endfunction
 let s:source.gather_candidates = function(s:SID . 'Source_gather_candidates')
@@ -496,43 +489,79 @@ function! s:gather_headings()
         call s:ids_to_refs(headings)
       endif
     catch /^CacheCompatibilityError:/
+      " Fallback siliently.
     catch /^unite-outline:/
       call unite#util#print_error(v:exception)
     endtry
   endif
   if !cache_reusable
     " Path B_2: Get headings by parsing the buffer.
-    let start_time = s:benchmark_start()
-
-    let lines = [""] + getbufline(s:context.buffer.nr, 1, '$')
-    let s:context.lines = lines
-    let s:context.heading_lnum = 0
-    let s:context.matched_lnum = 0
-
-    if s:context.method !=# 'folding'
-      " Path B_2_a: Extract headings in filetype-specific way using the
-      " filetype's outline info.
-      let s:context.method = 'filetype'
-      let headings = s:extract_filetype_headings()
-    else
-      " Path B_2_b: Extract headings using folds' information.
-      let s:context.method = 'folding'
-      let headings = s:extract_folding_headings()
+    let winnr = bufwinnr(s:context.buffer.nr)
+    if winnr == -1
+      throw "NoWindowError:"
     endif
+    call s:Util.print_progress("Extracting headings...")
+    " Save and set Vim options.
+    let save_winheight  = &winheight
+    let save_winwidth   = &winwidth
+    let save_lazyredraw = &lazyredraw
+    set lazyredraw
+    set winheight=1
+    set winwidth=1
+    " current window -> context window
+    execute winnr . 'wincmd w'
+    " NOTE: To keep the window size on :wincmd, set 'winheight' and 'winwidth'
+    " to a small value.
+    let success = 0
+    try
+      let start_time = s:benchmark_start()
 
-    let num_lines = len(lines) - 1
-    let is_volatile = get(s:context.outline_info, 'is_volatile', 0)
-    if !is_volatile && num_lines > 100 && !empty(headings)
-      let is_persistant = (num_lines > g:unite_source_outline_cache_limit)
-      call s:Cache.set(buffer, s:refs_to_ids(headings), is_persistant)
-    elseif s:Cache.has(buffer)
-      call s:Cache.remove(buffer)
-    endif
+      let lines = [""] + getbufline(s:context.buffer.nr, 1, '$')
+      let s:context.lines = lines
+      let s:context.heading_lnum = 0
+      let s:context.matched_lnum = 0
 
-    call s:benchmark_stop(start_time) | " use s:context.lines
-    unlet s:context.lines
-    unlet s:context.heading_lnum
-    unlet s:context.matched_lnum
+      if s:context.method !=# 'folding'
+        " Path B_2_a: Extract headings in filetype-specific way using the
+        " filetype's outline info.
+        let s:context.method = 'filetype'
+        let headings = s:extract_filetype_headings()
+      else
+        " Path B_2_b: Extract headings using folds' information.
+        let s:context.method = 'folding'
+        let headings = s:extract_folding_headings()
+      endif
+
+      " Cache the headings.
+      let num_lines = len(lines) - 1
+      let is_volatile = get(s:context.outline_info, 'is_volatile', 0)
+      if !is_volatile && num_lines > 100 && !empty(headings)
+        let is_persistant = (num_lines > g:unite_source_outline_cache_limit)
+        call s:Cache.set(buffer, s:refs_to_ids(headings), is_persistant)
+      elseif s:Cache.has(buffer)
+        call s:Cache.remove(buffer)
+      endif
+
+      " current window <- context window
+      wincmd p
+      let &lazyredraw = save_lazyredraw
+      let success = 1
+      call s:Util.print_progress("Extracting headings...done.")
+
+      call s:benchmark_stop(start_time) | " use s:context.lines
+      unlet s:context.lines
+      unlet s:context.heading_lnum
+      unlet s:context.matched_lnum
+    finally
+      " Restore Vim options.
+      if !success
+        " current window <- context window
+        wincmd p
+        let &lazyredraw = save_lazyredraw
+      endif
+      let &winheight = save_winheight
+      let &winwidth  = save_winwidth
+    endtry
   endif
   return headings
 endfunction
@@ -740,18 +769,8 @@ function! s:_builtin_extract_headings()
       endif
     endif
 
-    if s:lnum % 500 == 0
-      if len(headings) > g:unite_source_outline_max_headings
-        call unite#print_message(
-              \ "[unite-outline] Too many headings, the extraction was interrupted.")
-        break
-      else
-        call s:Util.print_progress("Extracting headings..." . s:lnum * 100 / num_lines . "%")
-      endif
-    endif
     let s:lnum += 1
   endwhile
-  call s:Util.print_progress("Extracting headings...done.")
 
   return headings
 endfunction
@@ -806,10 +825,6 @@ function! s:extract_folding_headings()
   let headings = []
   let lines = s:context.lines | let num_lines = len(lines)
 
-  " current window -> context window
-  let winnr = bufwinnr(s:context.buffer.nr)
-  execute winnr . 'wincmd w'
-
   let current_level = 0
   let lnum = 1
   while lnum < num_lines
@@ -828,26 +843,10 @@ function! s:extract_folding_headings()
       call add(headings, heading)
     endif
     let current_level = foldlevel
-
-    if lnum % 500 == 0
-      if len(headings) > g:unite_source_outline_max_headings
-        call unite#print_message(
-              \ "[unite-outline] Too many headings, the extraction was interrupted.")
-        break
-      else
-        call s:Util.print_progress("Extracting headings..." . lnum * 100 / num_lines . "%")
-      endif
-    endif
     let lnum += 1
   endwhile
-  call s:Util.print_progress("Extracting headings...done.")
-
-  " current window <- context window
-  wincmd p
-
   call map(headings, 's:normalize_heading(v:val)')
   call s:Tree.build(headings)
-
   return headings
 endfunction
 
