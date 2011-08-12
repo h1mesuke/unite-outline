@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_formatter.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-11
+" Updated : 2011-08-12
 " Version : 0.3.6
 " License : MIT license {{{
 "
@@ -46,17 +46,16 @@ let s:formatter = {
 
 function! s:formatter.filter(candidates, context)
   let outline_context = a:context.source__outline_context
-  if empty(a:candidates) || outline_context.method !=# 'filetype'
-    return a:candidates
-  endif
+  if empty(a:candidates) | return a:candidates | endif
 
-  let candidates = a:candidates
   let outline_info = outline_context.outline_info
+  let candidates = a:candidates
 
-  let do_insert_blank = !empty(outline_info.heading_groups) ||
-        \ has_key(outline_info, 'need_blank_between')
+  let do_insert_blank = (outline_context.method ==# 'filetype' &&
+        \ (!empty(outline_info.heading_groups) || has_key(outline_info, 'need_blank_between')))
 
   if do_insert_blank
+    " Insert blanks for readability.
     if !has_key(outline_info, 'need_blank_between')
       " Use the default implementation.
       let outline_info.need_blank_between = function('s:need_blank_between')
@@ -66,12 +65,26 @@ function! s:formatter.filter(candidates, context)
     let memo = {} | " for memoization
     for cand in a:candidates[1:]
       let heading = cand.source__heading
-      if do_insert_blank && outline_info.need_blank_between(prev_heading, heading, memo)
+      if outline_info.need_blank_between(prev_heading, heading, memo)
         call add(candidates, s:BLANK)
       endif
       call add(candidates, cand)
       let prev_heading = heading
     endfor
+  endif
+
+  " Turbo Jump
+  if len(a:candidates) < 10
+    let matches = filter(copy(a:candidates), 'v:val.source__heading.is_matched')
+    if len(matches) == 1 " Bingo!
+      let bingo = copy(matches[0])
+      if bingo != a:candidates[0]
+        " Prepend a copy of the only one matched heading to the narrowing
+        " results for jumping to its position with one <Enter>.
+        let bingo.abbr = substitute(bingo.abbr, '^ \=', '!', '')
+        let candidates = [bingo, s:BLANK] + candidates
+      endif
+    endif
   endif
   return candidates
 endfunction
