@@ -164,7 +164,6 @@ function! s:Ctags_extract_headings(context)
   let tag_name_counter = {}
 
   let root = s:Tree.new()
-
   let idx = 0
   while idx < num_tags
     let tag = tags[idx]
@@ -212,13 +211,12 @@ function! s:Ctags_extract_headings(context)
     if idx % 50 == 0
       call s:Util.print_progress("Extracting headings..." . idx * 100 / num_tags . "%")
     endif
-
     let idx += 1
   endwhile
   call s:Util.print_progress("Extracting headings...done.")
 
   " Merge
-  for heading in filter(values(scope_table), 's:Tree.is_toplevel(v:val)')
+  for heading in filter(values(scope_table), '!has_key(v:val, "parent")')
     call s:Tree.append_child(root, heading)
   endfor
   call s:Util.List.sort_by_lnum(root.children)

@@ -568,9 +568,7 @@ function! s:refs_to_ids(headings)
   let headings = map(headings, 'copy(v:val)')
   for heading in headings
     let heading.parent = heading.parent.id
-    if has_key(heading, 'children')
-      let heading.children = map(copy(heading.children), 'v:val.id')
-    endif
+    let heading.children = map(copy(heading.children), 'v:val.id')
   endfor
   return headings
 endfunction
@@ -588,9 +586,7 @@ function! s:ids_to_refs(headings)
       else
         let heading.parent = heading_table[heading.parent]
       endif
-      if has_key(heading, 'children')
-        call map(heading.children, 'heading_table[v:val]')
-      endif
+      call map(heading.children, 'heading_table[v:val]')
     endfor
   catch
     call s:Util.print_debug(v:throwpoint)

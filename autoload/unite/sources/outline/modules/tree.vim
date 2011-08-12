@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-10
+" Updated : 2011-08-12
 " Version : 0.3.6
 " License : MIT license {{{
 "
@@ -51,6 +51,10 @@ function! s:Tree_append_child(heading, child)
   endif
   call add(a:heading.children, a:child)
   let a:child.parent = a:heading
+  " Ensure that all headings has 'children'.
+  if !has_key(a:child, 'children')
+    let a:child.children = []
+  endif
 endfunction
 call s:Tree.function('append_child')
 
@@ -60,12 +64,12 @@ endfunction
 call s:Tree.function('remove_child')
 
 function! s:Tree_is_toplevel(heading)
-  return !has_key(a:heading, 'parent') || has_key(a:heading.parent, '__root__')
+  return has_key(a:heading.parent, '__root__')
 endfunction
 call s:Tree.function('is_toplevel')
 
 function! s:Tree_is_leaf(heading)
-  return !has_key(a:heading, 'children') || empty(a:heading.children)
+  return empty(a:heading.children)
 endfunction
 call s:Tree.function('is_leaf')
 
@@ -76,6 +80,7 @@ function! s:Tree_build(headings, ...)
   let root = s:Tree_new()
   if empty(a:headings) | return root | endif
 
+  " Ensure that all headings has 'children'.
   for heading in a:headings
     let heading.children = []
   endfor
@@ -122,16 +127,14 @@ call s:Tree.function('filter')
 "
 function! s:mark(heading, predicate)
   let child_marked = 0
-  if has_key(a:heading, 'children')
-    for child in a:heading.children
-      if !child.is_marked
-        continue
-      endif
-      if s:mark(child, a:predicate)
-        let child_marked = 1
-      endif
-    endfor
-  endif
+  for child in a:heading.children
+    if !child.is_marked
+      continue
+    endif
+    if s:mark(child, a:predicate)
+      let child_marked = 1
+    endif
+  endfor
   let a:heading.is_matched = a:predicate.call(a:heading)
   let a:heading.is_marked = (child_marked || a:heading.is_matched)
   return a:heading.is_marked
@@ -144,13 +147,11 @@ endfunction
 "
 function! s:Tree_flatten(tree)
   let headings = []
-  if has_key(a:tree, 'children')
-    for node in a:tree.children
-      let node.level = s:Tree_is_toplevel(node) ? 1 : node.parent.level + 1
-      call add(headings, node)
-      let headings += s:Tree_flatten(node)
-    endfor
-  endif
+  for node in a:tree.children
+    let node.level = s:Tree_is_toplevel(node) ? 1 : node.parent.level + 1
+    call add(headings, node)
+    let headings += s:Tree_flatten(node)
+  endfor
   return headings
 endfunction
 call s:Tree.function('flatten')
@@ -161,11 +162,10 @@ function! s:Tree_get_root(headings)
   if empty(a:headings) | return s:Tree_new() | endif
   let heading = a:headings[0]
   while 1
-    if !has_key(heading, 'parent')
-      break
-    elseif has_key(heading.parent, '__root__')
+    if has_key(heading.parent, '__root__')
       return heading.parent
     endif
+    let heading = heading.parent
   endwhile
   let root = s:Tree.new()
   let top_headings = filter(copy(a:headings), 's:Tree_is_toplevel(v:val)')
@@ -178,14 +178,12 @@ call s:Tree.function('get_root')
 
 function! s:Tree_has_marked_child(heading)
   let result = 0
-  if has_key(a:heading, 'children')
-    for child in a:heading.children
-      if child.is_marked
-        let result = 1
-        break
-      endif
-    endfor
-  endif
+  for child in a:heading.children
+    if child.is_marked
+      let result = 1
+      break
+    endif
+  endfor
   return result
 endfunction
 call s:Tree.function('has_marked_child')
@@ -203,16 +201,14 @@ endfunction
 call s:Tree.function('remove')
 
 function! s:remove(heading, predicate)
-  if has_key(a:heading, 'children')
-    let children = copy(a:heading.children)
-    for child in children
-      if a:predicate.call(child)
-        call s:Tree_remove_child(a:heading, child)
-        continue
-      endif
-      call s:remove(child, a:predicate)
-    endfor
-  endif
+  let children = copy(a:heading.children)
+  for child in children
+    if a:predicate.call(child)
+      call s:Tree_remove_child(a:heading, child)
+      continue
+    endif
+    call s:remove(child, a:predicate)
+  endfor
 endfunction
 
 " vim: filetype=vim
