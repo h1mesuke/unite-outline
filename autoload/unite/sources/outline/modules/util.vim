@@ -314,8 +314,8 @@ endfunction
 call s:Util.function('print_debug')
 
 function! s:Util_print_progress(msg)
-  redraw
   echon a:msg
+  redraw
 endfunction
 call s:Util.function('print_progress')
 
