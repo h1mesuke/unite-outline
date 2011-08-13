@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/cpp.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-10
+" Updated : 2011-08-13
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -38,7 +38,7 @@ let s:outline_info = {
       \   { 'name'   : 'function',
       \     'pattern': '/\(operator\>.*\|\h\w*\)\ze\s*(/' },
       \   { 'name'   : 'macro',
-      \     'pattern': '/.*\ze : macro/' },
+      \     'pattern': '/\h\w*\ze\%( (.*)\)\= : macro/' },
       \ ],
       \}
 

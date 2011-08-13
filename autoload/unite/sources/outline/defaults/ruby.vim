@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/ruby.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-10
+" Updated : 2011-08-13
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -38,15 +38,15 @@ let s:outline_info = {
       \ 'highlight_rules': [
       \   { 'name'     : 'comment',
       \     'pattern'  : '/#.*/' },
-      \   { 'name'     : 'type',
-      \     'pattern'  : '/.*\ze : \%(module\|class\)/' },
-      \   { 'name'     : 'eigen_class',
-      \     'pattern'  : '/  \<class\s\+<<\s\+.*/',
-      \     'highlight': g:unite_source_outline_highlight.special },
       \   { 'name'     : 'method',
-      \     'pattern'  : '/:\@<! [_[:alnum:]=\[\]<>!?.]\+/' },
+      \     'pattern'  : '/:\@<! \zs[_[:alnum:]=\[\]<>!?.]\+/' },
+      \   { 'name'     : 'type',
+      \     'pattern'  : '/\S\+\ze : \%(module\|class\)/' },
+      \   { 'name'     : 'eigen_class',
+      \     'pattern'  : '/\<class\s\+<<\s\+.*/',
+      \     'highlight': g:unite_source_outline_highlight.special },
       \   { 'name'     : 'meta_method',
-      \     'pattern'  : '/  \<def\s\+[^(]*/',
+      \     'pattern'  : '/\<def\s\+[^(]*/',
       \     'highlight': g:unite_source_outline_highlight.special },
       \   { 'name'     : 'parameter_list',
       \     'pattern'  : '/(.*)/' },

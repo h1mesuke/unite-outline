@@ -290,7 +290,8 @@ call extend(g:unite_source_outline_highlight, {
       \ 'function': 'Function',
       \ 'macro'   : 'Macro',
       \ 'method'  : 'Function',
-      \ 'package' : 'Normal',
+      \ 'normal'  : g:unite_abbr_highlight,
+      \ 'package' : g:unite_abbr_highlight,
       \ 'special' : 'Macro',
       \ 'type'    : 'Type',
       \ 'level_1' : 'Type',
@@ -298,8 +299,8 @@ call extend(g:unite_source_outline_highlight, {
       \ 'level_3' : 'Identifier',
       \ 'level_4' : 'Constant',
       \ 'level_5' : 'Special',
-      \ 'level_6' : 'Normal',
-      \ 'parameter_list': 'Normal',
+      \ 'level_6' : g:unite_abbr_highlight,
+      \ 'parameter_list': g:unite_abbr_highlight,
       \ }, 'keep')
 
 "---------------------------------------

@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/tex.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-10
+" Updated : 2011-04-19
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for TeX
-" Version: 0.1.0
+" Version: 0.0.9
 
 function! unite#sources#outline#defaults#tex#outline_info()
   return s:outline_info
@@ -19,21 +19,6 @@ let s:Util = unite#sources#outline#import('Util')
 
 let s:outline_info = {
       \ 'heading': '^\\\%(title\|part\|chapter\|\%(sub\)\{,2}section\|begin{thebibliography}\){',
-      \
-      \ 'highlight_rules': [
-      \   { 'name'     : 'level_1',
-      \     'pattern'  : '/h1\. .*/' },
-      \   { 'name'     : 'level_2',
-      \     'pattern'  : '/h2\. .*/' },
-      \   { 'name'     : 'level_3',
-      \     'pattern'  : '/h3\. .*/' },
-      \   { 'name'     : 'level_4',
-      \     'pattern'  : '/h4\. .*/' },
-      \   { 'name'     : 'level_5',
-      \     'pattern'  : '/h5\. .*/' },
-      \   { 'name'     : 'level_6',
-      \     'pattern'  : '/h6\. .*/' },
-      \ ],
       \}
 
 let s:unit_level_map = {

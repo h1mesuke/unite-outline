@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/python.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-10
+" Updated : 2011-08-13
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -30,7 +30,7 @@ let s:outline_info = {
       \
       \ 'highlight_rules': [
       \   { 'name'   : 'type',
-      \     'pattern': '/.*\ze : class/' },
+      \     'pattern': '/\S\+\ze : class/' },
       \   { 'name'   : 'function',
       \     'pattern': '/\h\w*\ze\s*(/' },
       \   { 'name'   : 'parameter_list',
