@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-08-08
+Updated : 2011-08-14
 Version : 0.3.6
 License : MIT license {{{
 
@@ -31,13 +31,14 @@ License : MIT license {{{
 	使い方			|unite-outline-usage|
 	設定			|unite-outline-settings|
 	  変数			  |unite-outline-variables|
+	  キーマッピング	  |unite-outline-key-mappings|
 	  設定例		  |unite-outline-settings-examples|
 	Outline Info		|unite-outline-info|
 	  outline info の作成	  |unite-outline-info-create|
 	  outline info の属性	  |unite-outline-info-attributes|
+	  外部プログラム	  |unite-outline-info-external-programs|
 	関数			|unite-outline-functions|
 	  UTILITY FUNCTIONS	  |unite-outline-utility-functions|
-	外部プログラム		|unite-outline-external-programs|
 	ToDo			|unite-outline-todo|
 	既知の問題		|unite-outline-bugs|
 	更新履歴		|unite-outline-changelog|
@@ -75,6 +76,8 @@ License : MIT license {{{
 	|unite|の使い方については、unite.vim のヘルプを参照して下さい。ここで
 	は、unite.vim の source である unite-outline の使い方を説明します。
 
+見出し一覧を表示する ~
+
 	バッファの見出し一覧を表示するには、source として outline を指定し、
 	:Unite を実行します。
 >
@@ -88,6 +91,12 @@ License : MIT license {{{
 	抽出された見出しはキャッシュされ、２回目以降は見出し一覧の表示が高速に
 	なります。
 
+見出しを絞り込む ~
+
+	|unite-usage|を参照
+
+見出し一覧を更新する ~
+
 	キャッシュの内容を破棄し、見出しの抽出をやり直したい場合は、outline の
 	引数に "!" を指定して :Unite を実行します。
 >
@@ -96,6 +105,23 @@ License : MIT license {{{
 	もしくは、見出し一覧が表示されている状態（ノーマルモード）で
 	|<Plug>(unite_redraw)|（デフォルトのキーマッピングでは <C-l>）を実行し
 	ます。
+
+折り畳みから見出しを作成する ~
+
+	バッファに折り畳みが設定されていれば、それを元に見出しを作成することも
+	できます。
+>
+	:Unite outline:folding
+<
+	この方法は、バッファのファイルタイプに対応する outline info がない場合
+	でも使えます。（'foldmethod' によっては、折り畳みから有用な見出しが作
+	成できないことがあります）
+
+	ファイルタイプ固有の見出し抽出に戻す場合は
+>
+	:Unite outline:filetype
+<
+	とします。
 
 ==============================================================================
 設定						*unite-outline-settings*
@@ -175,26 +201,70 @@ g:unite_source_outline_highlight	*g:unite_source_outline_highlight*
 	      \ 'function': 'Function',
 	      \ 'macro'   : 'Macro',
 	      \ 'method'  : 'Function',
+	      \ 'normal'  : g:unite_abbr_highlight,
+	      \ 'package' : g:unite_abbr_highlight,
 	      \ 'special' : 'Macro',
 	      \ 'type'    : 'Type',
-	      \ 'parameter_list': 'Normal',
+	      \ 'level_1' : 'Type',
+	      \ 'level_2' : 'PreProc',
+	      \ 'level_3' : 'Identifier',
+	      \ 'level_4' : 'Constant',
+	      \ 'level_5' : 'Special',
+	      \ 'level_6' : g:unite_abbr_highlight,
+	      \ 'parameter_list': g:unite_abbr_highlight,
 	      \ }
 <
 	ハイライトを適用する部分を指定するためのパターンは、個々のファイルタイ
 	プに対応した outline info で定義します。
 
-	参照：|unite-outline-info-highlight_rules|
+	詳細は|unite-outline-info-highlight_rules|を参照
+
+------------------------------------------------------------------------------
+キーマッピング				*unite-outline-key-mappings*
+
+SELECTING A HEADING ~
+
+	これらのキーマッピングは、見出し一覧を表示している unite.vim のバッ
+	ファの buffer_name が "outline" で始まる場合のみ使用できます。
+
+	buffer_name の指定方法については|unite-options-buffer-name|を参照
+
+				*<Plug>(unite_source_outline_loop_cursor_down)*
+<Plug>(unite_source_outline_loop_cursor_down)
+
+	次の行に移動します。ただし、絞り込み後は、実際にマッチしていない見出し
+	（子孫見出しのどれかがマッチしたため絞り込みの結果に残ったが、自身は
+	マッチしていないもの）をスキップします。
+
+				*<Plug>(unite_source_outline_loop_cursor_up)*
+<Plug>(unite_source_outline_loop_cursor_up)
+
+	前の行に移動します。ただし、絞り込み後は、実際にマッチしていない見出し
+	（子孫見出しのどれかがマッチしたため絞り込みの結果に残ったが、自身は
+	マッチしていないもの）をスキップします。
 
 ------------------------------------------------------------------------------
 設定例					*unite-outline-settings-examples*
+
+	.vimrc ~
 >
 	nnoremap [unite] <Nop>
 	nmap f [unite]
 
 	nnoremap <silent> [unite]o :<C-u>Unite -buffer-name=outline outline<CR>
+	nnoremap <silent> [unite]z :<C-u>Unite -buffer-name=outline outline:folding<CR>
+	nnoremap <silent> [unite]Z :<C-u>Unite -buffer-name=outline outline:filetype<CR>
 
 	call unite#set_buffer_name_option('outline', 'ignorecase', 1)
 	call unite#set_buffer_name_option('outline', 'smartcase', 1)
+<
+
+	.vim/after/ftplugin/unite.vim ~
+>
+	if unite#get_context().buffer_name =~# '^outline'
+	  nmap <buffer> J <Plug>(unite_source_outline_loop_cursor_down)
+	  nmap <buffer> K <Plug>(unite_source_outline_loop_cursor_up)
+	endif
 <
 ==============================================================================
 Outline Info					*unite-outline-info*
@@ -286,12 +356,20 @@ heading-1		文字列（任意）		*unite-outline-info-heading-1*
 	こういうタイプの見出しにも対応できるよう、次の行が実質上の空行とみなせ
 	る場合は、もうひとつ次の行も見るにようになっています。
 
-
+	定義例： >
+	let s:outline_info = {
+	      \ 'heading-1': '^[-=]\{10,}\s*$',
+	      \ }
+<
 heading			文字列（任意） 		*unite-outline-info-heading*
 
 	「その行が」見出しであるような行にマッチするパターン
 
-
+	定義例（HTML用)： >
+	let s:outline_info = {
+	      \ 'heading': '<[hH][1-6][^>]*>',
+	      \ }
+<
 heading+1		文字列（任意）		*unite-outline-info-heading+1*
 
 	「前の行が」見出しであるような行にマッチするパターン
@@ -302,7 +380,12 @@ heading+1		文字列（任意）		*unite-outline-info-heading+1*
 <
 	のような、下線をともなうタイプの見出しを抽出できます。
 
-
+	定義例（Markdown用)： >
+	let s:outline_info = {
+	      \ 'heading'  : '^#\+',
+	      \ 'heading+1': '^[-=]\+$',
+	      \ }
+<
 create_heading		関数（任意） 	*unite-outline-info-create_heading()*
 
 	create_heading( {which}, {heading-line}, {matched-line}, {context})
@@ -380,7 +463,6 @@ create_heading		関数（任意） 	*unite-outline-info-create_heading()*
 	  return heading
 	endfunction
 <
-
 skip			辞書（任意）		*unite-outline-info-skip*
 
 	見出し抽出の対象としない領域を指定するための辞書です。
@@ -426,7 +508,6 @@ skip			辞書（任意）		*unite-outline-info-skip*
 		\   'block': ['^=begin', '^=end'],
 		\ },
 <
-
 EXTRACTING HEADINGS [2] ~
 
 extract_headings	関数（任意）	*unite-outline-info-extract_headings()*
@@ -517,7 +598,8 @@ need_blank_between	関数（任意）	*unite-outline-info-need_blank_between()*
 	need_blank_between( {heading-1}, {heading-2}, {memo})
 
 	設定されていると、見出し一覧の表示に先立って順次呼び出されます。
-	真を返すと {heading-1} と {heading-2} の間に空行が挿入されます。
+	真を返すと、兄弟関係にある見出し {heading-1} と {heading-2} の間に空行
+	が挿入されます。
 
 	この関数を定義することで、見出し一覧における空行の挿入を制御できます。
 	heading_groups属性の設定による空行の挿入結果が期待通りにならない場合、
@@ -529,19 +611,13 @@ need_blank_between	関数（任意）	*unite-outline-info-need_blank_between()*
 
 	定義例（Python用）： >
 	function! s:outline_info.need_blank_between(head1, head2, memo)
-	  if a:head1.level < a:head2.level
+	  if a:head1.group == 'function' && a:head2.group == 'function'
+	    " Don't insert a blank between two sibling functions.
 	    return 0
-	  elseif a:head1.level == a:head2.level
-	    if a:head1.group == 'function' && a:head2.group == 'function'
-	      " Don't insert a blank between two headings of functions.
-	      return 0
-	    else
-	      return (a:head1.group != a:head2.group ||
-		    \ s:Util.has_marked_child(a:head1, a:memo) ||
-		    \ s:Util.has_marked_child(a:head2, a:memo))
-	    endif
-	  else " if a:head1.level > a:head2.level
-	    return 1
+	  else
+	    return (a:head1.group != a:head2.group ||
+		  \ s:Util.has_marked_child(a:head1, a:memo) ||
+		  \ s:Util.has_marked_child(a:head2, a:memo))
 	  endif
 	endfunction
 <
@@ -571,13 +647,12 @@ highlight_rules		辞書（任意）	*unite-outline-info-highlight_rules*
 	      \   { 'name'     : 'comment',
 	      \     'pattern'  : '/".*/' },
 	      \   { 'name'     : 'augroup',
-	      \     'pattern'  : '/.*\ze: augroup/',
+	      \     'pattern'  : '/\S\+\ze : augroup/',
 	      \     'highlight': g:unite_source_outline_highlight.type },
 	      \   { 'name'     : 'function',
 	      \     'pattern'  : '/\S\+\ze\s*(/' },
 	      \   { 'name'     : 'parameter_list',
 	      \     'pattern'  : '/(.*)/' },
-	      \ ],
 	      \}
 <
 	highlight属性は省略でき、その場合は|g:unite_source_outline_highlight|
@@ -610,6 +685,20 @@ finalize		関数（任意） 		*unite-outline-info-finalize()*
 	始末の機会を与えます。
 
 	{context} については、|unite-outline-notation-{context}|を参照
+
+------------------------------------------------------------------------------
+外部プログラム				 *unite-outline-info-external-programs*
+
+同梱されている outline info のうち、一部のファイルタイプ用のものは、見出しの抽
+出に特定の外部プログラムを使用します。
+
+これらのファイルタイプでの見出し抽出を行うためには、指定された外部プログラムが
+実行可能である（PATH が通っており、|system()|から呼び出せる）必要があります。
+
+C, C++, Java, Python
+
+	* Exuberant Ctags（必須）
+	  http://ctags.sourceforge.net/
 
 ==============================================================================
 関数						*unite-outline-functions*
@@ -686,25 +775,21 @@ Util.neighbor_matchstr( {context}, {lnum}, {pattern} [, {range} [, {exclusive}]]
 	した部分文字列を返します。マッチしない場合は "" を返します。
 
 ==============================================================================
-外部プログラム				 *unite-outline-external-programs*
-
-同梱されている outline info のうち、一部のファイルタイプ用のものは、見出しの抽
-出に特定の外部プログラムを使用します。
-
-これらのファイルタイプでの見出し抽出を行うためには、指定された外部プログラムが
-実行可能である（PATH が通っており、|system()|から呼び出せる）必要があります。
-
-C, C++, Java, Python
-
-	* Exuberant Ctags（必須）
-	  http://ctags.sourceforge.net/
-
-==============================================================================
 TODO						*unite-outline-todo*
+
+	* 絞り込み時の hlsearch
+
+	* 見出し抽出の高速化
+
+		searchpos() とか使うとよさそう。
 
 	* JavaScript用 outline info の改善
 
 		jsctags を使えばよさげ。
+
+	* Ruby用 outline info の改善
+
+		rtags を使えばよさげ。
 
 	*　見出し一覧の自動更新
 
@@ -713,7 +798,8 @@ TODO						*unite-outline-todo*
 
 	* D, Erlang, Go, Haskell などの outline info
 
-		作者にとって未知の言語なため対応が遅れています。
+		話題の言語には一通り対応したいもの。
+		が、作者にとって未知の言語なため対応が遅れています。
 		なんとかしなければ。
 
 	* 対応ファイルタイプの充実
@@ -738,7 +824,7 @@ outline info 募集！
 	
 	* Send a pull request - GitHub
 	  https://github.com/h1mesuke/unite-outline/pull/new/master
-
+	
 ==============================================================================
 既知の問題					*unite-outline-bugs*
 
@@ -758,6 +844,13 @@ outline info 募集！
 更新履歴					*unite-outline-changelog*
 
 https://github.com/h1mesuke/unite-outline/commits/master
+
+0.3.7	2011-08-14
+
+	* 見出しが１つまで絞り込まれたら、その見出しのコピーを最上段に表示する
+	  機能を追加。見出し選択のためのカーソル移動を不要とした。
+
+	* 折り畳みの見出し抽出を実装	|unite-outline-usage|
 
 0.3.6	2011-08-08
 
