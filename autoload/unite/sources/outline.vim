@@ -634,7 +634,6 @@ function! s:extract_filetype_headings()
     let s:context.outline_info =
           \ unite#sources#outline#get_outline_info(buffer.filetype)
   endif
-
   let outline_info = s:context.outline_info
   if empty(outline_info)
     if empty(buffer.filetype)
@@ -646,6 +645,7 @@ function! s:extract_filetype_headings()
     return []
   endif
 
+  " Extract headings.
   if has_key(outline_info, 'initialize')
     call outline_info.initialize(s:context)
   endif
@@ -660,9 +660,7 @@ function! s:extract_filetype_headings()
     call outline_info.finalize(s:context)
   endif
 
-  let ignore_types = unite#sources#
-        \outline#get_ignore_heading_types(buffer.filetype)
-
+  " Normalize.
   if type(headings) == type({})
     let tree = headings | unlet headings
     let headings = s:Tree.flatten(tree)
@@ -675,6 +673,8 @@ function! s:extract_filetype_headings()
   endif
 
   " Filter headings.
+  let ignore_types = unite#sources#
+        \outline#get_ignore_heading_types(buffer.filetype)
   let headings = s:filter_headings(headings, ignore_types)
 
   return headings
@@ -940,23 +940,24 @@ function! s:filter_headings(headings, ignore_types)
   if empty(a:ignore_types) | return a:headings | endif
   let headings = a:headings
 
+  " Remove comment headings.
   if index(a:ignore_types, 'comment') >= 0
-    " Remove comment headings.
     call filter(headings, 'v:val.type !=# "comment"')
     let headings = s:Tree.flatten(s:Tree.build(headings))
   endif
 
   let ignore_types = map(copy(a:ignore_types), 'unite#util#escape_pattern(v:val)')
   let ignore_types_pattern = '^\%(' . join(ignore_types, '\|') . '\)$'
-
   " Use something like closure.
   let predicate = {}
   let predicate.ignore_types_pattern = ignore_types_pattern
   function predicate.call(heading)
     return (a:heading.type =~# self.ignore_types_pattern)
   endfunction
-  let headings = s:Tree.remove(headings, predicate)
-
+  " Remove headings to be ignored.
+  let tree = s:Tree.get_root(headings[0])
+  call s:Tree.remove(tree, predicate)
+  let headings = s:Tree.flatten(tree)
   return headings
 endfunction
 

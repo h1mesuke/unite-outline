@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_matcher_glob.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-11
+" Updated : 2011-08-13
 " Version : 0.3.6
 " License : MIT license {{{
 "
@@ -41,11 +41,13 @@ let s:matcher = {
 " unite/autoload/filters/matcher_glob.vim
 "
 function! s:matcher.filter(candidates, context)
-  let headings = map(copy(a:candidates), 'v:val.source__heading')
-  for heading in headings
+  " Initialize marks.
+  for cand in a:candidates
+    let heading = cand.source__heading
     let heading.is_marked  = 1
     let heading.is_matched = 0
   endfor
+
   if a:context.input == ''
     let g:unite_source_outline_input = ''
     return a:candidates
@@ -55,10 +57,8 @@ function! s:matcher.filter(candidates, context)
 
   for input in split(a:context.input, '\\\@<! ')
     let input = substitute(input, '\\ ', ' ', 'g')
-
     " Use something like closure.
     let predicate = {}
-
     if input =~ '^!'
       " Exclusion
       let predicate.input = unite#escape_match(input)
@@ -86,9 +86,12 @@ function! s:matcher.filter(candidates, context)
         endfunction
       endif
     endif
-    let headings = s:Tree.filter(headings, predicate)
+    " Mark headings.
+    let tree = s:Tree.get_root(a:candidates[0].source__heading)
+    call s:Tree.mark(tree, predicate)
   endfor
-  let candidates = map(headings, 'v:val.__unite_candidate__')
+  " Filter headings.
+  let candidates = filter(copy(a:candidates), 'v:val.source__heading.is_marked')
   return candidates
 endfunction
 
