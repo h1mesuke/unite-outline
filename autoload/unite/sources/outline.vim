@@ -406,8 +406,10 @@ function! s:Source_gather_candidates(args, context)
   " Save and set Vim options.
   let save_cpoptions  = &cpoptions
   let save_ignorecase = &ignorecase
+  let save_magic = &magic
   set cpoptions&vim
   set noignorecase
+  set magic
   try
     let opts = s:parse_options(a:args, a:context)
     call extend(s:context, opts)
@@ -447,6 +449,7 @@ function! s:Source_gather_candidates(args, context)
     " Restore Vim options.
     let &cpoptions  = save_cpoptions
     let &ignorecase = save_ignorecase
+    let &magic = save_magic
   endtry
 endfunction
 let s:source.gather_candidates = function(s:SID . 'Source_gather_candidates')
