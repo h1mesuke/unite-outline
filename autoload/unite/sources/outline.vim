@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-13
+" Updated : 2011-08-14
 " Version : 0.3.7
 " License : MIT license {{{
 "
@@ -234,7 +234,7 @@ endfunction
 
 let g:unite_source_outline_input = ''
 
-function! s:jump_to_match(...)
+function! s:jump_to_matched_candidate_line(...)
   if &l:filetype !=# 'unite' || unite#get_context().buffer_name !~# '^outline'
     call unite#print_error(
           \ "unite-outline: The key-mapping was used on the unexpected buffer.")
@@ -254,10 +254,10 @@ function! s:jump_to_match(...)
 endfunction
 
 nnoremap <silent> <Plug>(unite_source_outline_loop_cursor_down)
-      \ :<C-u>call <SID>jump_to_match()<CR>
+      \ :<C-u>call <SID>jump_to_matched_candidate_line()<CR>
 
 nnoremap <silent> <Plug>(unite_source_outline_loop_cursor_up)
-      \ :<C-u>call <SID>jump_to_match('b')<CR>
+      \ :<C-u>call <SID>jump_to_matched_candidate_line('b')<CR>
 
 "-----------------------------------------------------------------------------
 " Variables
