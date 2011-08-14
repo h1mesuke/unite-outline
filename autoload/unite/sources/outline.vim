@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-14
+" Updated : 2011-08-15
 " Version : 0.3.7
 " License : MIT license {{{
 "
@@ -372,7 +372,6 @@ function! s:Source_Hooks_on_init(args, context)
         \ 'buffer': buffer,
         \ 'outline_info': outline_info,
         \ }
-
   let a:context.source__outline_context = s:context
 endfunction
 let s:source.hooks.on_init = function(s:SID . 'Source_Hooks_on_init')
@@ -504,27 +503,36 @@ function! s:gather_headings()
     if winnr == -1
       throw "NoWindowError:"
     endif
+
     call s:Util.print_progress("Extracting headings...")
+
     " Save and set Vim options.
-    let save_winheight  = &winheight
-    let save_winwidth   = &winwidth
-    let save_lazyredraw = &lazyredraw
-    set lazyredraw
+    let save_eventignore = &eventignore
+    let save_winheight   = &winheight
+    let save_winwidth    = &winwidth
+    let save_lazyredraw  = &lazyredraw
+    set eventignore=all
     set winheight=1
     set winwidth=1
-    " current window -> context window
-    execute winnr . 'wincmd w'
     " NOTE: To keep the window size on :wincmd, set 'winheight' and 'winwidth'
     " to a small value.
+    set lazyredraw
+
+    " Switch: current window -> context window
+    execute winnr . 'wincmd w'
+
+    " Save the cursor and scroll.
+    let save_cursor  = getpos('.')
+    let save_topline = line('w0')
+
+    let lines = [""] + getbufline(s:context.buffer.nr, 1, '$')
+    let s:context.lines = lines | " available while the extraction
+    let s:context.heading_lnum = 0
+    let s:context.matched_lnum = 0
+
     let success = 0
+    let start_time = s:benchmark_start()
     try
-      let start_time = s:benchmark_start()
-
-      let lines = [""] + getbufline(s:context.buffer.nr, 1, '$')
-      let s:context.lines = lines
-      let s:context.heading_lnum = 0
-      let s:context.matched_lnum = 0
-
       if s:context.method !=# 'folding'
         " Path B_2_a: Extract headings in filetype-specific way using the
         " filetype's outline info.
@@ -537,7 +545,7 @@ function! s:gather_headings()
       endif
 
       " Cache the headings.
-      let num_lines = len(lines) - 1
+      let num_lines = len(s:context.lines) - 1 | " -1 for a dummy
       let is_volatile = get(s:context.outline_info, 'is_volatile', 0)
       if !is_volatile && num_lines > 100 && !empty(headings)
         let is_persistant = (num_lines > g:unite_source_outline_cache_limit)
@@ -545,26 +553,32 @@ function! s:gather_headings()
       elseif s:Cache.has(buffer)
         call s:Cache.remove(buffer)
       endif
-
-      " current window <- context window
-      wincmd p
-      let &lazyredraw = save_lazyredraw
       let success = 1
-      call s:Util.print_progress("Extracting headings...done.")
+    finally
+      " Restore the cursor and scroll.
+      let save_scrolloff = &scrolloff
+      set scrolloff=0
+      call cursor(save_topline, 1)
+      normal! zt
+      call setpos('.', save_cursor)
+      let &scrolloff = save_scrolloff
 
-      call s:benchmark_stop(start_time) | " use s:context.lines
+      " Siwtch: current window <- context window
+      wincmd p
+
+      " Restore Vim options.
+      let &lazyredraw = save_lazyredraw
+      if success
+        call s:Util.print_progress("Extracting headings...done.")
+        call s:benchmark_stop(start_time) | " use s:context.lines
+      endif
+      let &winheight   = save_winheight
+      let &winwidth    = save_winwidth
+      let &eventignore = save_eventignore
+
       unlet s:context.lines
       unlet s:context.heading_lnum
       unlet s:context.matched_lnum
-    finally
-      " Restore Vim options.
-      if !success
-        " current window <- context window
-        wincmd p
-        let &lazyredraw = save_lazyredraw
-      endif
-      let &winheight = save_winheight
-      let &winwidth  = save_winwidth
     endtry
   endif
   return headings
@@ -580,7 +594,7 @@ endfunction
 
 function! s:benchmark_stop(start_time)
   if get(g:, 'unite_source_outline_profile', 0) && has("reltime")
-    let num_lines = len(s:context.lines)
+    let num_lines = len(s:context.lines) - 1 | " -1 for a dummy
     let used_time = s:get_reltime() - a:start_time
     let used_time_100l = used_time * (str2float("100") / num_lines)
     call s:Util.print_progress("unite-outline: used=" . string(used_time) .
@@ -656,7 +670,7 @@ function! s:extract_filetype_headings()
     let headings = outline_info.extract_headings(s:context)
     let is_normalized = 0
   else
-    let headings = s:_builtin_extract_headings()
+    let headings = s:builtin_extract_headings()
     let is_normalized = 1
   endif
   if has_key(outline_info, 'finalize')
@@ -683,170 +697,211 @@ function! s:extract_filetype_headings()
   return headings
 endfunction
 
-function! s:_builtin_extract_headings()
-  let s:lnum = 1
-
-  call s:skip_header()
+function! s:builtin_extract_headings()
   let outline_info = s:context.outline_info
+  let [which, pattern] = s:build_heading_pattern()
 
-  " Eval once.
-  let skip_block = has_key(outline_info, 'skip') && has_key(outline_info.skip, 'block')
-  let has_heading_pattern      = has_key(outline_info, 'heading')
-  let has_heading_prev_pattern = has_key(outline_info, 'heading-1')
-  let has_heading_next_pattern = has_key(outline_info, 'heading+1')
-  let has_create_heading_func  = has_key(outline_info, 'create_heading')
-  "
-  " NOTE: outline info is allowed to update heading patterns dynamically on
-  " the runtime, so attribute values for them must not be assigned to local
-  " variables here.
+  let has_create_heading = has_key(outline_info, 'create_heading')
+  let num_lines = line('$')
 
+  let skip_ranges = s:get_skip_ranges()
+  call add(skip_ranges, [num_lines + 1, num_lines + 2]) | " sentinel
+  let srp = 0 | " skip range pointer
+
+  normal! G$
+  " NOTE: To make searchpos() match even at column 1 of line 1, move the
+  " cursor to the end of the buffer and give 'w' flag to wrap.
+
+  let prev_lnum = 1
   let headings = []
-  let lines = s:context.lines | let num_lines = len(lines)
-
-  while s:lnum < num_lines
-    let line = lines[s:lnum]
-
-    if skip_block && line =~# outline_info.skip.block.begin
-      " Skip a documentation block.
-      call s:skip_to(outline_info.skip.block.end)
-
-    elseif has_heading_prev_pattern && line =~# outline_info['heading-1'] && s:lnum < num_lines - 3
+  while 1
+    let found = 0
+    let [lnum, col, submatch] = searchpos(pattern, 'pw')
+    if lnum < prev_lnum
+      break
+    endif
+    while lnum > skip_ranges[srp][1]
+      let srp += 1
+    endwhile
+    if skip_ranges[srp][0] <= lnum
+      continue
+    endif
+    if which[submatch] ==# 'heading-1' && lnum < num_lines - 3
       " Matched: heading-1
-      let next_line = lines[s:lnum + 1]
+      let next_line = getline(lnum + 1)
       if next_line =~ '[[:punct:]]\@!\S'
-        let s:context.heading_lnum = s:lnum + 1
-        let s:context.matched_lnum = s:lnum
-        if has_create_heading_func
-          let heading = outline_info.create_heading('heading-1', next_line, line, s:context)
-        else
-          let heading = next_line
-        endif
-        if !empty(heading)
-          call add(headings, s:normalize_heading(heading))
-          let s:lnum += 1
-        endif
-      elseif next_line =~ '\S' && s:lnum < num_lines - 4
-        " See one more next
-        let next_line = lines[s:lnum + 2]
+        let s:context.heading_lnum = lnum + 1
+        let s:context.matched_lnum = lnum
+        let found = 1
+      elseif next_line =~ '\S' && lnum < num_lines - 4
+        " See one more next.
+        let next_line = getline(lnum + 2)
         if next_line =~ '[[:punct:]]\@!\S'
-          let s:context.heading_lnum = s:lnum + 2
-          let s:context.matched_lnum = s:lnum
-          if has_create_heading_func
-            let heading = outline_info.create_heading('heading-1', next_line, line, s:context)
-          else
-            let heading = next_line
-          endif
-          if !empty(heading)
-            call add(headings, s:normalize_heading(heading))
-            let s:lnum += 2
-          endif
+          let s:context.heading_lnum = lnum + 2
+          let s:context.matched_lnum = lnum
+          let found = 1
         endif
       endif
-
-    elseif has_heading_pattern && line =~# outline_info.heading
+    elseif which[submatch] ==# 'heading'
       " Matched: heading
-      let s:context.heading_lnum = s:lnum
-      let s:context.matched_lnum = s:lnum
-      if has_create_heading_func
-        let heading = outline_info.create_heading('heading', line, line, s:context)
+      let s:context.heading_lnum = lnum
+      let s:context.matched_lnum = lnum
+      let found = 1
+    elseif which[submatch] ==# 'heading+1' && lnum > 0
+      " Matched: heading+1
+      let s:context.heading_lnum = lnum - 1
+      let s:context.matched_lnum = lnum
+      let prev_line = getline(lnum - 1)
+      let found = (prev_line =~ '[[:punct:]]\@!\S')
+    endif
+    if found
+      let heading_line = getline(s:context.heading_lnum)
+      let matched_line = getline(s:context.matched_lnum)
+      if has_create_heading
+        let heading = outline_info.create_heading(
+              \ which[submatch], heading_line, matched_line, s:context)
       else
-        let heading = line
+        let heading = heading_line
       endif
       if !empty(heading)
         call add(headings, s:normalize_heading(heading))
       endif
-
-    elseif has_heading_next_pattern && line =~# outline_info['heading+1'] && s:lnum > 0
-      " Matched: heading+1
-      let prev_line = lines[s:lnum - 1]
-      if prev_line =~ '[[:punct:]]\@!\S'
-        let s:context.heading_lnum = s:lnum - 1
-        let s:context.matched_lnum = s:lnum
-        if has_create_heading_func
-          let heading = outline_info.create_heading('heading+1', prev_line, line, s:context)
-        else
-          let heading = prev_line
-        endif
-        if !empty(heading)
-          call add(headings, s:normalize_heading(heading))
-        endif
+      if len(headings) >= g:unite_source_outline_max_headings
+        call unite#print_message(
+              \ "[unite-outline] Too many headings, the extraction was interrupted.")
+        break
       endif
     endif
-
-    let s:lnum += 1
+    let prev_lnum = lnum
   endwhile
-
   return headings
 endfunction
 
-function! s:skip_header()
+function! s:build_heading_pattern()
   let outline_info = s:context.outline_info
-  let lines = s:context.lines | let num_lines = len(lines)
+  let which = ['dummy', 'dummy']
+  " NOTE: searchpos() returns submatch counted from 2.
+  let sub_patterns = []
+  if has_key(outline_info, 'heading-1')
+    call add(which, 'heading-1')
+    call add(sub_patterns, outline_info['heading-1'])
+  endif
+  if has_key(outline_info, 'heading')
+    call add(which, 'heading')
+    call add(sub_patterns, outline_info.heading)
+  endif
+  if has_key(outline_info, 'heading+1')
+    call add(which, 'heading+1')
+    call add(sub_patterns, outline_info['heading+1'])
+  endif
+  call map(sub_patterns, 's:_substitue_sub_pattern(v:val)')
+  let pattern = '\%(' . join(sub_patterns, '\|') . '\)'
+  return [which, pattern]
+endfunction
+function! s:_substitue_sub_pattern(pattern)
+  " Substitute all '\(' with '\%('
+  return '\(' . substitute(a:pattern, '\(\(^\|[^\\]\)\(\\\{2}\)*\)\@<=\\(', '\\%(', 'g') . '\)'
+endfunction
 
-  if has_key(outline_info, 'skip') && has_key(outline_info.skip, 'header')
-    " Eval once.
-    let skip_header_leading = has_key(outline_info.skip.header, 'leading')
-    let skip_header_block   = has_key(outline_info.skip.header, 'block')
-
-    while s:lnum < num_lines
-      let line = lines[s:lnum]
-      if skip_header_leading && line =~# outline_info.skip.header.leading
-        call s:skip_while(outline_info.skip.header.leading)
-      elseif skip_header_block && line =~# outline_info.skip.header.block.begin
-        call s:skip_to(outline_info.skip.header.block.end)
-      else
-        break
-      endif
+function! s:get_skip_ranges()
+  let outline_info = s:context.outline_info
+  if !has_key(outline_info, 'skip') | return [] | endif
+  let ranges = []
+  let num_lines = line('$')
+  if has_key(outline_info.skip, 'header')
+    let header_range = s:get_header_range()
+    if !empty(header_range)
+      call add(ranges, header_range)
+    endif
+  endif
+  if has_key(outline_info.skip, 'block')
+    let block = outline_info.skip.block
+    normal! gg0
+    while 1
+      let beg_lnum= search(block.begin, 'ceW')
+      if beg_lnum == 0 | break | endif
+      let end_lnum= search(block.end, 'ceW')
+      if end_lnum == 0 | break | endif
+      call add(ranges, [beg_lnum, end_lnum])
     endwhile
+  endif
+  return ranges
+endfunction
+
+function! s:get_header_range()
+  let outline_info = s:context.outline_info
+  let header = outline_info.skip.header
+  let has_leading = has_key(header, 'leading')
+  let has_block   = has_key(header, 'block')
+
+  let lnum = 1 | let num_lines = line('$')
+  while lnum < num_lines
+    let line = getline(lnum)
+    if has_leading && line =~# header.leading
+      let lnum = s:skip_while(header.leading, lnum)
+    elseif has_block && line =~# header.block.begin
+      let lnum = s:skip_until(header.block.end, lnum)
+    else
+      break
+    endif
+  endwhile
+  let lnum -= 1
+  if lnum > 1
+    return [1, lnum]
+  else
+    return []
   endif
 endfunction
 
-function! s:skip_while(pattern)
-  let lines = s:context.lines | let num_lines = len(lines)
-  let s:lnum += 1
-  while s:lnum < num_lines
-    let line = lines[s:lnum]
+function! s:skip_while(pattern, from)
+  let lnum = a:from + 1 | let num_lines = line('$')
+  while lnum <= num_lines
+    let line = getline(lnum)
     if line !~# a:pattern
       break
     endif
-    let s:lnum += 1
+    let lnum += 1
   endwhile
+  return lnum
 endfunction
 
-function! s:skip_to(pattern)
-  let lines = s:context.lines | let num_lines = len(lines)
-  let s:lnum += 1
-  while s:lnum < num_lines
-    let line = lines[s:lnum]
+function! s:skip_until(pattern, from)
+  let lnum = a:from + 1 | let num_lines = line('$')
+  while lnum <= num_lines
+    let line = getline(lnum)
+    let lnum += 1
     if line =~# a:pattern
       break
     endif
-    let s:lnum += 1
   endwhile
+  return lnum
 endfunction
 
 function! s:extract_folding_headings()
   let headings = []
-  let lines = s:context.lines | let num_lines = len(lines)
-
-  let current_level = 0
-  let lnum = 1
+  let curr_level = 0
+  let lnum = 1 | let num_lines = line('$')
   while lnum < num_lines
     let foldlevel = foldlevel(lnum)
-    if foldlevel > current_level
+    if foldlevel > curr_level
       let heading_lnum = lnum
       if &l:foldmethod ==# 'indent'
         let heading_lnum -=1
       endif
       let heading = {
-            \ 'word' : lines[heading_lnum],
+            \ 'word' : getline(heading_lnum),
             \ 'level': foldlevel,
             \ 'type' : 'folding',
             \ 'lnum' : heading_lnum,
             \ }
       call add(headings, heading)
+      if len(headings) >= g:unite_source_outline_max_headings
+        call unite#print_message(
+              \ "[unite-outline] Too many headings, the extraction was interrupted.")
+        break
+      endif
     endif
-    let current_level = foldlevel
+    let curr_level = foldlevel
     let lnum += 1
   endwhile
   call map(headings, 's:normalize_heading(v:val)')
