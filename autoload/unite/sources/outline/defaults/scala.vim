@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/scala.vim
 " Author  : thinca <thinca+vim@gmail.com>
-" Updated : 2011-08-08
+" Updated : 2011-08-15
 "
 " License : Creative Commons Attribution 2.1 Japan License
 "           <http://creativecommons.org/licenses/by/2.1/jp/deed.en>
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for Scala
-" Version: 0.1.2
+" Version: 0.1.3
 
 function! unite#sources#outline#defaults#scala#outline_info()
   return s:outline_info
@@ -17,7 +17,7 @@ endfunction
 
 let s:Util = unite#sources#outline#import('Util')
 
-let s:header_pattern = '\v^\s*%(\w+\s+)*\zs<%(class|object|trait|def)>'
+let s:header_pattern = '^\s*\%(\h\w*\s\+\)*\zs\<\%(class\|object\|trait\|def\)\>'
 let s:outline_info = {
       \  'heading-1': s:Util.shared_pattern('cpp', 'heading-1'),
       \  'heading'  : s:header_pattern,
