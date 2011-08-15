@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/rst.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-05-17
+" Updated : 2011-08-15
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,14 +9,14 @@
 "=============================================================================
 
 " Default outline info for reStructuredText
-" Version: 0.0.2
+" Version: 0.0.3
 
 function! unite#sources#outline#defaults#rst#outline_info()
   return s:outline_info
 endfunction
 
 let s:outline_info = {
-      \ 'heading+1': '^\([[:punct:]]\)\1\{3,}$',
+      \ 'heading+1': '^[[:punct:]]\{4,}$',
       \ }
 
 function! s:outline_info.initialize(context)
@@ -34,17 +34,20 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   let lines = a:context.lines
   let h_lnum = a:context.heading_lnum
 
-  if h_lnum > 1 && lines[h_lnum - 1] == a:matched_line
-    " Title
-    let heading.level = 1
-  else
-    " Sections
-    let adchar = a:matched_line[0]
-    if !has_key(s:adornment_levels, adchar)
-      let s:adornment_levels[adchar] = s:adornment_id
-      let s:adornment_id += 1
+  " Check the matching strictly.
+  if a:matched_line =~ '^\([[:punct:]]\)\1\{3,}$'
+    if h_lnum > 1 && lines[h_lnum - 1] == a:matched_line
+      " Title
+      let heading.level = 1
+    else
+      " Sections
+      let adchar = a:matched_line[0]
+      if !has_key(s:adornment_levels, adchar)
+        let s:adornment_levels[adchar] = s:adornment_id
+        let s:adornment_id += 1
+      endif
+      let heading.level = s:adornment_levels[adchar]
     endif
-    let heading.level = s:adornment_levels[adchar]
   endif
 
   if heading.level > 0
