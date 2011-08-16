@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-08-14
+Updated : 2011-08-16
 Version : 0.3.7
 License : MIT license {{{
 
@@ -31,7 +31,6 @@ License : MIT license {{{
 	使い方			|unite-outline-usage|
 	設定			|unite-outline-settings|
 	  変数			  |unite-outline-variables|
-	  キーマッピング	  |unite-outline-key-mappings|
 	  設定例		  |unite-outline-settings-examples|
 	Outline Info		|unite-outline-info|
 	  outline info の作成	  |unite-outline-info-create|
@@ -215,38 +214,12 @@ g:unite_source_outline_highlight	*g:unite_source_outline_highlight*
 	      \ }
 <
 	ハイライトを適用する部分を指定するためのパターンは、個々のファイルタイ
-	プに対応した outline info で定義します。
+	プ用の outline info で定義します。
 
 	詳細は|unite-outline-info-highlight_rules|を参照
 
 ------------------------------------------------------------------------------
-キーマッピング				*unite-outline-key-mappings*
-
-SELECTING A HEADING ~
-
-	これらのキーマッピングは、見出し一覧を表示している unite.vim のバッ
-	ファの buffer_name が "outline" で始まる場合のみ使用できます。
-
-	buffer_name の指定方法については|unite-options-buffer-name|を参照
-
-				*<Plug>(unite_source_outline_loop_cursor_down)*
-<Plug>(unite_source_outline_loop_cursor_down)
-
-	次の行に移動します。ただし、絞り込み後は、実際にマッチしていない見出し
-	（子孫見出しのどれかがマッチしたため絞り込みの結果に残ったが、自身は
-	マッチしていないもの）をスキップします。
-
-				*<Plug>(unite_source_outline_loop_cursor_up)*
-<Plug>(unite_source_outline_loop_cursor_up)
-
-	前の行に移動します。ただし、絞り込み後は、実際にマッチしていない見出し
-	（子孫見出しのどれかがマッチしたため絞り込みの結果に残ったが、自身は
-	マッチしていないもの）をスキップします。
-
-------------------------------------------------------------------------------
 設定例					*unite-outline-settings-examples*
-
-	.vimrc ~
 >
 	nnoremap [unite] <Nop>
 	nmap f [unite]
@@ -259,13 +232,6 @@ SELECTING A HEADING ~
 	call unite#set_buffer_name_option('outline', 'smartcase', 1)
 <
 
-	.vim/after/ftplugin/unite.vim ~
->
-	if unite#get_context().buffer_name =~# '^outline'
-	  nmap <buffer> J <Plug>(unite_source_outline_loop_cursor_down)
-	  nmap <buffer> K <Plug>(unite_source_outline_loop_cursor_up)
-	endif
-<
 ==============================================================================
 Outline Info					*unite-outline-info*
 
@@ -370,6 +336,22 @@ heading			文字列（任意） 		*unite-outline-info-heading*
 	      \ 'heading': '<[hH][1-6][^>]*>',
 	      \ }
 <
+				*unite-outline-info-heading-pattern-constraints*
+	重要：使用できるパターンの制約~
+
+	heading-1, heaging, heading+1 のパターンとして使用できる正規表現には
+	以下の制約があります。
+
+	1. 'magic'オプションがオンである場合の書法を用いること	|/magic|
+	2. 後方参照（\1..\9）を使用しないこと			|/\1|
+
+	これらは、見出し抽出時のパターンマッチングの速度を最大限に上げるために
+	もうけられている制約です。見出しの抽出に後方参照が必要な場合は、
+	heading では後方参照を使わない緩いマッチングを行い、その後の
+	create_heading()関数にて後方参照を用いた厳密なマッチングを行うといった
+	方法で対処して下さい。
+
+
 heading+1		文字列（任意）		*unite-outline-info-heading+1*
 
 	「前の行が」見出しであるような行にマッチするパターン
@@ -779,10 +761,6 @@ TODO						*unite-outline-todo*
 
 	* 絞り込み時の hlsearch
 
-	* 見出し抽出の高速化
-
-		searchpos() とか使うとよさそう。
-
 	* JavaScript用 outline info の改善
 
 		jsctags を使えばよさげ。
@@ -835,7 +813,7 @@ outline info 募集！
 	絞り込みを行います。（小見出しがマッチした見出しも残すなど）
 
 	現在、一部のファイルタイプ（Ruby など）では、ソースコードのインデント
-	の深さから見出しレベルを決定してします。この場合、作成される見出しのツ
+	の深さから見出しレベルを決定しています。この場合、作成される見出しのツ
 	リーが、必ずしも論理的に正しい親子関係を反映しないことがあります。結
 	果、絞り込みの結果に、実際には親子関係にないはずの見出しが残ることがあ
 	ります。
@@ -845,10 +823,21 @@ outline info 募集！
 
 https://github.com/h1mesuke/unite-outline/commits/master
 
+0.5.0	2011-08-xx
+
+	* 見出しの抽出を高速化
+	  これにともない、outline info の heading-1, heading, heading+1 に使用
+	  できる正規表現にいくつかの制約を導入
+				|unite-outline-info-heading-pattern-constraints|
+
+	* 以下のキーマッピングを deprecated とした
+	  -<Plug>(unite_outline_loop_cursor_down)
+	  -<Plug>(unite_outline_loop_cursor_up)
+
 0.3.7	2011-08-14
 
-	* 見出しが１つまで絞り込まれたら、その見出しのコピーを最上段に表示する
-	  機能を追加。見出し選択のためのカーソル移動を不要とした。
+	* 見出しが１つまで絞り込まれたら、絞り込み結果の最上段にその見出しを複
+	  製する機能を追加。見出し選択のためのカーソル移動を不要とした。
 
 	* 折り畳みの見出し抽出を実装	|unite-outline-usage|
 
