@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-15
+" Updated : 2011-08-16
 " Version : 0.3.7
 " License : MIT license {{{
 "
@@ -232,32 +232,9 @@ endfunction
 "-----------------------------------------------------------------------------
 " Key-mappings
 
-let g:unite_source_outline_input = ''
-
-function! s:jump_to_matched_candidate_line(...)
-  if &l:filetype !=# 'unite' || unite#get_context().buffer_name !~# '^outline'
-    call unite#print_error(
-          \ "unite-outline: The key-mapping was used on the unexpected buffer.")
-    return
-  endif
-  let flags = (a:0 ? a:1 : '')
-  let forward = (flags !~# 'b')
-  if empty(g:unite_source_outline_input)
-    execute 'normal' "\<Plug>(unite_loop_cursor_" . (forward ? 'down' : 'up') . ')'
-  else
-    for i in range(3)
-      execute 'normal!' (forward ? '$' : '0')
-      call search('\c' . g:unite_source_outline_input, 'w' . flags)
-      if winline() > 2 | break | endif
-    endfor
-  endif
-endfunction
-
-nnoremap <silent> <Plug>(unite_source_outline_loop_cursor_down)
-      \ :<C-u>call <SID>jump_to_matched_candidate_line()<CR>
-
-nnoremap <silent> <Plug>(unite_source_outline_loop_cursor_up)
-      \ :<C-u>call <SID>jump_to_matched_candidate_line('b')<CR>
+" For backward compatibility.
+nmap <Plug>(unite_source_outline_loop_cursor_down) <Plug>(unite_skip_cursor_down)
+nmap <Plug>(unite_source_outline_loop_cursor_up) <Plug>(unite_skip_cursor_up)
 
 "-----------------------------------------------------------------------------
 " Variables
