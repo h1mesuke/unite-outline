@@ -62,9 +62,11 @@ function! s:Tree_append_child(node, child)
   endif
   call add(a:node.children, a:child)
   let a:child.parent = a:node
-  " Ensure that all headings has 'children'.
+  " Ensure that all nodes have 'children'.
   if !has_key(a:child, 'children')
     let a:child.children = []
+    " NOTE: While building a tree, all nodes of the tree pass throuth this
+    " function as a:child.
   endif
 endfunction
 call s:Tree.function('append_child')
@@ -84,26 +86,21 @@ function! s:Tree_is_leaf(node)
 endfunction
 call s:Tree.function('is_leaf')
 
-" Builds the tree structure from a list of headings and then returns the root
-" node of the tree.
+" Builds a tree structure from a List of elements, which are Dictionaries with
+" `level' attribute, and then returns the root node of the built tree.
 "
-function! s:Tree_build(headings, ...)
+function! s:Tree_build(elems)
   let root = s:Tree_new()
-  if empty(a:headings) | return root | endif
-
-  " Ensure that all headings has 'children'.
-  for heading in a:headings
-    let heading.children = []
-  endfor
-
-  let context = [root] | " stack
-  let prev_heading =  a:headings[0]
-  for heading in a:headings
-    while context[-1].level >= heading.level
-      call remove(context, -1)
+  if empty(a:elems) | return root | endif
+  " Build a tree.
+  let stack = [root]
+  let prev_elem =  a:elems[0]
+  for elem in a:elems
+    while stack[-1].level >= elem.level
+      call remove(stack, -1)
     endwhile
-    call s:Tree_append_child(context[-1], heading)
-    call add(context, heading)
+    call s:Tree_append_child(stack[-1], elem)
+    call add(stack, elem)
   endfor
   return root
 endfunction
@@ -111,7 +108,7 @@ call s:Tree.function('build')
 
 " Flatten a tree into a List.
 "
-" NOTE: This function resets heading levels in accordance with the given
+" NOTE: This function resets the level of nodes in accordance with the given
 " tree's structure while flattening it.
 "
 "   1               1
@@ -120,13 +117,13 @@ call s:Tree.function('build')
 "   |  +--4         |  +--3 
 "
 function! s:Tree_flatten(node)
-  let headings = []
+  let nodes = []
   for child in a:node.children
     let child.level = a:node.level + 1
-    call add(headings, child)
-    let headings += s:Tree_flatten(child)
+    call add(nodes, child)
+    let nodes += s:Tree_flatten(child)
   endfor
-  return headings
+  return nodes
 endfunction
 call s:Tree.function('flatten')
 
