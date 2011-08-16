@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-13
+" Updated : 2011-08-16
 " Version : 0.3.7
 " License : MIT license {{{
 "
@@ -141,7 +141,7 @@ function! s:Tree_mark(node, predicate)
     if !child.is_marked
       continue
     endif
-    let child.is_matched = a:predicate.call(child)
+    let child.is_matched = child.is_matched && a:predicate.call(child)
     let child.is_marked = (s:Tree_mark(child, a:predicate) || child.is_matched)
     if child.is_marked
       let child_marked = 1

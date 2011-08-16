@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_matcher_glob.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-13
+" Updated : 2011-08-16
 " Version : 0.3.7
 " License : MIT license {{{
 "
@@ -45,7 +45,7 @@ function! s:matcher.filter(candidates, context)
   for cand in a:candidates
     let heading = cand.source__heading
     let heading.is_marked  = 1
-    let heading.is_matched = 0
+    let heading.is_matched = 1
   endfor
 
   if a:context.input == ''
