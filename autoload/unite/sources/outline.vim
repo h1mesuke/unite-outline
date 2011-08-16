@@ -685,71 +685,69 @@ function! s:builtin_extract_headings()
   call add(skip_ranges, [num_lines + 1, num_lines + 2]) | " sentinel
   let srp = 0 | " skip range pointer
 
-  normal! G$
-  " NOTE: To make searchpos() match even at column 1 of line 1, move the
-  " cursor to the end of the buffer and give 'w' flag to wrap.
-
-  let prev_lnum = 1
   let headings = []
+  call cursor(1, 1)
   while 1
     let found = 0
-    let [lnum, col, submatch] = searchpos(pattern, 'pw')
-    if lnum < prev_lnum
+    let [lnum, col, submatch] = searchpos(pattern, 'cpW')
+    if lnum == 0
       break
     endif
     while lnum > skip_ranges[srp][1]
       let srp += 1
     endwhile
-    if skip_ranges[srp][0] <= lnum
-      continue
-    endif
-    if which[submatch] ==# 'heading-1' && lnum < num_lines - 3
-      " Matched: heading-1
-      let next_line = getline(lnum + 1)
-      if next_line =~ '[[:punct:]]\@!\S'
-        let s:context.heading_lnum = lnum + 1
-        let s:context.matched_lnum = lnum
-        let found = 1
-      elseif next_line =~ '\S' && lnum < num_lines - 4
-        " See one more next.
-        let next_line = getline(lnum + 2)
+    if lnum < skip_ranges[srp][0]
+      if which[submatch] ==# 'heading-1' && lnum < num_lines - 3
+        " Matched: heading-1
+        let next_line = getline(lnum + 1)
         if next_line =~ '[[:punct:]]\@!\S'
-          let s:context.heading_lnum = lnum + 2
+          let s:context.heading_lnum = lnum + 1
           let s:context.matched_lnum = lnum
           let found = 1
+        elseif next_line =~ '\S' && lnum < num_lines - 4
+          " See one more next.
+          let next_line = getline(lnum + 2)
+          if next_line =~ '[[:punct:]]\@!\S'
+            let s:context.heading_lnum = lnum + 2
+            let s:context.matched_lnum = lnum
+            let found = 1
+          endif
+        endif
+      elseif which[submatch] ==# 'heading'
+        " Matched: heading
+        let s:context.heading_lnum = lnum
+        let s:context.matched_lnum = lnum
+        let found = 1
+      elseif which[submatch] ==# 'heading+1' && lnum > 0
+        " Matched: heading+1
+        let s:context.heading_lnum = lnum - 1
+        let s:context.matched_lnum = lnum
+        let prev_line = getline(lnum - 1)
+        let found = (prev_line =~ '[[:punct:]]\@!\S')
+      endif
+      if found
+        let heading_line = getline(s:context.heading_lnum)
+        let matched_line = getline(s:context.matched_lnum)
+        if has_create_heading
+          let heading = outline_info.create_heading(
+                \ which[submatch], heading_line, matched_line, s:context)
+        else
+          let heading = heading_line
+        endif
+        if !empty(heading)
+          call add(headings, s:normalize_heading(heading))
+        endif
+        if len(headings) >= g:unite_source_outline_max_headings
+          call unite#print_message(
+                \ "[unite-outline] Too many headings, the extraction was interrupted.")
+          break
         endif
       endif
-    elseif which[submatch] ==# 'heading'
-      " Matched: heading
-      let s:context.heading_lnum = lnum
-      let s:context.matched_lnum = lnum
-      let found = 1
-    elseif which[submatch] ==# 'heading+1' && lnum > 0
-      " Matched: heading+1
-      let s:context.heading_lnum = lnum - 1
-      let s:context.matched_lnum = lnum
-      let prev_line = getline(lnum - 1)
-      let found = (prev_line =~ '[[:punct:]]\@!\S')
     endif
-    if found
-      let heading_line = getline(s:context.heading_lnum)
-      let matched_line = getline(s:context.matched_lnum)
-      if has_create_heading
-        let heading = outline_info.create_heading(
-              \ which[submatch], heading_line, matched_line, s:context)
-      else
-        let heading = heading_line
-      endif
-      if !empty(heading)
-        call add(headings, s:normalize_heading(heading))
-      endif
-      if len(headings) >= g:unite_source_outline_max_headings
-        call unite#print_message(
-              \ "[unite-outline] Too many headings, the extraction was interrupted.")
-        break
-      endif
+    if lnum == num_lines
+      break
     endif
-    let prev_lnum = lnum
+    call cursor(lnum + 1, 1)
   endwhile
   return headings
 endfunction
@@ -784,7 +782,6 @@ function! s:get_skip_ranges()
   let outline_info = s:context.outline_info
   if !has_key(outline_info, 'skip') | return [] | endif
   let ranges = []
-  let num_lines = line('$')
   if has_key(outline_info.skip, 'header')
     let header_range = s:get_header_range()
     if !empty(header_range)
@@ -793,13 +790,25 @@ function! s:get_skip_ranges()
   endif
   if has_key(outline_info.skip, 'block')
     let block = outline_info.skip.block
-    normal! gg0
+    let num_lines = line('$')
+    call cursor(1, 1)
     while 1
-      let beg_lnum= search(block.begin, 'ceW')
-      if beg_lnum == 0 | break | endif
-      let end_lnum= search(block.end, 'ceW')
-      if end_lnum == 0 | break | endif
+      let beg_lnum= search(block.begin, 'cW')
+      if beg_lnum == 0 || beg_lnum == num_lines
+        break
+      else
+        call cursor(beg_lnum + 1, 1)
+      endif
+      let end_lnum= search(block.end, 'cW')
+      if end_lnum == 0
+        break
+      endif
       call add(ranges, [beg_lnum, end_lnum])
+      if end_lnum == num_lines
+        break
+      else
+        call cursor(end_lnum + 1, 1)
+      endif
     endwhile
   endif
   return ranges
