@@ -232,7 +232,7 @@ endfunction
 "-----------------------------------------------------------------------------
 " Key-mappings
 
-" For backward compatibility.
+" DEPRECATED:
 nmap <Plug>(unite_source_outline_loop_cursor_down) <Plug>(unite_skip_cursor_down)
 nmap <Plug>(unite_source_outline_loop_cursor_up) <Plug>(unite_skip_cursor_up)
 
@@ -752,6 +752,14 @@ function! s:builtin_extract_headings()
   return headings
 endfunction
 
+" Merge heading-1, heading, heading+1 patterns into one heading pattern for
+" use of searchpos().
+"
+" Example of the return value:
+"
+"   [ ['dummy', 'dummy', 'heading-1', 'heading', 'heading+1'],
+"     '\%(\(heading-1\)\|\(heading\)\|\(heading+1\)\)' ]
+"
 function! s:build_heading_pattern()
   let outline_info = s:context.outline_info
   let which = ['dummy', 'dummy']
@@ -778,6 +786,8 @@ function! s:_substitue_sub_pattern(pattern)
   return '\(' . substitute(a:pattern, '\(\(^\|[^\\]\)\(\\\{2}\)*\)\@<=\\(', '\\%(', 'g') . '\)'
 endfunction
 
+" Returns a List of ranges to be skipped while the extraction.
+"
 function! s:get_skip_ranges()
   let outline_info = s:context.outline_info
   if !has_key(outline_info, 'skip') | return [] | endif
