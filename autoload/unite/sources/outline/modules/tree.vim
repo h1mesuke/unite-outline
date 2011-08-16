@@ -130,26 +130,41 @@ function! s:Tree_flatten(node)
 endfunction
 call s:Tree.function('flatten')
 
-" Marks nodes using {predicate}.
+" Marks nodes for which or one of whose children {predicate} returns True.
 "
-" A node is marked when it has any marked child or for which {predicate}
-" returns True.
+" * A node is matched for which {predicate} returns True.
+" * A node is marked when it has any marked child or is matched.
 "
-function! s:Tree_mark(node, predicate)
+" NOTE: unite-outline's matcher see these flags to accomplish its tree-aware
+" filtering task.
+"
+function! s:Tree_match(node, predicate, ...)
+  let and = (a:0 ? a:1 : 0)
+  if !and
+    call s:init_marks(a:node)
+  endif
   let child_marked = 0
   for child in a:node.children
     if !child.is_marked
       continue
     endif
     let child.is_matched = child.is_matched && a:predicate.call(child)
-    let child.is_marked = (s:Tree_mark(child, a:predicate) || child.is_matched)
+    let child.is_marked = (s:Tree_match(child, a:predicate, 1) || child.is_matched)
     if child.is_marked
       let child_marked = 1
     endif
   endfor
   return child_marked
 endfunction
-call s:Tree.function('mark')
+call s:Tree.function('match')
+
+function! s:init_marks(node)
+  for child in a:node.children
+    let child.is_marked  = 1
+    let child.is_matched = 1
+    call s:init_marks(child)
+  endfor
+endfunction
 
 function! s:Tree_has_marked_child(node)
   for child in a:node.children

@@ -41,20 +41,12 @@ let s:matcher = {
 " unite/autoload/filters/matcher_glob.vim
 "
 function! s:matcher.filter(candidates, context)
-  " Initialize marks.
-  for cand in a:candidates
-    let heading = cand.source__heading
-    let heading.is_marked  = 1
-    let heading.is_matched = 1
-  endfor
-
-  if a:context.input == ''
-    let g:unite_source_outline_input = ''
-    return a:candidates
-  elseif empty(a:candidates)
+  if a:context.input == '' || empty(a:candidates)
     return a:candidates
   endif
 
+  let tree = s:Tree.get_root(a:candidates[0].source__heading)
+  let and = 0
   for input in split(a:context.input, '\\\@<! ')
     let input = substitute(input, '\\ ', ' ', 'g')
     " Use something like closure.
@@ -69,13 +61,11 @@ function! s:matcher.filter(candidates, context)
     elseif input =~ '\\\@<!\*'
       " Wildcard
       let predicate.input = unite#escape_match(input)
-      let g:unite_source_outline_input = predicate.input
       function predicate.call(heading)
         return (a:heading.keyword =~ self.input)
       endfunction
     else
       let predicate.input = substitute(input, '\\\(.\)', '\1', 'g')
-      let g:unite_source_outline_input = predicate.input
       if &ignorecase
         function predicate.call(heading)
           return (stridx(tolower(a:heading.keyword), self.input) != -1)
@@ -87,11 +77,14 @@ function! s:matcher.filter(candidates, context)
       endif
     endif
     " Mark headings.
-    let tree = s:Tree.get_root(a:candidates[0].source__heading)
-    call s:Tree.mark(tree, predicate)
+    call s:Tree.match(tree, predicate, and)
+    let and = 1
   endfor
   " Filter headings.
   let candidates = filter(copy(a:candidates), 'v:val.source__heading.is_marked')
+  for cand in candidates
+    let cand.is_matched = cand.source__heading.is_matched
+  endfor
   return candidates
 endfunction
 
