@@ -89,6 +89,18 @@ call s:Tree.function('is_leaf')
 " Builds a tree structure from a List of elements, which are Dictionaries with
 " `level' attribute, and then returns the root node of the built tree.
 "
+" NOTE: This function allows discontinuous levels and build a tree from such
+" a sequence of levels as shown below:
+"
+"                             root
+"                              |
+"                              +--1
+"   [1, 3, 5, 5, 2, ...]  =>   |  +--3
+"                              |  |  +--5
+"                              |  |  +--5
+"                              |  |
+"                              :  +--2
+"
 function! s:Tree_build(elems)
   let root = s:Tree_new()
   if empty(a:elems) | return root | endif
@@ -110,13 +122,17 @@ call s:Tree.function('build')
 
 " Flatten a tree into a List.
 "
-" NOTE: This function resets the level of nodes in accordance with the given
-" tree's structure while flattening it.
+" NOTE: This function also correct the level of nodes in accordance with the
+" given tree's structure while flattening it.
 "
-"   1               1
-"   +--3            +--2
-"   |  +--5   =>    |  +--3
-"   |  +--4         |  +--3 
+"   root             root
+"    |                |
+"    +--1             +--1
+"    |  +--3          |  +--2
+"    |  |  +--5  =>   |  |  +--3  =>  [1, 2, 3, 3, 2, ...]
+"    |  |  +--5       |  |  +--3
+"    |  |             |  |
+"    :  +--2          :  +--2
 "
 function! s:Tree_flatten(node)
   let nodes = []
