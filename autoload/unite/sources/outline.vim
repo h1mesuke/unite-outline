@@ -465,12 +465,11 @@ function! s:gather_headings()
       if !s:context.is_force && s:context.method ==# method
         " The cached headings are reusable because they were extracted by the
         " same method as s:context.method.
-        let cache_reusable = 1
         call s:ids_to_refs(headings)
+        let cache_reusable = 1
       endif
     catch /^CacheCompatibilityError:/
       " Fallback siliently.
-      let cache_reusable = 0
     catch /^unite-outline:/
       call unite#util#print_error(v:exception)
     endtry
@@ -974,7 +973,7 @@ function! s:digest_line(line)
   if s:strchars(line) <= 20
     let digest = line
   else
-    let line = matchstr(line, '^\%(\%(.\{5}\)\{,20}\)')
+    let line = matchstr(line, '^\%(.\{5}\)\{,20}')
     let digest = substitute(line, '\(.\).\{4}', '\1', 'g')
   endif
   return digest

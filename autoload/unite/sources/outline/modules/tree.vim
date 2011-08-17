@@ -94,7 +94,6 @@ function! s:Tree_build(elems)
   if empty(a:elems) | return root | endif
   " Build a tree.
   let stack = [root]
-  let prev_elem =  a:elems[0]
   for elem in a:elems
     " Forget about the current children...
     let elem.children = []
