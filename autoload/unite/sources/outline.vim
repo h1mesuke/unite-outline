@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-16
+" Updated : 2011-08-17
 " Version : 0.3.7
 " License : MIT license {{{
 "
@@ -470,6 +470,7 @@ function! s:gather_headings()
       endif
     catch /^CacheCompatibilityError:/
       " Fallback siliently.
+      let cache_reusable = 0
     catch /^unite-outline:/
       call unite#util#print_error(v:exception)
     endtry
