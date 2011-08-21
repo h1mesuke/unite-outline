@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-16
+" Updated : 2011-08-21
 " Version : 0.3.7
 " License : MIT license {{{
 "
@@ -96,7 +96,10 @@ function! s:Tree_build(elems)
   let stack = [root]
   let prev_elem =  a:elems[0]
   for elem in a:elems
-    while stack[-1].level >= elem.level
+    " Forget about the current children...
+    let elem.children = []
+    " Make the top of the stack point to the parent.
+    while elem.level <= stack[-1].level
       call remove(stack, -1)
     endwhile
     call s:Tree_append_child(stack[-1], elem)
