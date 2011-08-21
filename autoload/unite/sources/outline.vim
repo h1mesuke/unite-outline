@@ -386,6 +386,12 @@ function! s:Source_Hooks_on_init(args, context)
         \ 'shiftwidth': getbufvar('%', '&shiftwidth'),
         \ 'tabstop'   : getbufvar('%', '&tabstop'),
         \ }
+  let compound_filetypes = split(buffer.filetype, '\.')
+  call extend(buffer, {
+        \ 'major_filetype': get(compound_filetypes, 0, ''),
+        \ 'minor_filetype': get(compound_filetypes, 1, ''),
+        \ 'compound_filetypes': compound_filetypes,
+        \ })
   let outline_info = unite#sources#outline#get_outline_info(buffer.filetype)
   let s:context = {
         \ 'buffer': buffer,
