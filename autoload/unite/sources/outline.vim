@@ -125,6 +125,18 @@ function! s:check_update(path)
   return (new_ftime > old_ftime)
 endfunction
 
+function! unite#sources#outline#get_filetype_option(filetype, key)
+  for filetype in s:resolve_filetype(a:filetype)
+    if has_key(g:unite_source_outline_filetype_options, filetype)
+      let opts = g:unite_source_outline_filetype_options[filetype]
+      if has_key(opts, a:key)
+        return opts[a:key]
+      endif
+    endif
+  endfor
+  throw "unite-outline: Unknown option `" . a:key . "'."
+endfunction
+
 "  {filetype}
 "    |/
 "   aaa.bbb.ccc -(alias)-> ddd -(alias)-> eee
@@ -283,10 +295,6 @@ if !exists('g:unite_source_outline_indent_width')
   let g:unite_source_outline_indent_width = 2
 endif
 
-if !exists('g:unite_source_outline_ignore_heading_types')
-  let g:unite_source_outline_ignore_heading_types = {}
-endif
-
 if !exists('g:unite_source_outline_max_headings')
   let g:unite_source_outline_max_headings = 1000
 endif
@@ -294,6 +302,14 @@ endif
 if !exists('g:unite_source_outline_cache_limit')
   let g:unite_source_outline_cache_limit = 1000
 endif
+
+if !exists('g:unite_source_outline_filetype_options')
+  let g:unite_source_outline_filetype_options = {}
+endif
+call extend(g:unite_source_outline_filetype_options, { '*': {} }, 'keep')
+call extend(g:unite_source_outline_filetype_options['*'], {
+      \ 'ignore_types': [],
+      \ }, 'keep')
 
 if !exists('g:unite_source_outline_highlight')
   let g:unite_source_outline_highlight = {}
@@ -706,8 +722,8 @@ function! s:extract_filetype_headings()
   endif
 
   " Filter headings.
-  let ignore_types = unite#sources#
-        \outline#get_ignore_heading_types(buffer.filetype)
+  let ignore_types = unite#sources#outline#
+        \get_filetype_option(buffer.filetype, 'ignore_types')
   let headings = s:filter_headings(headings, ignore_types)
 
   return headings
@@ -1053,15 +1069,6 @@ function! s:filter_headings(headings, ignore_types)
   call s:Tree.remove(tree, predicate)
   let headings = s:Tree.flatten(tree)
   return headings
-endfunction
-
-function! unite#sources#outline#get_ignore_heading_types(filetype)
-  for filetype in [a:filetype, s:resolve_filetype_alias(a:filetype), '*']
-    if has_key(g:unite_source_outline_ignore_heading_types, filetype)
-      return g:unite_source_outline_ignore_heading_types[filetype]
-    endif
-  endfor
-  return []
 endfunction
 
 function! s:convert_headings_to_candidates(headings)
