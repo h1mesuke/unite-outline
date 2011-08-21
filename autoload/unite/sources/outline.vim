@@ -68,16 +68,7 @@ endfunction
 "
 function! unite#sources#outline#get_outline_info(filetype, ...)
   let is_default = (a:0 ? a:1 : 0)
-
-  " NOTE: The filetype of the buffer may be a "compound filetype", a set of
-  " filetypes separated by periods. If the filetype is a compound one and has
-  " no outline info, fallback to its major filetype which is the left most.
-  "
-  let try_filetypes = [a:filetype]
-  if a:filetype =~ '\.'
-    call add(try_filetypes, split(a:filetype, '\.')[0])
-  endif
-  for filetype in try_filetypes
+  for filetype in s:resolve_filetype(a:filetype)
     let outline_info = s:get_outline_info(filetype, is_default)
     if !empty(outline_info) | return outline_info | endif
   endfor
@@ -92,10 +83,8 @@ function! unite#sources#outline#get_default_outline_info(filetype)
 endfunction
 
 function! s:get_outline_info(filetype, is_default)
-  let filetype = s:resolve_filetype_alias(a:filetype)
-
-  if has_key(g:unite_source_outline_info, filetype)
-    return g:unite_source_outline_info[filetype]
+  if has_key(g:unite_source_outline_info, a:filetype)
+    return g:unite_source_outline_info[a:filetype]
   endif
   let oinfo_dirs = (a:is_default ? s:OUTLINE_INFO_PATH[-1:] : s:OUTLINE_INFO_PATH)
   for dir in oinfo_dirs
@@ -122,14 +111,6 @@ function! s:get_outline_info(filetype, is_default)
   return {}
 endfunction
 
-function! s:resolve_filetype_alias(filetype)
-  if has_key(s:filetype_alias_table, a:filetype)
-    let filetype = s:filetype_alias_table[a:filetype]
-    return s:resolve_filetype_alias(filetype) | " 1 more hop
-  endif
-  return a:filetype
-endfunction
-
 function! s:check_update(path)
   if !exists('s:ftime_table')
     let s:ftime_table = {}
@@ -142,6 +123,51 @@ function! s:check_update(path)
   endif
   let s:ftime_table[path] = new_ftime
   return (new_ftime > old_ftime)
+endfunction
+
+"  {filetype}
+"    |/
+"   aaa.bbb.ccc -(alias)-> ddd -(alias)-> eee
+"    |/
+"   aaa.bbb     -(alias)-> fff -(alias)-> ggg
+"    |/
+"   aaa
+"
+"   => [aaa.bbb.ccc, ddd, eee, aaa.bbb, fff, ggg, aaa]
+"
+function! s:resolve_filetype(filetype)
+  let candidates = []
+  let filetype = a:filetype
+  while 1
+    call add(candidates, filetype)
+    let candidates += s:resolve_filetype_alias(filetype)
+    if filetype =~ '\.'
+      let filetype = substitute(filetype, '\.\w\+$', '', '')
+    else
+      break
+    endif
+  endwhile
+  call add(candidates, '*')
+  return candidates
+endfunction
+
+function! s:resolve_filetype_alias(filetype)
+  let seen = {}
+  let candidates = []
+  let filetype = a:filetype
+  while 1
+    if has_key(s:filetype_alias_table, filetype)
+      if has_key(seen, filetype)
+        throw "unite-outline: Cyclic alias definition detected."
+      endif
+      let filetype = s:filetype_alias_table[filetype]
+      call add(candidates, filetype)
+      let seen[filetype] = 1
+    else
+      break
+    endif
+  endwhile
+  return candidates
 endfunction
 
 function! s:normalize_outline_info(outline_info)
