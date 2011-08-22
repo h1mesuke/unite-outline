@@ -103,7 +103,8 @@ function! s:get_tags(context)
   else
     let tag_lines = split(ctags_out, "\<NL>")
     try
-      return map(tag_lines, 's:create_tag(v:val, lang)')
+      return filter(map(tag_lines, 's:create_tag(v:val, lang)'),
+      \             '!empty(v:val)')
     catch
       throw tag_lines[0]
     endtry
@@ -120,6 +121,10 @@ endfunction
 "
 function! s:create_tag(tag_line, lang)
   let fields = split(a:tag_line, "\<Tab>")
+  if len(fields) < 3
+    return {}
+  endif
+
   let tag = {}
   let tag.name = fields[0]
   let tag.lnum = str2nr(fields[2])
