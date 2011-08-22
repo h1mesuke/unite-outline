@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-08-16
+Updated : 2011-08-22
 Version : 0.3.7
 License : MIT license {{{
 
@@ -131,13 +131,16 @@ License : MIT license {{{
 g:unite_source_outline_info			*g:unite_source_outline_info*
 
 	ファイルタイプごとの outline info を格納する辞書
+	オートロード関数を使わず、vimrc にて直に outline info を定義する場合に
+	のみ、作成した outline info をこの辞書に登録します。
+
+	outline info の作成については|unite-outline-info-create|を参照
 
 	初期値は {}
 
 	unite-outline に同梱されている outline info はオートロード関数によって
-	遅延ロードされるため、この辞書の初期値は空になっています。
-
-	outline info については|unite-outline-info|を参照
+	遅延ロードされるため、この辞書の初期値は空であり、またロード後も使用さ
+	れません。
 
 g:unite_source_outline_indent_width	*g:unite_source_outline_indent_width*
 
@@ -145,26 +148,38 @@ g:unite_source_outline_indent_width	*g:unite_source_outline_indent_width*
 	unite-outline はこの値にもとづいて見出し一覧のインデントを生成します。
 
 	初期値は 2
-				*g:unite_source_outline_ignore_heading_types*
-g:unite_source_outline_ignore_heading_types
+					*g:unite_source_outline_filetype_options*
+g:unite_source_outline_filetype_options
 
-	非表示にしたい見出しの種類を設定するための辞書
-	ファイルタイプごとに、見出しの種類を表す文字列のリストを設定します。
+	ファイルタイプごとのオプション設定を行うための辞書
+	ファイルタイプごとに、オプション名をキー、オプション値を値とする辞書を
+	設定します。
 
-	「すべてのファイルタイプ」を意味する特殊なファイルタイプ名として "*" が
-	使用できます。個別の設定がなされていないファイルタイプにはその設定が適
-	用されます。
+	「すべてのファイルタイプ」を意味する特殊なファイルタイプ名として "*"
+	が使用できます。個別の設定がなされていないファイルタイプにはその設定が
+	適用されます。
 
-	各見出しの種類については outline info の定義を参照
-
-	初期値は {}
+	初期値は以下の設定例に同じ
 
 	設定例： >
-	let ignore_types = {}
-	let ignore_types['*'] = ['comment']
-	let ignore_types.cpp  = ['macro', 'typedef', 'enum']
-	let g:unite_source_outline_ignore_heading_types = ignore_types
-	unlet ignore_types
+	let g:unite_source_outline_filetype_options = {}
+	let g:unite_source_outline_filetype_options['*'] = {
+	      \ 'ignore_types': [],
+	      \ }
+<
+	設定可能なオプション ~
+
+	ignore_types	リスト	*unite-outline-filetype-option-ignore-types*
+
+		非表示にしたい見出しの種類のリスト
+		指定可能な見出しの種類については outline info の定義を参照
+
+		設定例： >
+		let ftopts = g:unite_source_outline_filetype_options
+		let ftopts['*'].ignore_types = ['comment']
+		let ftopts.cpp = {}
+		let ftopts.cpp.ignore_types = ['macro', 'typedef', 'enum']
+		unlet ftopts
 <
 g:unite_source_outline_max_headings	*g:unite_source_outline_max_headings*
 
@@ -192,7 +207,7 @@ g:unite_source_outline_highlight	*g:unite_source_outline_highlight*
 	見出し一覧のハイライトを指定するための辞書
 	見出しのグループごとに適用するハイライトを指定できます。
 
-	初期値は下の設定例を参照
+	初期値は以下の設定例に同じ
 
 	設定例： >
 	let g:unite_source_outline_highlight = {
@@ -260,10 +275,9 @@ outline info の作成				*unite-outline-info-create*
 	vimrc にて g:unite_source_outline_info.{filetype} に直接 outline info
 	を設定します。
 
-	定義例： >
+	定義例（Ruby用）： >
 	let g:unite_source_outline_info.ruby = {
-	      \ 'heading-1': '^\s*#\s*[-=#]\{10,}\s*$',
-	      \ 'heading'  : '^\s*\(module\|class\|def\)\>',
+	      \ 'heading': '^\s*\(module\|class\|def\)\>',
 	      \ 'skip': {
 	      \   'header': '^#',
 	      \   'block' : ['^=begin', '^=end'],
@@ -759,6 +773,13 @@ Util.neighbor_matchstr( {context}, {lnum}, {pattern} [, {range} [, {exclusive}]]
 ==============================================================================
 TODO						*unite-outline-todo*
 
+	*　見出し一覧の自動更新
+
+		バッファの変更を検出し、見出し一覧の更新を自動で行う仕組み。
+		できれば非同期にやりたいが……
+
+	* ヘルプの英訳
+	
 	* 絞り込み時の hlsearch
 
 	* JavaScript用 outline info の改善
@@ -768,11 +789,6 @@ TODO						*unite-outline-todo*
 	* Ruby用 outline info の改善
 
 		rtags を使えばよさげ。
-
-	*　見出し一覧の自動更新
-
-		バッファの変更を検出し、見出し一覧の更新を自動で行う仕組み。
-		できれば非同期にやりたいが……
 
 	* D, Erlang, Go, Haskell などの outline info
 
@@ -829,6 +845,10 @@ https://github.com/h1mesuke/unite-outline/commits/master
 	  これにともない、outline info の heading-1, heading, heading+1 に使用
 	  できる正規表現にいくつかの制約を導入
 				|unite-outline-info-heading-pattern-constraints|
+
+	* ファイルタイプごとのオプション設定をまとめるため、以下の変数を追加
+	  -|g:unite_source_outline_filetype_options|
+	  - g:unite_source_outline_ignore_heading_types は上記の変数に統合
 
 	* 以下のキーマッピングを deprecated とした
 	  -<Plug>(unite_outline_loop_cursor_down)
