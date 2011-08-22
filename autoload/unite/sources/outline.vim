@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-21
+" Updated : 2011-08-22
 " Version : 0.3.7
 " License : MIT license {{{
 "
@@ -715,13 +715,13 @@ function! s:extract_filetype_headings()
     call outline_info.finalize(s:context)
   endif
 
-  " Normalize.
+  " Normalize headings.
   if type(headings) == type({})
     let tree = headings | unlet headings
     let headings = s:Tree.flatten(tree)
   else
     let tree = s:Tree.build(headings)
-    let headings = s:Tree.flatten(tree) | " smooth levels
+    let headings = s:Tree.flatten(tree) | " correct levels
   endif
   if !is_normalized
     call map(headings, 's:normalize_heading(v:val)')
