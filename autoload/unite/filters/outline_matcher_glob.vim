@@ -2,7 +2,7 @@
 " File    : autoload/unite/filters/outline_matcher_glob.vim
 " Author  : h1mesuke <himesuke@gmail.com>
 " Updated : 2011-08-16
-" Version : 0.3.7
+" Version : 0.3.8
 " License : MIT license {{{
 "
 "   Permission is hereby granted, free of charge, to any person obtaining
