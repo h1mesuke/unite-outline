@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-11
+" Updated : 2011-08-24
 " Version : 0.3.7
 " License : MIT license {{{
 "
@@ -69,7 +69,7 @@ function! s:check_cache_dir()
     return 1
   else
     try
-      call mkdir(s:Cache.DIR, 'p')
+      call mkdir(iconv(s:Cache.DIR, &encoding, &termencoding), 'p')
     catch
       call unite#util#print_error("unite-outline: Couldn't create the cache directory.")
     endtry
