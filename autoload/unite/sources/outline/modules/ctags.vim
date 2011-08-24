@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-22
+" Updated : 2011-08-25
 " Version : 0.3.7
 " License : MIT license {{{
 "
@@ -178,9 +178,8 @@ function! s:Ctags_extract_headings(context)
     call unite#print_message("[unite-outline] Sorry, Exuberant Ctags required.")
     return []
   elseif !s:Ctags_supports(filetype)
-    call unite#print_message(
-          \ "[unite-outline] Sorry, your ctags doesn't support " .
-          \ toupper(filetype))
+    call unite#print_message("[unite-outline] " .
+          \ "Sorry, your ctags doesn't support " . toupper(filetype))
     return []
   endif
 

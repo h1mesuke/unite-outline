@@ -717,8 +717,8 @@ function! s:extract_filetype_headings()
     if empty(buffer.filetype)
       call unite#print_message("[unite-outline] Please set the filetype.")
     else
-      call unite#print_message("[unite-outline] Sorry, " .
-            \ toupper(buffer.filetype) . " is not supported.")
+      call unite#print_message("[unite-outline] " .
+            \ "Sorry, " . toupper(buffer.filetype) . " is not supported.")
     endif
     return []
   endif
@@ -823,8 +823,8 @@ function! s:builtin_extract_headings()
           call add(headings, s:normalize_heading(heading))
         endif
         if len(headings) >= g:unite_source_outline_max_headings
-          call unite#print_message(
-                \ "[unite-outline] Too many headings, the extraction was interrupted.")
+          call unite#print_message("[unite-outline] " . 
+                \ "Too many headings, the extraction was interrupted.")
           break
         endif
       endif
@@ -977,8 +977,8 @@ function! s:extract_folding_headings()
             \ }
       call add(headings, heading)
       if len(headings) >= g:unite_source_outline_max_headings
-        call unite#print_message(
-              \ "[unite-outline] Too many headings, the extraction was interrupted.")
+        call unite#print_message("[unite-outline] " .
+              \ "Too many headings, the extraction was interrupted.")
         break
       endif
     endif
