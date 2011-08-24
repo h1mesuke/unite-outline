@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-08-24
+Updated : 2011-08-25
 Version : 0.3.7
 License : MIT license {{{
 
@@ -360,9 +360,9 @@ heading			文字列（任意） 		*unite-outline-info-heading*
 
 	これらは、見出し抽出時のパターンマッチングの速度を最大限に上げるために
 	もうけられている制約です。見出しの抽出に後方参照が必要な場合は、
-	heading では後方参照を使わない緩いマッチングを行い、その後の
-	create_heading()関数にて後方参照を用いた厳密なマッチングを行うといった
-	方法で対処して下さい。
+	heading-1, heading, heading+1 には後方参照のない緩めのパターンを設定
+	し、マッチ後の create_heading()関数にて再度、後方参照を用いた厳密な
+	マッチングを行うといった方法で対処して下さい。
 
 
 heading+1		文字列（任意）		*unite-outline-info-heading+1*
@@ -859,20 +859,20 @@ outline info 募集！
 
 https://github.com/h1mesuke/unite-outline/commits/master
 
-0.5.0	2011-08-xx
+0.3.8	2011-08-25
 
 	* 見出しの抽出を高速化
 	  これにともない、outline info の heading-1, heading, heading+1 に使用
 	  できる正規表現にいくつかの制約を導入
-				|unite-outline-info-heading-pattern-constraints|
+				|unite-outline-info-heading-pattern-restrictions|
 
 	* ファイルタイプごとのオプション設定をまとめるため、以下の変数を追加
 	  -|g:unite_source_outline_filetype_options|
 	  - g:unite_source_outline_ignore_heading_types は上記の変数に統合
 
 	* 以下のキーマッピングを deprecated とした
-	  -<Plug>(unite_outline_loop_cursor_down)
-	  -<Plug>(unite_outline_loop_cursor_up)
+	  - <Plug>(unite_outline_loop_cursor_down)
+	  - <Plug>(unite_outline_loop_cursor_up)
 
 0.3.7	2011-08-14
 
