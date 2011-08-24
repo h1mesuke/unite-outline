@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-24
+" Updated : 2011-08-25
 " Version : 0.3.7
 " License : MIT license {{{
 "
@@ -44,6 +44,28 @@ let s:OUTLINE_ALIASES = [
       \ ['xhtml',    'html'    ],
       \ ['zsh',      'sh'      ],
       \]
+
+let s:OUTLINE_CACHE_DIR = g:unite_data_directory . '/outline'
+
+" Rename the cache directory if its name is still old, dotted name.
+" See http://d.hatena.ne.jp/tyru/20110824/unite_file_mru
+let old_cache_dir = g:unite_data_directory . '/.outline'
+if isdirectory(s:OUTLINE_CACHE_DIR)
+  if isdirectory(old_cache_dir) 
+    call unite#print_message("[unite-outline] " .
+          \ "Warning: Please remove the old cache directory: ")
+    call unite#print_message("[unite-outline] " . old_cache_dir)
+  endif
+else " if !isdirectory(s:OUTLINE_CACHE_DIR)
+  if isdirectory(old_cache_dir)
+    if rename(old_cache_dir, s:OUTLINE_CACHE_DIR) != 0
+      let s:OUTLINE_CACHE_DIR = old_cache_dir
+      call unite#util#print_error(
+            \ "unite-outline: Couldn't rename the cache directory.")
+    endif
+  endif
+endif
+unlet old_cache_dir
 
 let s:OUTLINE_CACHE_VAR = 'unite_source_outline_cache'
 
@@ -358,7 +380,7 @@ call s:define_filetype_aliases()
 "-----------------------------------------------------------------------------
 " Source
 
-let s:Cache = unite#sources#outline#import('Cache', g:unite_data_directory . '/.outline')
+let s:Cache = unite#sources#outline#import('Cache', s:OUTLINE_CACHE_DIR)
 let s:Tree  = unite#sources#outline#import('Tree')
 let s:Util  = unite#sources#outline#import('Util')
 
