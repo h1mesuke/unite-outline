@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-22
+" Updated : 2011-08-24
 " Version : 0.3.7
 " License : MIT license {{{
 "
@@ -371,6 +371,7 @@ delfunction s:get_SID
 let s:source = {
       \ 'name'       : 'outline',
       \ 'description': 'candidates from heading list',
+      \ 'filters'    : ['outline_matcher_glob', 'outline_formatter'],
       \ 'syntax'     : 'uniteSource__Outline',
       \
       \ 'hooks': {}, 'action_table': {}, 'alias_table': {}, 'default_action': {},
@@ -1204,10 +1205,5 @@ function! s:adjust_scroll(best_winline)
 endfunction
 
 let s:source.action_table.jump_list = s:action_table
-
-"---------------------------------------
-" Filters
-
-call unite#custom_filters('outline', ['outline_matcher_glob', 'outline_formatter'])
 
 " vim: filetype=vim
