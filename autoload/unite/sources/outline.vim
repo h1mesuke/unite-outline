@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-25
+" Updated : 2011-08-26
 " Version : 0.3.8
 " License : MIT license {{{
 "
@@ -85,26 +85,33 @@ function! unite#sources#outline#alias(alias, filetype)
   let s:filetype_alias_table[a:alias] = a:filetype
 endfunction
 
-" Returns the outline info for {filetype}. If not defined, returns an empty
+" Returns the outline info for {filetype}. If not found, returns an empty
 " Dictionary.
 "
-function! unite#sources#outline#get_outline_info(filetype, ...)
+function! unite#sources#outline#get_outline_info(filetype)
+  return s:get_outline_info(a:filetype, 0)
+endfunction
+
+" Returns the default outline info for {filetype}. If not found, returns an
+" empty Dictionary.
+"
+function! unite#sources#outline#get_default_outline_info(filetype)
+  return s:get_outline_info(a:filetype, 1)
+endfunction
+
+function! s:get_outline_info(filetype, ...)
   let is_default = (a:0 ? a:1 : 0)
   for filetype in s:resolve_filetype(a:filetype)
-    let outline_info = s:get_outline_info(filetype, is_default)
+    let outline_info = s:load_outline_info(filetype, is_default)
     if !empty(outline_info) | return outline_info | endif
   endfor
   return {}
 endfunction
 
-" Returns the default outline info for {filetype}. If not defined, returns
-" an empty Dictionary.
+" Try to load the outline info for {filetype}. If couldn't load, returns an
+" empty Directory.
 "
-function! unite#sources#outline#get_default_outline_info(filetype)
-  return unite#sources#outline#get_outline_info(a:filetype, 1)
-endfunction
-
-function! s:get_outline_info(filetype, is_default)
+function! s:load_outline_info(filetype, is_default)
   if has_key(g:unite_source_outline_info, a:filetype)
     return g:unite_source_outline_info[a:filetype]
   endif
@@ -148,6 +155,10 @@ function! s:check_update(path)
 endfunction
 
 function! unite#sources#outline#get_filetype_option(filetype, key)
+  return s:get_filetype_option(a:filetype, a:key)
+endfunction
+
+function! s:get_filetype_option(filetype, key)
   for filetype in s:resolve_filetype(a:filetype)
     if has_key(g:unite_source_outline_filetype_options, filetype)
       let opts = g:unite_source_outline_filetype_options[filetype]
@@ -415,7 +426,7 @@ function! s:Source_Hooks_on_init(args, context)
         \ 'minor_filetype': get(compound_filetypes, 1, ''),
         \ 'compound_filetypes': compound_filetypes,
         \ })
-  let outline_info = unite#sources#outline#get_outline_info(buffer.filetype)
+  let outline_info = s:get_outline_info(buffer.filetype)
   let s:context = {
         \ 'buffer': buffer,
         \ 'outline_info': outline_info,
@@ -709,8 +720,7 @@ function! s:extract_filetype_headings()
   let buffer = s:context.buffer
   if s:context.is_force
     " Re-source the outline info if updated.
-    let s:context.outline_info =
-          \ unite#sources#outline#get_outline_info(buffer.filetype)
+    let s:context.outline_info = s:get_outline_info(buffer.filetype)
   endif
   let outline_info = s:context.outline_info
   if empty(outline_info)
