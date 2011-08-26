@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/php.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-13
+" Updated : 2011-08-26
 "
 " Contributed by hamaco
 "
@@ -11,7 +11,7 @@
 "=============================================================================
 
 " Default outline info for PHP
-" Version: 0.1.0
+" Version: 0.1.1
 
 function! unite#sources#outline#defaults#php#outline_info()
   return s:outline_info
@@ -21,7 +21,7 @@ let s:Util = unite#sources#outline#import('Util')
 
 let s:outline_info = {
       \ 'heading-1': s:Util.shared_pattern('cpp', 'heading-1'),
-      \ 'heading'  : '^\s*\%(interface\|class\|\%(\h\w*\s\+\)\=function\)\>',
+      \ 'heading'  : '^\s*\%(interface\|class\|\%(\h\w*\s\+\)*function\)\>',
       \
       \ 'skip': {
       \   'header': {
@@ -79,11 +79,15 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
       " function or method
       let heading.type = 'function'
       let heading.word = substitute(heading.word, '\<function\s*', '', '')
-      if heading.word =~ '^\s*public\>'
+      if heading.word =~ '\<static\>'
+        let heading.word = substitute(heading.word, '\<static\s*', '', '')
+        let heading.word .= ' <static>'
+      endif
+      if heading.word =~ '\<public\>'
         let heading.word = substitute(heading.word, '\<public\s*', '+ ', '')
-      elseif heading.word =~ '^\s*protected\>'
+      elseif heading.word =~ '\<protected\>'
         let heading.word = substitute(heading.word, '\<protected\s*', '# ', '')
-      elseif heading.word =~ '^\s*private\>'
+      elseif heading.word =~ '\<private\>'
         let heading.word = substitute(heading.word, '\<private\s*', '- ', '')
       elseif heading.level > 3
         let heading.word = substitute(heading.word, '\%(&\|\h\)\@=', '+ ', '')
