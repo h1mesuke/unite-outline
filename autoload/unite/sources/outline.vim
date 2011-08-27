@@ -347,10 +347,10 @@ function! s:resolve_filetype_alias(filetype)
   return candidates
 endfunction
 
-function! unite#sources#outline#get_default_highlight(...)
-  return call('s:get_default_highlight', a:000)
+function! unite#sources#outline#get_highlight(...)
+  return call('s:get_highlight', a:000)
 endfunction
-function! s:get_default_highlight(name)
+function! s:get_highlight(name)
   return (has_key(g:unite_source_outline_highlight, a:name)
         \ ? g:unite_source_outline_highlight[a:name]
         \ : s:default_highlight[a:name])
@@ -477,7 +477,7 @@ function! s:Source_Hooks_on_syntax(source_args, unite_context)
     if has_key(outline_info, 'highlight_rules')
       for hl_rule in outline_info.highlight_rules
         if !has_key(hl_rule, 'highlight')
-          let hl_rule.highlight = s:get_default_highlight(hl_rule.name)
+          let hl_rule.highlight = s:get_highlight(hl_rule.name)
         endif
         execute 'syntax match uniteSource__Outline_' . hl_rule.name hl_rule.pattern
               \ 'contained containedin=uniteSource__Outline'

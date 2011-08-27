@@ -32,7 +32,7 @@ let s:outline_info = {
       \     'pattern'  : '/".*/' },
       \   { 'name'     : 'augroup',
       \     'pattern'  : '/\S\+\ze : augroup/',
-      \     'highlight': unite#sources#outline#get_default_highlight('type') },
+      \     'highlight': unite#sources#outline#get_highlight('type') },
       \   { 'name'     : 'function',
       \     'pattern'  : '/\S\+\ze\s*(/' },
       \   { 'name'     : 'parameter_list',
