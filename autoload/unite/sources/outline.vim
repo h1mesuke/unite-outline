@@ -186,6 +186,30 @@ function! s:load_outline_info(filetype, is_default)
   return {}
 endfunction
 
+function! s:find_autoload_script(funcname)
+  if !exists('s:autoload_scripts')
+    let s:autoload_scripts = {}
+  endif
+  if has_key(s:autoload_scripts, a:funcname)
+    let path =  s:autoload_scripts[a:funcname]
+    if filereadable(path)
+      return s:autoload_scripts[a:funcname]
+    else
+      " The script was moved somewhere for some reason...
+      unlet s:autoload_scripts[a:funcname]
+    endif
+  endif
+  let path_list = split(a:funcname, '#')
+  let rel_path = 'autoload/' . join(path_list[:-2], '/') . '.vim'
+  let path = get(split(globpath(&runtimepath, rel_path), "\<NL>"), 0, '')
+  if empty(path)
+    throw "ScriptNotFoundError: Script file not found for " . a:funcname
+  else
+    let s:autoload_scripts[a:funcname] = path
+  endif
+  return path
+endfunction
+
 function! s:check_update(path)
   if !exists('s:ftime_table')
     let s:ftime_table = {}
@@ -198,66 +222,6 @@ function! s:check_update(path)
   endif
   let s:ftime_table[path] = new_ftime
   return (new_ftime > old_ftime)
-endfunction
-
-function! unite#sources#outline#get_filetype_option(...)
-  return call('s:get_filetype_option', a:000)
-endfunction
-function! s:get_filetype_option(filetype, key)
-  for filetype in s:resolve_filetype(a:filetype)
-    if has_key(g:unite_source_outline_filetype_options, filetype)
-      let options = g:unite_source_outline_filetype_options[filetype]
-      if has_key(options, a:key)
-        return options[a:key]
-      endif
-    endif
-  endfor
-  return s:default_filetype_options[a:key]
-endfunction
-
-"  {filetype}
-"    |/
-"   aaa.bbb.ccc -(alias)-> ddd -(alias)-> eee
-"    |/
-"   aaa.bbb     -(alias)-> fff -(alias)-> ggg
-"    |/
-"   aaa
-"
-"   => [aaa.bbb.ccc, ddd, eee, aaa.bbb, fff, ggg, aaa]
-"
-function! s:resolve_filetype(filetype)
-  let candidates = []
-  let filetype = a:filetype
-  while 1
-    call add(candidates, filetype)
-    let candidates += s:resolve_filetype_alias(filetype)
-    if filetype =~ '\.'
-      let filetype = substitute(filetype, '\.\w\+$', '', '')
-    else
-      break
-    endif
-  endwhile
-  call add(candidates, '*')
-  return candidates
-endfunction
-
-function! s:resolve_filetype_alias(filetype)
-  let seen = {}
-  let candidates = []
-  let filetype = a:filetype
-  while 1
-    if has_key(s:filetype_alias_table, filetype)
-      if has_key(seen, filetype)
-        throw "unite-outline: Cyclic alias definition detected."
-      endif
-      let filetype = s:filetype_alias_table[filetype]
-      call add(candidates, filetype)
-      let seen[filetype] = 1
-    else
-      break
-    endif
-  endwhile
-  return candidates
 endfunction
 
 function! s:normalize_outline_info(outline_info)
@@ -323,6 +287,66 @@ function! s:normalize_heading_groups(outline_info)
   let a:outline_info.heading_group_map = group_map
 endfunction
 
+function! unite#sources#outline#get_filetype_option(...)
+  return call('s:get_filetype_option', a:000)
+endfunction
+function! s:get_filetype_option(filetype, key)
+  for filetype in s:resolve_filetype(a:filetype)
+    if has_key(g:unite_source_outline_filetype_options, filetype)
+      let options = g:unite_source_outline_filetype_options[filetype]
+      if has_key(options, a:key)
+        return options[a:key]
+      endif
+    endif
+  endfor
+  return s:default_filetype_options[a:key]
+endfunction
+
+"  {filetype}
+"    |/
+"   aaa.bbb.ccc -(alias)-> ddd -(alias)-> eee
+"    |/
+"   aaa.bbb     -(alias)-> fff -(alias)-> ggg
+"    |/
+"   aaa
+"
+"   => [aaa.bbb.ccc, ddd, eee, aaa.bbb, fff, ggg, aaa]
+"
+function! s:resolve_filetype(filetype)
+  let candidates = []
+  let filetype = a:filetype
+  while 1
+    call add(candidates, filetype)
+    let candidates += s:resolve_filetype_alias(filetype)
+    if filetype =~ '\.'
+      let filetype = substitute(filetype, '\.\w\+$', '', '')
+    else
+      break
+    endif
+  endwhile
+  call add(candidates, '*')
+  return candidates
+endfunction
+
+function! s:resolve_filetype_alias(filetype)
+  let seen = {}
+  let candidates = []
+  let filetype = a:filetype
+  while 1
+    if has_key(s:filetype_alias_table, filetype)
+      if has_key(seen, filetype)
+        throw "unite-outline: Cyclic alias definition detected."
+      endif
+      let filetype = s:filetype_alias_table[filetype]
+      call add(candidates, filetype)
+      let seen[filetype] = 1
+    else
+      break
+    endif
+  endwhile
+  return candidates
+endfunction
+
 function! unite#sources#outline#get_default_highlight(...)
   return call('s:get_default_highlight', a:000)
 endfunction
@@ -335,30 +359,6 @@ endfunction
 function! unite#sources#outline#import(name, ...)
   let name = tolower(substitute(a:name, '\(\l\)\(\u\)', '\1_\2', 'g'))
   return call('unite#sources#outline#modules#' . name . '#import', a:000)
-endfunction
-
-function! s:find_autoload_script(funcname)
-  if !exists('s:autoload_scripts')
-    let s:autoload_scripts = {}
-  endif
-  if has_key(s:autoload_scripts, a:funcname)
-    let path =  s:autoload_scripts[a:funcname]
-    if filereadable(path)
-      return s:autoload_scripts[a:funcname]
-    else
-      " The script was moved somewhere for some reason...
-      unlet s:autoload_scripts[a:funcname]
-    endif
-  endif
-  let path_list = split(a:funcname, '#')
-  let rel_path = 'autoload/' . join(path_list[:-2], '/') . '.vim'
-  let path = get(split(globpath(&runtimepath, rel_path), "\<NL>"), 0, '')
-  if empty(path)
-    throw "ScriptNotFoundError: Script file not found for " . a:funcname
-  else
-    let s:autoload_scripts[a:funcname] = path
-  endif
-  return path
 endfunction
 
 function! unite#sources#outline#clear_cache()
