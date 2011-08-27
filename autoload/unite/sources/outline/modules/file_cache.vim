@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-27
+" Updated : 2011-08-28
 " Version : 0.3.8
 " License : MIT license {{{
 "
@@ -130,13 +130,13 @@ function! s:load_cache_file(path)
   let lines = readfile(cache_file)
   if !empty(lines)
     let dumped_data = lines[0]
-    call s:Util.print_debug("[LOADED] cache file: " . cache_file)
+    call s:print_debug("[LOADED] cache file: " . cache_file)
   else
     throw "unite-outline: Couldn't load the cache file: " . cache_file
   endif
   " Touch; Update the timestamp.
   if writefile([dumped_data], cache_file) == 0
-    call s:Util.print_debug("[TOUCHED] cache file: " . cache_file)
+    call s:print_debug("[TOUCHED] cache file: " . cache_file)
   endif
   sandbox let data = eval(dumped_data)
   return data
@@ -163,7 +163,7 @@ function! s:save_cache_file(path, data)
   let cache_file = s:get_cache_file_path(a:path)
   let dumped_data = string(a:data)
   if writefile([dumped_data], cache_file) == 0
-    call s:Util.print_debug("[SAVED] cache file: " . cache_file)
+    call s:print_debug("[SAVED] cache file: " . cache_file)
   else
     throw "unite-outline: Couldn't save the cache to: " . cache_file
   endif
@@ -185,7 +185,7 @@ call s:FileCache.function('remove')
 
 function! s:remove_file(path)
     if delete(a:path) == 0
-      call s:Util.print_debug("[DELETED] cache file: " . a:path)
+      call s:print_debug("[DELETED] cache file: " . a:path)
     else
       throw "unite-outline: Couldn't delete the cache file: " . a:path
     endif
@@ -233,6 +233,10 @@ function! s:cleanup_cache_files(...)
       call unite#util#print_error(v:exception)
     endtry
   endfor
+endfunction
+
+function! s:print_debug(msg)
+  call s:Util.print_debug('cache', a:msg)
 endfunction
 
 " vim: filetype=vim
