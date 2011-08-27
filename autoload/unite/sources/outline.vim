@@ -35,15 +35,15 @@ let s:OUTLINE_INFO_PATH = [
       \ 'autoload/unite/sources/outline/defaults/',
       \ ]
 
-let s:OUTLINE_ALIASES = [
-      \ ['c',        'cpp'     ],
-      \ ['cfg',      'dosini'  ],
-      \ ['mkd',      'markdown'],
-      \ ['plaintex', 'tex'     ],
-      \ ['snippet',  'conf'    ],
-      \ ['xhtml',    'html'    ],
-      \ ['zsh',      'sh'      ],
-      \]
+let s:OUTLINE_ALIASES = {
+      \ 'c'       : 'cpp',
+      \ 'cfg'     : 'dosini',
+      \ 'mkd'     : 'markdown',
+      \ 'plaintex': 'tex',
+      \ 'snippet' : 'conf',
+      \ 'xhtml'   : 'html',
+      \ 'zsh'     : 'sh',
+      \ }
 
 let s:OUTLINE_CACHE_DIR = g:unite_data_directory . '/outline'
 
@@ -433,7 +433,7 @@ function! s:define_filetype_aliases()
       let user_oinfos[filetype] = 1
     endfor
   endfor
-  for [alias, filetype] in s:OUTLINE_ALIASES
+  for [alias, filetype] in items(s:OUTLINE_ALIASES)
     if !has_key(user_oinfos, alias)
       call unite#sources#outline#alias(alias, filetype)
     endif
