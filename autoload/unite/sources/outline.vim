@@ -212,7 +212,7 @@ function! s:get_filetype_option(filetype, key)
       endif
     endif
   endfor
-  throw "unite-outline: Unknown option `" . a:key . "'."
+  return s:default_filetype_options[a:key]
 endfunction
 
 "  {filetype}
@@ -323,6 +323,15 @@ function! s:normalize_heading_groups(outline_info)
   let a:outline_info.heading_group_map = group_map
 endfunction
 
+function! unite#sources#outline#get_default_highlight(...)
+  return call('s:get_default_highlight', a:000)
+endfunction
+function! s:get_default_highlight(name)
+  return (has_key(g:unite_source_outline_highlight, a:name)
+        \ ? g:unite_source_outline_highlight[a:name]
+        \ : s:default_highlight[a:name])
+endfunction
+
 function! unite#sources#outline#import(name, ...)
   let name = tolower(substitute(a:name, '\(\l\)\(\u\)', '\1_\2', 'g'))
   return call('unite#sources#outline#modules#' . name . '#import', a:000)
@@ -382,18 +391,14 @@ if !exists('g:unite_source_outline_cache_limit')
   let g:unite_source_outline_cache_limit = 1000
 endif
 
+let s:default_filetype_options = {
+      \ 'ignore_types': [],
+      \ }
 if !exists('g:unite_source_outline_filetype_options')
   let g:unite_source_outline_filetype_options = {}
 endif
-call extend(g:unite_source_outline_filetype_options, { '*': {} }, 'keep')
-call extend(g:unite_source_outline_filetype_options['*'], {
-      \ 'ignore_types': [],
-      \ }, 'keep')
 
-if !exists('g:unite_source_outline_highlight')
-  let g:unite_source_outline_highlight = {}
-endif
-call extend(g:unite_source_outline_highlight, {
+let s:default_highlight = {
       \ 'comment' : 'Comment',
       \ 'function': 'Function',
       \ 'macro'   : 'Macro',
@@ -409,7 +414,10 @@ call extend(g:unite_source_outline_highlight, {
       \ 'level_5' : 'Special',
       \ 'level_6' : g:unite_abbr_highlight,
       \ 'parameter_list': g:unite_abbr_highlight,
-      \ }, 'keep')
+      \ }
+if !exists('g:unite_source_outline_highlight')
+  let g:unite_source_outline_highlight = {}
+endif
 
 "---------------------------------------
 " Aliases
@@ -469,7 +477,7 @@ function! s:Source_Hooks_on_syntax(source_args, unite_context)
     if has_key(outline_info, 'highlight_rules')
       for hl_rule in outline_info.highlight_rules
         if !has_key(hl_rule, 'highlight')
-          let hl_rule.highlight = g:unite_source_outline_highlight[hl_rule.name]
+          let hl_rule.highlight = s:get_default_highlight(hl_rule.name)
         endif
         execute 'syntax match uniteSource__Outline_' . hl_rule.name hl_rule.pattern
               \ 'contained containedin=uniteSource__Outline'

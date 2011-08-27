@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/perl.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-13
+" Updated : 2011-08-28
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -31,16 +31,16 @@ let s:outline_info = {
       \     'pattern'  : '/#.*/' },
       \   { 'name'     : 'sub',
       \     'pattern'  : '/\h\w*/',
-      \     'highlight': g:unite_source_outline_highlight.function },
+      \     'highlight': unite#sources#outline#get_default_highlight('function') },
       \   { 'name'     : 'block',
       \     'pattern'  : '/\<\%(BEGIN\|CHECK\|INIT\|END\|__\%(DATA\|END\)__\)\>/',
-      \     'highlight': g:unite_source_outline_highlight.special },
+      \     'highlight': unite#sources#outline#get_default_highlight('special') },
       \   { 'name'     : 'package',
       \     'pattern'  : '/\S\+\ze : package/',
-      \     'highlight': g:unite_source_outline_highlight.type },
+      \     'highlight': unite#sources#outline#get_default_highlight('type') },
       \   { 'name'     : '_after_colon',
       \     'pattern'  : '/ : \h\w*/',
-      \     'highlight': g:unite_source_outline_highlight.normal },
+      \     'highlight': unite#sources#outline#get_default_highlight('normal') },
       \ ],
       \}
 

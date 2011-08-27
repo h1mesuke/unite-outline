@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/vim.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-15
+" Updated : 2011-08-28
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -32,7 +32,7 @@ let s:outline_info = {
       \     'pattern'  : '/".*/' },
       \   { 'name'     : 'augroup',
       \     'pattern'  : '/\S\+\ze : augroup/',
-      \     'highlight': g:unite_source_outline_highlight.type },
+      \     'highlight': unite#sources#outline#get_default_highlight('type') },
       \   { 'name'     : 'function',
       \     'pattern'  : '/\S\+\ze\s*(/' },
       \   { 'name'     : 'parameter_list',
