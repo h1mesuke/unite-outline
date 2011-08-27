@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_formatter.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-13
+" Updated : 2011-08-27
 " Version : 0.3.8
 " License : MIT license {{{
 "
@@ -44,12 +44,13 @@ let s:formatter = {
       \ 'description': 'view formatter for outline tree',
       \ }
 
-function! s:formatter.filter(candidates, context)
+function! s:formatter.filter(candidates, unite_context)
   if empty(a:candidates) | return a:candidates | endif
-  let outline_context = a:context.source__outline_context
+  let bufnr = a:unite_context.source__outline_context_bufnr
+  let context = unite#sources#outline#get_outline_data(bufnr, 'context')
 
   " Insert blanks for readability.
-  let candidates = s:insert_blanks(a:candidates, outline_context)
+  let candidates = s:insert_blanks(a:candidates, context)
 
   " Turbo Jump
   if len(a:candidates) < 10
@@ -69,7 +70,7 @@ endfunction
 
 function! s:insert_blanks(candidates, context)
   let outline_info = a:context.outline_info
-  if a:context.method !=# 'filetype' ||
+  if a:context.options.method !=# 'filetype' ||
         \ (empty(outline_info.heading_groups) && !has_key(outline_info, 'need_blank_between'))
     return a:candidates
   endif

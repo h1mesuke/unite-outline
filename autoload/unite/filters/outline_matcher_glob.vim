@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_matcher_glob.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-16
+" Updated : 2011-08-27
 " Version : 0.3.8
 " License : MIT license {{{
 "
@@ -40,14 +40,14 @@ let s:matcher = {
 " Derived from:
 " unite/autoload/filters/matcher_glob.vim
 "
-function! s:matcher.filter(candidates, context)
-  if a:context.input == '' || empty(a:candidates)
+function! s:matcher.filter(candidates, unite_context)
+  if a:unite_context.input == '' || empty(a:candidates)
     return a:candidates
   endif
 
   let tree = s:Tree.get_root(a:candidates[0].source__heading)
   let and = 0
-  for input in split(a:context.input, '\\\@<! ')
+  for input in split(a:unite_context.input, '\\\@<! ')
     let input = substitute(input, '\\ ', ' ', 'g')
     " Use something like closure.
     let predicate = {}
