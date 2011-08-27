@@ -361,7 +361,7 @@ function! unite#sources#outline#import(name, ...)
   return call('unite#sources#outline#modules#' . name . '#import', a:000)
 endfunction
 
-function! unite#sources#outline#clear_cache()
+function! unite#sources#outline#remove_cache_files()
   call s:FileCache.clear()
 endfunction
 
