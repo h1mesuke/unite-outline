@@ -721,29 +721,30 @@ function! s:extract_headings(context)
   let save_winheight   = &winheight
   let save_winwidth    = &winwidth
   let save_lazyredraw  = &lazyredraw
-  set eventignore=all
-  set winheight=1
-  set winwidth=1
-  " NOTE: To keep the window size on :wincmd, set 'winheight' and 'winwidth'
-  " to a small value.
-  set lazyredraw
-
-  " Switch: current window -> context window
-  execute winnr . 'wincmd w'
-  " Save the cursor and scroll.
-  let save_cursor  = getpos('.')
-  let save_topline = line('w0')
-
-  let lines = [""] + getbufline('%', 1, '$')
-  let a:context.num_lines = len(lines)
-  " Merge the temporary context data to the context.
-  let a:context.lines = lines
-  let a:context.heading_lnum = 0
-  let a:context.matched_lnum = 0
-
-  let success = 0
-  let start_time = s:benchmark_start()
   try
+    set eventignore=all
+    set winheight=1
+    set winwidth=1
+    " NOTE: To keep the window size on :wincmd, set 'winheight' and 'winwidth'
+    " to a small value.
+    set lazyredraw
+
+    " Switch: current window -> context window
+    execute winnr . 'wincmd w'
+    " Save the cursor and scroll.
+    let save_cursor  = getpos('.')
+    let save_topline = line('w0')
+
+    let lines = [""] + getbufline('%', 1, '$')
+    let a:context.num_lines = len(lines)
+    " Merge the temporary context data to the context.
+    let a:context.lines = lines
+    let a:context.heading_lnum = 0
+    let a:context.matched_lnum = 0
+
+    let success = 0
+    let start_time = s:benchmark_start()
+
     " Extract headings.
     let s:heading_id = 1
     if options.method !=# 'folding'
@@ -779,6 +780,10 @@ function! s:extract_headings(context)
 
     " Restore the Vim options.
     let &lazyredraw = save_lazyredraw
+    let &winheight   = save_winheight
+    let &winwidth    = save_winwidth
+    let &eventignore = save_eventignore
+
     if success
       " Print a progress message.
       if options.is_sync
@@ -790,9 +795,6 @@ function! s:extract_headings(context)
       endif
       call s:benchmark_stop(start_time)
     endif
-    let &winheight   = save_winheight
-    let &winwidth    = save_winwidth
-    let &eventignore = save_eventignore
   endtry
 endfunction
 
