@@ -211,16 +211,16 @@ function! s:find_autoload_script(funcname)
 endfunction
 
 function! s:check_update(path)
-  if !exists('s:ftime_table')
-    let s:ftime_table = {}
+  if !exists('s:file_mtime_table')
+    let s:file_mtime_table = {}
   endif
   let path = fnamemodify(a:path, ':p')
   let new_ftime = getftime(path)
-  let old_ftime = get(s:ftime_table, path, new_ftime)
+  let old_ftime = get(s:file_mtime_table, path, new_ftime)
   if new_ftime > old_ftime
     source `=path`
   endif
-  let s:ftime_table[path] = new_ftime
+  let s:file_mtime_table[path] = new_ftime
   return (new_ftime > old_ftime)
 endfunction
 
