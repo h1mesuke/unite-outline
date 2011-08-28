@@ -427,6 +427,10 @@ if !exists('g:unite_source_outline_highlight')
   let g:unite_source_outline_highlight = {}
 endif
 
+if !exists('g:unite_source_outline_verbose')
+  let g:unite_source_outline_verbose = 0
+endif
+
 "---------------------------------------
 " Aliases
 
@@ -702,7 +706,15 @@ function! s:extract_headings(context)
     throw "NoWindowError:"
   endif
 
-  call s:Util.print_progress("Extracting headings...")
+  " Print a progress message.
+  let options = a:context.options
+  if options.is_sync
+    if g:unite_source_outline_verbose
+      call s:Util.print_progress("Update headings...")
+    endif
+  else
+    call s:Util.print_progress("Extract headings...")
+  endif
 
   " Save the Vim options.
   let save_eventignore = &eventignore
@@ -734,7 +746,6 @@ function! s:extract_headings(context)
   try
     " Extract headings.
     let s:heading_id = 1
-    let options = a:context.options
     if options.method !=# 'folding'
       " Path B_3_a: Extract headings in filetype-specific way using the
       " filetype's outline info.
@@ -769,7 +780,14 @@ function! s:extract_headings(context)
     " Restore the Vim options.
     let &lazyredraw = save_lazyredraw
     if success
-      call s:Util.print_progress("Extracting headings...done.")
+      " Print a progress message.
+      if options.is_sync
+        if g:unite_source_outline_verbose
+          call s:Util.print_progress("Update headings...done.")
+        endif
+      else
+        call s:Util.print_progress("Extract headings...done.")
+      endif
       call s:benchmark_stop(start_time)
     endif
     let &winheight   = save_winheight
