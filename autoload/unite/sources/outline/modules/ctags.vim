@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-01
+" Updated : 2011-09-02
 " Version : 0.3.8
 " License : MIT license {{{
 "
@@ -100,7 +100,7 @@ call s:Ctags.function('supports')
 function! s:execute_ctags(path, filetype)
   " Assemble the command-line.
   let lang_info = s:Ctags.lang_info[a:filetype]
-  let opts =  ' -f - --excmd=number --fields=afiKmsSzt --sort=no '
+  let opts  = ' -f - --excmd=number --fields=afiKmsSzt --sort=no '
   let opts .= ' --language-force=' . lang_info.name . ' '
   let opts .= lang_info.ctags_options
 
