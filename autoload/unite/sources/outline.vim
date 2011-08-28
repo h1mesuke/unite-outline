@@ -91,19 +91,25 @@ endfunction
 function! unite#sources#outline#has_outline_data(...)
   return call('s:has_outline_data', a:000)
 endfunction
-function! s:has_outline_data(bufnr, key)
-  call s:_init_outline_data_if_needed(a:bufnr)
-  let data = getbufvar(a:bufnr, s:OUTLINE_DATA_VAR)
-  return has_key(data, a:key)
+function! s:has_outline_data(bufnr, ...)
+  if a:0
+    let key = a:1
+    call s:_init_outline_data_if_needed(a:bufnr)
+    let data = getbufvar(a:bufnr, s:OUTLINE_DATA_VAR)
+    return has_key(data, key)
+  else
+    let bufvars = getbufvar(a:bufnr, '')
+    return has_key(bufvars, s:OUTLINE_DATA_VAR)
+  endif
 endfunction
 
 function! unite#sources#outline#get_outline_data(...)
   return call('s:get_outline_data', a:000)
 endfunction
-function! s:get_outline_data(bufnr, key)
+function! s:get_outline_data(bufnr, key, ...)
   call s:_init_outline_data_if_needed(a:bufnr)
   let data = getbufvar(a:bufnr, s:OUTLINE_DATA_VAR)
-  return data[a:key]
+  return (a:0 ? get(data, a:key, a:1) : data[a:key])
 endfunction
 
 function! unite#sources#outline#set_outline_data(...)
