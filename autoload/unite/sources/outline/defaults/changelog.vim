@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/changelog.vim
 " Author  : sgur
-" Updated : 2011-02-25
+" Updated : 2011-08-29
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -14,6 +14,9 @@
 function! unite#sources#outline#defaults#changelog#outline_info()
   return s:outline_info
 endfunction
+
+"-----------------------------------------------------------------------------
+" Outline Info
 
 let s:outline_info = {
       \ 'heading': '^\s\+\*.\+',

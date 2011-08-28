@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/ruby.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-28
+" Updated : 2011-08-29
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -16,6 +16,9 @@ function! unite#sources#outline#defaults#ruby#outline_info()
 endfunction
 
 let s:Util = unite#sources#outline#import('Util')
+
+"-----------------------------------------------------------------------------
+" Outline Info
 
 let s:outline_info = {
       \ 'heading-1': s:Util.shared_pattern('sh', 'heading-1'),
@@ -97,7 +100,6 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     endif
     let heading.word = substitute(heading.word, '\%(;\|#{\@!\).*$', '', '')
   endif
-
   return heading
 endfunction
 

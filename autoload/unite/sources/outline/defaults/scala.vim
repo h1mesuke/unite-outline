@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/scala.vim
 " Author  : thinca <thinca+vim@gmail.com>
-" Updated : 2011-08-15
+" Updated : 2011-08-29
 "
 " License : Creative Commons Attribution 2.1 Japan License
 "           <http://creativecommons.org/licenses/by/2.1/jp/deed.en>
@@ -17,10 +17,17 @@ endfunction
 
 let s:Util = unite#sources#outline#import('Util')
 
-let s:header_pattern = '^\s*\%(\h\w*\s\+\)*\zs\<\%(class\|object\|trait\|def\)\>'
+"---------------------------------------
+" Sub Pattern
+
+let s:pat_heading = '^\s*\%(\h\w*\s\+\)*\zs\<\%(class\|object\|trait\|def\)\>'
+
+"-----------------------------------------------------------------------------
+" Outline Info
+
 let s:outline_info = {
       \  'heading-1': s:Util.shared_pattern('cpp', 'heading-1'),
-      \  'heading'  : s:header_pattern,
+      \  'heading'  : s:pat_heading,
       \
       \  'skip': {
       \    'header': s:Util.shared_pattern('cpp', 'header'),
@@ -48,10 +55,9 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     let heading.type = 'comment'
     let heading.level = s:Util.get_comment_heading_level(a:context, m_lnum)
   elseif a:which == 'heading'
-    let heading.type = matchstr(a:matched_line, s:header_pattern)
+    let heading.type = matchstr(a:matched_line, s:pat_heading)
     let heading.word = matchstr(a:heading_line, '^.\{-}\ze\%(\s\+=\%(\s.*\)\?\|\s*{\s*\)\?$')
   endif
-
   return heading
 endfunction
 

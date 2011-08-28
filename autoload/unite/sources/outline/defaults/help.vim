@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/help.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-19
+" Updated : 2011-08-29
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -45,16 +45,17 @@ let s:Util = unite#sources#outline#import('Util')
 "---------------------------------------
 " Sub Patterns
 
-let s:section_number = '\d\+\.\d\+\s\+\S'
-let s:upper_word = '\u[[:upper:][:digit:]_]\+\>'
-let s:helptag = '\*[^*]\+\*'
+let s:pat_section_nr = '\d\+\.\d\+\s\+\S'
+let s:pat_upper_word = '\u[[:upper:][:digit:]_]\+\>'
+let s:pat_helptag = '\*[^*]\+\*'
 
 "-----------------------------------------------------------------------------
 " Outline Info
 
 let s:outline_info = {
       \ 'heading-1': '^[-=]\{10,}\s*$',
-      \ 'heading'  : '^\%(' . s:section_number . '\|' . s:upper_word . '.*\%(' . s:helptag . '\|\~\)\)',
+      \ 'heading'  : '^\%(' . s:pat_section_nr . '\|' .
+      \   s:pat_upper_word . '.*\%(' . s:pat_helptag . '\|\~\)\)',
       \ }
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
@@ -75,12 +76,12 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     endif
   elseif a:which ==# 'heading'
     let h_lnum = a:context.heading_lnum
-    if a:heading_line =~ '^' . s:section_number
+    if a:heading_line =~ '^' . s:pat_section_nr
       if a:heading_line =~ '\~\s*$'
         let heading.level = 3
       endif
-    elseif a:heading_line =~ s:helptag ||
-          \ s:Util.neighbor_match(a:context, h_lnum, s:helptag)
+    elseif a:heading_line =~ s:pat_helptag ||
+          \ s:Util.neighbor_match(a:context, h_lnum, s:pat_helptag)
       let heading.level = 4
     endif
   endif
@@ -96,13 +97,13 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   endif
 endfunction
 
-function! s:normalize_heading_word(heading_word)
-  let heading_word = substitute(a:heading_word, '\%(\~\|{{{\d\=\)\s*$', '', '')
-  let heading_word = substitute(heading_word, s:helptag, '', 'g')
-  if heading_word !~ '\l'
-    let heading_word = s:Util.String.capitalize(heading_word, 'g')
+function! s:normalize_heading_word(word)
+  let word = substitute(a:word, '\%(\~\|{{{\d\=\)\s*$', '', '')
+  let word = substitute(word, s:pat_helptag, '', 'g')
+  if word !~ '\l'
+    let word = s:Util.String.capitalize(word, 'g')
   endif
-  return heading_word
+  return word
 endfunction
 
 " vim: filetype=vim

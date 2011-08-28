@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/html.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-10
+" Updated : 2011-08-29
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -16,6 +16,9 @@ function! unite#sources#outline#defaults#html#outline_info()
 endfunction
 
 let s:Util = unite#sources#outline#import('Util')
+
+"-----------------------------------------------------------------------------
+" Outline Info
 
 let s:outline_info = {
       \ 'heading': '<[hH][1-6][^>]*>',

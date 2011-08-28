@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/python.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-13
+" Updated : 2011-08-29
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -17,6 +17,9 @@ endfunction
 
 let s:Ctags = unite#sources#outline#import('Ctags')
 let s:Util  = unite#sources#outline#import('Util')
+
+"-----------------------------------------------------------------------------
+" Outline Info
 
 let s:outline_info = {
       \ 'heading_groups': {

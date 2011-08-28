@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/php.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-26
+" Updated : 2011-08-29
 "
 " Contributed by hamaco
 "
@@ -22,14 +22,14 @@ let s:Util = unite#sources#outline#import('Util')
 "---------------------------------------
 " Sub Pattern
 
-let s:kind = '\%(interface\|class\|function\)\>'
+let s:pat_type = '\%(interface\|class\|function\)\>'
 
 "-----------------------------------------------------------------------------
 " Outline Info
 
 let s:outline_info = {
       \ 'heading-1': s:Util.shared_pattern('cpp', 'heading-1'),
-      \ 'heading'  : '^\s*\%(\h\w*\s\+\)*' . s:kind,
+      \ 'heading'  : '^\s*\%(\h\w*\s\+\)*' . s:pat_type,
       \
       \ 'skip': {
       \   'header': {
@@ -74,7 +74,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     let heading.type = 'comment'
     let heading.level = s:Util.get_comment_heading_level(a:context, m_lnum)
   elseif a:which == 'heading'
-    let modifiers = matchstr(heading.word, '^.*\ze' . s:kind)
+    let modifiers = matchstr(heading.word, '^.*\ze' . s:pat_type)
     let heading.word = substitute(heading.word, '\s*{.*$', '', '')
     if heading.word =~ '\<interface\>'
       " Interface

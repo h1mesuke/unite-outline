@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/rst.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-15
+" Updated : 2011-08-29
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -14,6 +14,9 @@
 function! unite#sources#outline#defaults#rst#outline_info()
   return s:outline_info
 endfunction
+
+"-----------------------------------------------------------------------------
+" Outline Info
 
 let s:outline_info = {
       \ 'heading+1': '^[[:punct:]]\{4,}$',
@@ -31,7 +34,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
         \ 'type' : 'generic',
         \ }
 
-  let lines = a:context.lines
+  let lines  = a:context.lines
   let h_lnum = a:context.heading_lnum
 
   " Check the matching strictly.

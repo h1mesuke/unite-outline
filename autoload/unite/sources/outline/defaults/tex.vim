@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/tex.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-04-19
+" Updated : 2011-08-29
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -16,6 +16,9 @@ function! unite#sources#outline#defaults#tex#outline_info()
 endfunction
 
 let s:Util = unite#sources#outline#import('Util')
+
+"-----------------------------------------------------------------------------
+" Outline Info
 
 let s:outline_info = {
       \ 'heading': '^\\\%(title\|part\|chapter\|\%(sub\)\{,2}section\|begin{thebibliography}\){',
@@ -68,11 +71,11 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   endif
 endfunction
 
-function! s:normalize_heading_word(heading_word, unit)
-  let heading_word = substitute(a:heading_word, '\\\\\n', '', 'g')
-  let heading_word = matchstr(heading_word, '^\\\w\+{\zs.*\ze}\s*$')
-  let heading_word = s:unit_seqnr_prefix(a:unit) . heading_word
-  return heading_word
+function! s:normalize_heading_word(word, unit)
+  let word = substitute(a:word, '\\\\\n', '', 'g')
+  let word = matchstr(word, '^\\\w\+{\zs.*\ze}\s*$')
+  let word = s:unit_seqnr_prefix(a:unit) . word
+  return word
 endfunction
 
 function! s:unit_seqnr_prefix(unit)

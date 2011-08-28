@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/review.vim
 " Author  : AKAMATSU Yuki <y.akamatsu@ukstudio.jp>
-" Updated : 2011-04-24
+" Updated : 2011-08-29
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -14,6 +14,9 @@
 function! unite#sources#outline#defaults#review#outline_info()
   return s:outline_info
 endfunction
+
+"-----------------------------------------------------------------------------
+" Outline Info
 
 let s:outline_info = {
       \ 'heading': '^=\+',
