@@ -398,7 +398,9 @@ if !exists('g:unite_source_outline_cache_limit')
 endif
 
 let s:default_filetype_options = {
-      \ 'ignore_types': [],
+      \ 'auto_update'      : 1,
+      \ 'auto_update_event': 'write',
+      \ 'ignore_types'     : [],
       \ }
 if !exists('g:unite_source_outline_filetype_options')
   let g:unite_source_outline_filetype_options = {}
@@ -506,27 +508,34 @@ function! s:Source_gather_candidates(source_args, unite_context)
 
     let options = s:parse_source_arguments(a:source_args, a:unite_context)
     let bufnr = a:unite_context.source__outline_context_bufnr
+
+    let unite_changenr = s:get_outline_data(bufnr, '__unite_changenr__', 0)
+    let model_changenr = s:get_outline_data(bufnr, 'model_changenr', 0)
+    call s:Util.print_debug('event',
+          \ 'changenr: model = ' . model_changenr . ', unite  = ' . unite_changenr)
+    let options.is_sync = (model_changenr != unite_changenr)
+
     if s:has_outline_data(bufnr, '__unite_candidates__')
       " Path A: Get candidates from the buffer local cache and return them.
       let candidates = s:get_outline_data(bufnr, '__unite_candidates__')
-      let last_method = (!empty(candidates) &&
-            \ candidates[0].source__heading.type ==# 'folding' ? 'folding' : 'filetype')
-      if options.method ==# 'last'
-        let options.method = last_method
-      endif
-      if !options.is_force && options.method ==# last_method
-        " The cached candidates are reusable because they were extracted by
-        " the same method as options.method.
+      if s:is_valid_candidates(candidates, options)
         return candidates
       endif
     endif
 
-    " Path B: Candidates haven't been cached, so try to get headings.
+    " Path B: Candidates are invalid or haven't been cached, so try to get
+    " headings.
     let headings = s:get_headings(bufnr, options)
+
     " Convert the headings into candidates.
     let candidates = s:convert_headings_to_candidates(headings, a:unite_context)
     " Save the candidates to the on-memory cache.
     call s:set_outline_data(bufnr, '__unite_candidates__', candidates)
+    " Synchronize the change counts.
+    call s:set_outline_data(bufnr, '__unite_changenr__', model_changenr)
+    call s:Util.print_debug('event',
+          \ 'changenr: model = ' . model_changenr . ', unite  = ' . model_changenr .
+          \ ' [SYNC]')
 
     return candidates
 
@@ -586,6 +595,7 @@ function! s:create_context(bufnr, ...)
         \ })
   let options = {
         \ 'is_force': 0,
+        \ 'is_sync' : 0,
         \ 'method'  : 'last',
         \ }
   call extend(options, (a:0 ? a:1 : {}))
@@ -598,6 +608,17 @@ function! s:create_context(bufnr, ...)
   return context
 endfunction
 
+function! s:is_valid_candidates(candidates, options)
+  let last_method = (!empty(a:candidates) &&
+        \ a:candidates[0].source__heading.type ==# 'folding' ? 'folding' : 'filetype')
+  if a:options.method ==# 'last'
+    let a:options.method = last_method
+  endif
+  let is_valid = (!a:options.is_sync &&
+        \ (!a:options.is_force && a:options.method ==# last_method))
+  return is_valid
+endfunction
+
 function! s:is_valid_headings(headings, options)
   let l_headings = a:headings.as_list
   let is_folding = (!empty(l_headings) && l_headings[0].type ==# 'folding')
@@ -605,9 +626,8 @@ function! s:is_valid_headings(headings, options)
   if a:options.method ==# 'last'
     let a:options.method = last_method
   endif
-  let is_valid = (!a:options.is_force && a:options.method ==# last_method)
-  " The cached headings are valid when they were extracted by the same method
-  " as a:options.method.
+  let is_valid = (a:options.is_sync ||
+        \ (!a:options.is_force && a:options.method ==# last_method))
   return is_valid
 endfunction
 
@@ -663,6 +683,10 @@ function! s:get_headings(bufnr, options)
       call s:remove_outline_data(a:bufnr, 'headings')
     endif
   endif
+
+  " Update the change count of the headings.
+  call s:set_outline_data(a:bufnr, 'model_changenr', changenr())
+
   return headings
 endfunction
 
@@ -820,9 +844,9 @@ function! s:extract_filetype_headings(context)
   endif
 
   " Filter headings.
-  let ignore_types = unite#sources#outline#
-        \get_filetype_option(buffer.filetype, 'ignore_types')
-  call s:filter_headings(headings, ignore_types)
+  let ignore_types =
+        \ unite#sources#outline#get_filetype_option(buffer.filetype, 'ignore_types')
+  let headings = s:filter_headings(headings, ignore_types)
 
   return headings
 endfunction
@@ -1312,5 +1336,91 @@ function! s:adjust_scroll(best_winline)
 endfunction
 
 let s:source.action_table.jump_list = s:action_table
+
+"-----------------------------------------------------------------------------
+" Auto-update
+
+autocmd CursorHold * call s:on_cursor_hold()
+
+function! s:on_cursor_hold()
+  let bufnr = bufnr('%')
+  if !s:has_outline_data(bufnr)
+    return
+  endif
+  call s:Util.print_debug('event', 'on_cursor_hold')
+  if s:should_update(bufnr, 'hold')
+    call s:update_headings(bufnr)
+  endif
+endfunction
+
+autocmd BufWritePost * call s:on_buf_write_post()
+
+function! s:on_buf_write_post()
+  let bufnr = bufnr('%')
+  if !s:has_outline_data(bufnr)
+    return
+  endif
+  call s:Util.print_debug('event', 'on_write_post')
+  if s:should_update(bufnr, 'write')
+    call s:update_headings(bufnr)
+  endif
+endfunction
+
+function! s:should_update(bufnr, event)
+  let auto_update_enabled = s:get_filetype_option(&l:filetype, 'auto_update')
+  if !auto_update_enabled
+    return 0
+  endif
+  let auto_update_event = s:get_filetype_option(&l:filetype, 'auto_update_event')
+  if auto_update_event ==# 'write' && a:event ==# 'hold'
+    return 0
+  endif
+  let last_changenr = s:get_outline_data(a:bufnr, 'model_changenr', 0)
+  let curr_changenr = changenr()
+  call s:Util.print_debug('event',
+        \ 'changenr: model = ' . last_changenr . ', buffer = ' . curr_changenr)
+  return (curr_changenr != last_changenr)
+  " NOTE: The current changenr may smaller than the last on because undo
+  " commands decrease the changenr.
+endfunction
+
+function! s:update_headings(bufnr)
+  call s:Util.print_debug('event', 'update_headings')
+  " Update Model.
+  call s:get_headings(a:bufnr, { 'is_force': 1 })
+  " Update View.
+  let outline_wins = s:get_outline_windows(a:bufnr)
+  for winnr in outline_wins
+    call s:Util.print_debug('event', 'redraw outline window #' . winnr)
+    call unite#force_redraw(winnr)
+  endfor
+endfunction
+
+" Returns a List of winnrs of the windows that are displaying the heading list
+" of the buffer {bufnr}.
+"
+function! s:get_outline_windows(bufnr)
+  let outline_wins = []
+  let winnr = 1
+  while winnr <= winnr('$')
+    let wbufnr = winbufnr(winnr)
+    if getbufvar(wbufnr, '&filetype') ==# 'unite'
+      try
+        let unite = getbufvar(wbufnr, 'unite')
+        for source in unite.sources
+          if source.name ==# 'outline' &&
+                \ source.unite__context.source__outline_context_bufnr == a:bufnr
+            call add(outline_wins, winnr)
+          endif
+        endfor
+      catch
+        call unite#util#print_error(v:throwpoint)
+        call unite#util#print_error(v:exception)
+      endtry
+    endif
+    let winnr += 1
+  endwhile
+  return outline_wins
+endfunction
 
 " vim: filetype=vim
