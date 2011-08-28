@@ -1015,13 +1015,11 @@ function! s:get_skip_ranges(context)
     let num_lines = line('$')
     call cursor(1, 1)
     while 1
-      let beg_lnum= search(block.begin, 'cW')
+      let beg_lnum = search(block.begin, 'cW')
       if beg_lnum == 0 || beg_lnum == num_lines
         break
-      else
-        call cursor(beg_lnum + 1, 1)
       endif
-      let end_lnum= search(block.end, 'cW')
+      let end_lnum = search(block.end, 'W')
       if end_lnum == 0
         break
       endif
