@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-28
+" Updated : 2011-08-29
 " Version : 0.3.8
 " License : MIT license {{{
 "
@@ -876,6 +876,7 @@ function! s:builtin_extract_headings(context)
   let headings = []
   call cursor(1, 1)
   while 1
+    let step  = 1
     let found = 0
     " Search the buffer for the next heading.
     let [lnum, col, submatch] = searchpos(pattern, 'cpW')
@@ -892,6 +893,7 @@ function! s:builtin_extract_headings(context)
         if next_line =~ '[[:punct:]]\@!\S'
           let a:context.heading_lnum = lnum + 1
           let a:context.matched_lnum = lnum
+          let step  = 2
           let found = 1
         elseif next_line =~ '\S' && lnum < num_lines - 4
           " See one more next.
@@ -899,6 +901,7 @@ function! s:builtin_extract_headings(context)
           if next_line =~ '[[:punct:]]\@!\S'
             let a:context.heading_lnum = lnum + 2
             let a:context.matched_lnum = lnum
+            let step  = 3
             let found = 1
           endif
         endif
@@ -936,7 +939,7 @@ function! s:builtin_extract_headings(context)
     if lnum == num_lines
       break
     endif
-    call cursor(lnum + 1, 1)
+    call cursor(lnum + step, 1)
   endwhile
   return headings
 endfunction
