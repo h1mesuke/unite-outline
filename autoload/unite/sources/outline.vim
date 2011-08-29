@@ -616,9 +616,11 @@ function! s:is_valid_candidates(candidates, options)
   if a:options.extract_method ==# 'last'
     let a:options.extract_method = last_method
   endif
-  let is_valid = (!a:options.is_sync &&
-        \ (!a:options.is_force && a:options.extract_method ==# last_method))
-  return is_valid
+  if a:options.is_sync
+    return 0
+  else
+    return (!a:options.is_force && a:options.extract_method ==# last_method)
+  endif
 endfunction
 
 function! s:is_valid_headings(headings, options)
@@ -628,9 +630,11 @@ function! s:is_valid_headings(headings, options)
   if a:context.extract_method ==# 'last'
     let a:context.extract_method = last_method
   endif
-  let is_valid = (a:context.is_sync ||
-        \ (!a:context.is_force && a:context.extract_method ==# last_method))
-  return is_valid
+  if a:context.is_sync
+    return 1
+  else
+    return (!a:context.is_force && a:context.extract_method ==# last_method)
+  endif
 endfunction
 
 function! s:get_headings(bufnr, options)
