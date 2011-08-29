@@ -478,6 +478,7 @@ let s:source = {
       \ }
 
 function! s:Source_Hooks_on_init(source_args, unite_context)
+  call s:update_buffer_changenr()
   let a:unite_context.source__outline_context_bufnr = bufnr('%')
 endfunction
 let s:source.hooks.on_init = function(s:SID . 'Source_Hooks_on_init')
@@ -514,11 +515,22 @@ function! s:Source_gather_candidates(source_args, unite_context)
     let options = s:parse_source_arguments(a:source_args, a:unite_context)
     let bufnr = a:unite_context.source__outline_context_bufnr
 
-    let unite_changenr = s:get_outline_data(bufnr, '__unite_changenr__', 0)
-    let model_changenr = s:get_outline_data(bufnr, 'model_changenr', 0)
-    call s:Util.print_debug('event',
-          \ 'changenr: model = ' . model_changenr . ', unite  = ' . unite_changenr)
-    let options.is_sync = (model_changenr != unite_changenr)
+    let auto_update = s:get_filetype_option(getbufvar(bufnr, '&filetype'), 'auto_update', 0)
+    if auto_update
+      let buffer_changenr = s:get_outline_data(bufnr, 'buffer_changenr', 0)
+      let  model_changenr = s:get_outline_data(bufnr,  'model_changenr', 0)
+      if model_changenr != buffer_changenr
+        call s:Util.print_debug('event', 'changenr: buffer = ' . buffer_changenr .
+              \ ', model = ' . model_changenr . ', unite = ?')
+        let options.is_force = 1
+        let options.is_sync  = 0
+      else
+        let  unite_changenr = s:get_outline_data(bufnr, '__unite_changenr__', 0)
+        call s:Util.print_debug('event', 'changenr: buffer = ' . buffer_changenr .
+              \ ', model = ' . model_changenr . ', unite = ' . unite_changenr)
+        let options.is_sync = (model_changenr != unite_changenr)
+      endif
+    endif
 
     if s:has_outline_data(bufnr, '__unite_candidates__')
       " Path A: Get candidates from the buffer local cache and return them.
@@ -536,11 +548,22 @@ function! s:Source_gather_candidates(source_args, unite_context)
     let candidates = s:convert_headings_to_candidates(headings, a:unite_context)
     " Save the candidates to the on-memory cache.
     call s:set_outline_data(bufnr, '__unite_candidates__', candidates)
-    " Synchronize the change counts.
-    call s:set_outline_data(bufnr, '__unite_changenr__', model_changenr)
-    call s:Util.print_debug('event',
-          \ 'changenr: model = ' . model_changenr . ', unite  = ' . model_changenr .
-          \ ' [SYNC]')
+
+    if auto_update
+      " Synchronize the change counts.
+      if options.is_sync
+        call s:set_outline_data(bufnr, '__unite_changenr__',  model_changenr)
+      else
+        call s:set_outline_data(bufnr, '__unite_changenr__', buffer_changenr)
+      endif
+      if g:unite_source_outline_event_debug
+        let buffer_changenr = s:get_outline_data(bufnr, 'buffer_changenr', 0)
+        let  model_changenr = s:get_outline_data(bufnr,  'model_changenr', 0)
+        let  unite_changenr = s:get_outline_data(bufnr, '__unite_changenr__', 0)
+        call s:Util.print_debug('event', 'changenr: buffer = ' . buffer_changenr .
+              \ ', model = ' . model_changenr . ', unite = ' . unite_changenr . ' [SYNC]')
+      endif
+    endif
 
     return candidates
 
@@ -565,6 +588,7 @@ let s:source.gather_candidates = function(s:SID . 'Source_gather_candidates')
 function! s:parse_source_arguments(source_args, unite_context)
   let options = {
         \ 'is_force': 0,
+        \ 'is_sync' : 0,
         \ 'extract_method': 'last',
         \ }
   for value in a:source_args
@@ -1366,7 +1390,8 @@ function! s:on_cursor_hold()
     return
   endif
   call s:Util.print_debug('event', 'on_cursor_hold')
-  if s:should_update(bufnr, 'hold')
+  call s:update_buffer_changenr()
+  if s:should_update('hold')
     call s:update_headings(bufnr)
   endif
 endfunction
@@ -1378,13 +1403,18 @@ function! s:on_buf_write_post()
   if !s:has_outline_data(bufnr)
     return
   endif
-  call s:Util.print_debug('event', 'on_write_post')
-  if s:should_update(bufnr, 'write')
+  call s:Util.print_debug('event', 'on_buf_write_post')
+  call s:update_buffer_changenr()
+  if s:should_update('write')
     call s:update_headings(bufnr)
   endif
 endfunction
 
-function! s:should_update(bufnr, event)
+function! s:update_buffer_changenr()
+  call s:set_outline_data(bufnr('%'), 'buffer_changenr', changenr())
+endfunction
+
+function! s:should_update(event)
   let auto_update_enabled = s:get_filetype_option(&l:filetype, 'auto_update')
   if !auto_update_enabled
     return 0
