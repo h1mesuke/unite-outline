@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_formatter.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-27
+" Updated : 2011-08-29
 " Version : 0.3.8
 " License : MIT license {{{
 "
@@ -70,7 +70,7 @@ endfunction
 
 function! s:insert_blanks(candidates, context)
   let outline_info = a:context.outline_info
-  if a:context.options.method !=# 'filetype' ||
+  if a:context.extract_method !=# 'filetype' ||
         \ (empty(outline_info.heading_groups) && !has_key(outline_info, 'need_blank_between'))
     return a:candidates
   endif

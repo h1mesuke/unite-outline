@@ -486,7 +486,7 @@ function! s:Source_Hooks_on_syntax(source_args, unite_context)
   let bufnr = a:unite_context.source__outline_context_bufnr
   let context = s:get_outline_data(bufnr, 'context')
   let outline_info = context.outline_info
-  if context.options.method ==# 'filetype'
+  if context.extract_method ==# 'filetype'
     if has_key(outline_info, 'highlight_rules')
       for hl_rule in outline_info.highlight_rules
         if !has_key(hl_rule, 'highlight')
@@ -565,13 +565,13 @@ let s:source.gather_candidates = function(s:SID . 'Source_gather_candidates')
 function! s:parse_source_arguments(source_args, unite_context)
   let options = {
         \ 'is_force': 0,
-        \ 'method'  : 'last',
+        \ 'extract_method': 'last',
         \ }
   for value in a:source_args
     if value =~# '^\%(ft\|fi\%[letype]\)$'
-      let options.method = 'filetype'
+      let options.extract_method = 'filetype'
     elseif value =~# '^fo\%[lding]$'
-      let options.method = 'folding'
+      let options.extract_method = 'folding'
     elseif value =~# '^\%(update\|!\)$'
       let options.is_force = 1
     endif
@@ -598,29 +598,26 @@ function! s:create_context(bufnr, ...)
         \ 'minor_filetype': get(compound_filetypes, 1, ''),
         \ 'compound_filetypes': compound_filetypes,
         \ })
-  let options = {
-        \ 'is_force': 0,
-        \ 'is_sync' : 0,
-        \ 'method'  : 'last',
-        \ }
-  call extend(options, (a:0 ? a:1 : {}))
   let outline_info = s:get_outline_info(buffer.filetype)
   let context = {
-        \ 'buffer' : buffer,
-        \ 'options': options,
+        \ 'buffer': buffer,
+        \ 'is_force': 0,
+        \ 'is_sync' : 0,
+        \ 'extract_method': 'last',
         \ 'outline_info': outline_info,
         \ }
+  call extend(context, (a:0 ? a:1 : {}))
   return context
 endfunction
 
 function! s:is_valid_candidates(candidates, options)
   let last_method = (!empty(a:candidates) &&
         \ a:candidates[0].source__heading.type ==# 'folding' ? 'folding' : 'filetype')
-  if a:options.method ==# 'last'
-    let a:options.method = last_method
+  if a:options.extract_method ==# 'last'
+    let a:options.extract_method = last_method
   endif
   let is_valid = (!a:options.is_sync &&
-        \ (!a:options.is_force && a:options.method ==# last_method))
+        \ (!a:options.is_force && a:options.extract_method ==# last_method))
   return is_valid
 endfunction
 
@@ -628,23 +625,22 @@ function! s:is_valid_headings(headings, options)
   let l_headings = a:headings.as_list
   let is_folding = (!empty(l_headings) && l_headings[0].type ==# 'folding')
   let last_method = (is_folding ? 'folding' : 'filetype')
-  if a:options.method ==# 'last'
-    let a:options.method = last_method
+  if a:context.extract_method ==# 'last'
+    let a:context.extract_method = last_method
   endif
-  let is_valid = (a:options.is_sync ||
-        \ (!a:options.is_force && a:options.method ==# last_method))
+  let is_valid = (a:context.is_sync ||
+        \ (!a:context.is_force && a:context.extract_method ==# last_method))
   return is_valid
 endfunction
 
 function! s:get_headings(bufnr, options)
   let context = s:create_context(a:bufnr, a:options)
-  let options = context.options
   call s:set_outline_data(a:bufnr, 'context', context)
 
   if s:has_outline_data(a:bufnr, 'headings')
     " Path B_1: Get headings from the on-memory cache.
     let headings = s:get_outline_data(a:bufnr, 'headings')
-    if s:is_valid_headings(headings, options)
+    if s:is_valid_headings(headings, context)
       return headings
     endif
   endif
@@ -674,7 +670,7 @@ function! s:get_headings(bufnr, options)
   let should_cache = (!is_volatile && !empty(headings.as_list))
   if should_cache
     " Save the headings to the cache.
-    let is_persistant = (context.num_lines > g:unite_source_outline_cache_limit)
+    let is_persistant = (context.__num_lines__ > g:unite_source_outline_cache_limit)
     if is_persistant
       call s:FileCache.set(a:bufnr, headings.as_tree)
     endif
@@ -708,8 +704,7 @@ function! s:extract_headings(context)
   endif
 
   " Print a progress message.
-  let options = a:context.options
-  if options.is_sync
+  if a:context.is_sync
     if g:unite_source_outline_verbose
       call s:Util.print_progress("Update headings...")
     endif
@@ -737,7 +732,7 @@ function! s:extract_headings(context)
     let save_topline = line('w0')
 
     let lines = [""] + getbufline('%', 1, '$')
-    let a:context.num_lines = len(lines)
+    let a:context.__num_lines__ = len(lines)
     " Merge the temporary context data to the context.
     let a:context.lines = lines
     let a:context.heading_lnum = 0
@@ -748,14 +743,14 @@ function! s:extract_headings(context)
 
     " Extract headings.
     let s:heading_id = 1
-    if options.method !=# 'folding'
+    if a:context.extract_method !=# 'folding'
       " Path B_3_a: Extract headings in filetype-specific way using the
       " filetype's outline info.
-      let options.method = 'filetype'
+      let a:context.extract_method = 'filetype'
       let headings = s:extract_filetype_headings(a:context)
     else
       " Path B_3_b: Extract headings using folds' information.
-      let options.method = 'folding'
+      let a:context.extract_method = 'folding'
       let headings = s:extract_folding_headings(a:context)
     endif
     let success = 1
@@ -787,7 +782,7 @@ function! s:extract_headings(context)
 
     if success
       " Print a progress message.
-      if options.is_sync
+      if a:context.is_sync
         if g:unite_source_outline_verbose
           call s:Util.print_progress("Update headings...done.")
         endif
@@ -826,8 +821,7 @@ endfunction
 "
 function! s:extract_filetype_headings(context)
   let buffer  = a:context.buffer
-  let options = a:context.options
-  if options.is_force
+  if a:context.is_force
     " Re-source the outline info if updated.
     let a:context.outline_info = s:get_outline_info(buffer.filetype)
   endif
@@ -1141,7 +1135,7 @@ function! s:normalize_heading(heading, context)
   let heading.pattern = '^' . unite#util#escape_pattern(heading.line) . '$'
   let heading.signature = s:calc_signature(heading.lnum, a:context.lines)
   let outline_info = a:context.outline_info
-  if a:context.options.method !=# 'folding' && !has_key(heading, 'group')
+  if a:context.extract_method !=# 'folding' && !has_key(heading, 'group')
     let group_map = outline_info.heading_group_map
     let heading.group = get(group_map, heading.type, 'generic')
   endif
