@@ -601,6 +601,7 @@ function! s:create_context(bufnr, ...)
   let outline_info = s:get_outline_info(buffer.filetype)
   let context = {
         \ 'buffer': buffer,
+        \ 'event' : 'user',
         \ 'is_force': 0,
         \ 'is_sync' : 0,
         \ 'extract_method': 'last',
@@ -708,7 +709,7 @@ function! s:extract_headings(context)
   endif
 
   " Print a progress message.
-  if a:context.is_sync
+  if a:context.event ==# 'auto_update'
     if g:unite_source_outline_verbose
       call s:Util.print_progress("Update headings...")
     endif
@@ -786,7 +787,7 @@ function! s:extract_headings(context)
 
     if success
       " Print a progress message.
-      if a:context.is_sync
+      if a:context.event ==# 'auto_update'
         if g:unite_source_outline_verbose
           call s:Util.print_progress("Update headings...done.")
         endif
@@ -1392,20 +1393,21 @@ function! s:should_update(bufnr, event)
   if auto_update_event ==# 'write' && a:event ==# 'hold'
     return 0
   endif
-  let last_changenr = s:get_outline_data(a:bufnr, 'model_changenr', 0)
-  let curr_changenr = changenr()
-  call s:Util.print_debug('event',
-        \ 'changenr: model = ' . last_changenr . ', buffer = ' . curr_changenr)
-  return (curr_changenr != last_changenr)
-  " NOTE: The current changenr may smaller than the last on because undo
+  let bufnr = bufnr('%')
+  let buffer_changenr = s:get_outline_data(bufnr, 'buffer_changenr', 0)
+  let  model_changenr = s:get_outline_data(bufnr,  'model_changenr', 0)
+  call s:Util.print_debug('event', 'changenr: buffer = ' . buffer_changenr .
+        \ ', model = ' . model_changenr)
+  return (buffer_changenr != model_changenr)
+  " NOTE: The current changenr may smaller than the last one because undo
   " commands decrease the changenr.
 endfunction
 
 function! s:update_headings(bufnr)
   call s:Util.print_debug('event', 'update_headings')
   " Update Model.
-  call s:get_headings(a:bufnr, { 'is_force': 1 })
-  " Update View.
+  call s:get_headings(a:bufnr, { 'event': 'auto_update', 'is_force': 1 })
+  " Update View if the outline window exists.
   let outline_wins = s:get_outline_windows(a:bufnr)
   for winnr in outline_wins
     call s:Util.print_debug('event', 'redraw outline window #' . winnr)
