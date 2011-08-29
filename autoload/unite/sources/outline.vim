@@ -296,7 +296,7 @@ endfunction
 function! unite#sources#outline#get_filetype_option(...)
   return call('s:get_filetype_option', a:000)
 endfunction
-function! s:get_filetype_option(filetype, key)
+function! s:get_filetype_option(filetype, key, ...)
   for filetype in s:resolve_filetype(a:filetype)
     if has_key(g:unite_source_outline_filetype_options, filetype)
       let options = g:unite_source_outline_filetype_options[filetype]
@@ -305,7 +305,8 @@ function! s:get_filetype_option(filetype, key)
       endif
     endif
   endfor
-  return s:default_filetype_options[a:key]
+  let default = (a:0 ? a:1 : 0)
+  return get(s:default_filetype_options, a:key, default)
 endfunction
 
 "  {filetype}
