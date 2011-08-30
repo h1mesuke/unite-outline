@@ -1382,7 +1382,11 @@ let s:source.action_table.jump_list = s:action_table
 "-----------------------------------------------------------------------------
 " Auto-update
 
-autocmd CursorHold * call s:on_cursor_hold()
+augroup plugin-unite-source-outline
+  autocmd!
+  autocmd CursorHold * call s:on_cursor_hold()
+  autocmd BufWritePost * call s:on_buf_write_post()
+augroup END
 
 function! s:on_cursor_hold()
   let bufnr = bufnr('%')
@@ -1395,8 +1399,6 @@ function! s:on_cursor_hold()
     call s:update_headings(bufnr)
   endif
 endfunction
-
-autocmd BufWritePost * call s:on_buf_write_post()
 
 function! s:on_buf_write_post()
   let bufnr = bufnr('%')
