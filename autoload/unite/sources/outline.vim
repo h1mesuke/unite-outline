@@ -183,7 +183,7 @@ function! s:load_outline_info(filetype, is_default)
       " The user moved his/her outline info somewhere!
       continue
     endtry
-    call s:check_update(scr_path)
+    call s:update_script(scr_path)
     " Load the outline info.
     let outline_info = {load_func}()
     let outline_info = s:normalize_outline_info(outline_info)
@@ -216,7 +216,10 @@ function! s:find_autoload_script(funcname)
   return path
 endfunction
 
-function! s:check_update(path)
+" Re-sources script file {path} if the script has been modified since the last
+" sourcing.
+"
+function! s:update_script(path)
   if !exists('s:file_mtime_table')
     let s:file_mtime_table = {}
   endif
@@ -325,7 +328,7 @@ function! s:resolve_filetype(filetype)
   while 1
     call add(candidates, filetype)
     let candidates += s:resolve_filetype_alias(filetype)
-    if filetype =~ '\.'
+    if filetype =~ '\.\w\+$'
       let filetype = substitute(filetype, '\.\w\+$', '', '')
     else
       break
@@ -520,6 +523,8 @@ function! s:Source_gather_candidates(source_args, unite_context)
       let buffer_changenr = s:get_outline_data(bufnr, 'buffer_changenr', 0)
       let  model_changenr = s:get_outline_data(bufnr,  'model_changenr', 0)
       if model_changenr != buffer_changenr
+        " The context buffer has been changed since the last extraction.
+        " Need to update all.
         call s:Util.print_debug('event', 'changenr: buffer = ' . buffer_changenr .
               \ ', model = ' . model_changenr . ', unite = ?')
         let options.is_force = 1
@@ -528,7 +533,12 @@ function! s:Source_gather_candidates(source_args, unite_context)
         let  unite_changenr = s:get_outline_data(bufnr, '__unite_changenr__', 0)
         call s:Util.print_debug('event', 'changenr: buffer = ' . buffer_changenr .
               \ ', model = ' . model_changenr . ', unite = ' . unite_changenr)
-        let options.is_sync = (model_changenr != unite_changenr)
+        if model_changenr != unite_changenr
+          " Model data (headings) has been updated since the last gathering of
+          " candidates.
+          " Need to synchronize candidates to the headings.
+          let options.is_sync = 1
+        endif
       endif
     endif
 
@@ -1019,7 +1029,8 @@ function! s:build_heading_pattern(outline_info)
 endfunction
 function! s:_substitue_sub_pattern(pattern)
   " Substitute all '\(' with '\%('
-  return '\(' . substitute(a:pattern, '\(\(^\|[^\\]\)\(\\\{2}\)*\)\@<=\\(', '\\%(', 'g') . '\)'
+  let meta_lparen = '\(\(^\|[^\\]\)\(\\\{2}\)*\)\@<=\\('
+  return '\(' . substitute(a:pattern, meta_lparen, '\\%(', 'g') . '\)'
 endfunction
 
 " Returns a List of ranges to be skipped while the extraction.
