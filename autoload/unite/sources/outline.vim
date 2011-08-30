@@ -192,6 +192,9 @@ function! s:load_outline_info(filetype, is_default)
   return {}
 endfunction
 
+" Returns a full pathname of the script file where function {funcname} is
+" defined.
+"
 function! s:find_autoload_script(funcname)
   if !exists('s:autoload_scripts')
     let s:autoload_scripts = {}
@@ -312,6 +315,9 @@ function! s:get_filetype_option(filetype, key, ...)
   return get(s:default_filetype_options, a:key, default)
 endfunction
 
+" Returns a List of filetypes that are {filetype} itself and its fallback
+" filetypes.
+"
 "  {filetype}
 "    |/
 "   aaa.bbb.ccc -(alias)-> ddd -(alias)-> eee
@@ -491,6 +497,7 @@ function! s:Source_Hooks_on_syntax(source_args, unite_context)
   let context = s:get_outline_data(bufnr, 'context')
   let outline_info = context.outline_info
   if context.extract_method ==# 'filetype'
+    " Method: Filetype
     if has_key(outline_info, 'highlight_rules')
       for hl_rule in outline_info.highlight_rules
         if !has_key(hl_rule, 'highlight')
@@ -501,6 +508,9 @@ function! s:Source_Hooks_on_syntax(source_args, unite_context)
         execute 'highlight default link uniteSource__Outline_' . hl_rule.name hl_rule.highlight
       endfor
     endif
+  else
+    " Method: Folding
+    " Now folding headings are not highlighted at all.
   endif
 endfunction
 let s:source.hooks.on_syntax = function(s:SID . 'Source_Hooks_on_syntax')
@@ -1427,6 +1437,9 @@ function! s:update_buffer_changenr()
   call s:set_outline_data(bufnr('%'), 'buffer_changenr', changenr())
 endfunction
 
+" Returns True if the current buffer has been changed and the headings of the
+" buffer should be updated.
+"
 function! s:should_update(event)
   let auto_update_enabled = s:get_filetype_option(&l:filetype, 'auto_update')
   if !auto_update_enabled
@@ -1448,9 +1461,9 @@ endfunction
 
 function! s:update_headings(bufnr)
   call s:Util.print_debug('event', 'update_headings')
-  " Update Model.
+  " Update Model data (headings).
   call s:get_headings(a:bufnr, { 'event': 'auto_update', 'is_force': 1 })
-  " Update View if the outline window exists.
+  " Update View (unite.vim) if the outline window exists.
   let outline_wins = s:get_outline_windows(a:bufnr)
   for winnr in outline_wins
     call s:Util.print_debug('event', 'redraw outline window #' . winnr)
