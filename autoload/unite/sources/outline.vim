@@ -694,7 +694,7 @@ function! s:get_headings(bufnr, options)
     endif
   endif
 
-  if s:FileCache.has(a:bufnr)
+  if !context.is_force && s:FileCache.has(a:bufnr)
     " Path B_2: Get headings from the persistent cache.
     try
       let t_headings = s:FileCache.get(a:bufnr)
