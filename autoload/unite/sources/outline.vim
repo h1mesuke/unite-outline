@@ -86,7 +86,7 @@ function! unite#sources#outline#alias(alias, filetype)
 endfunction
 
 " Accessor functions for the outline data, that is a Dictionary assigned to
-" the buffer local variable.
+" the script local variable.
 "
 function! unite#sources#outline#has_outline_data(...)
   return call('s:has_outline_data', a:000)
@@ -94,7 +94,6 @@ endfunction
 function! s:has_outline_data(bufnr, ...)
   if a:0
     let key = a:1
-    call s:_init_outline_data_if_needed(a:bufnr)
     let data = getbufvar(a:bufnr, s:OUTLINE_DATA_VAR)
     return has_key(data, key)
   else
@@ -107,7 +106,6 @@ function! unite#sources#outline#get_outline_data(...)
   return call('s:get_outline_data', a:000)
 endfunction
 function! s:get_outline_data(bufnr, key, ...)
-  call s:_init_outline_data_if_needed(a:bufnr)
   let data = getbufvar(a:bufnr, s:OUTLINE_DATA_VAR)
   return (a:0 ? get(data, a:key, a:1) : data[a:key])
 endfunction
@@ -116,7 +114,6 @@ function! unite#sources#outline#set_outline_data(...)
   call call('s:set_outline_data', a:000)
 endfunction
 function! s:set_outline_data(bufnr, key, value)
-  call s:_init_outline_data_if_needed(a:bufnr)
   let data = getbufvar(a:bufnr, s:OUTLINE_DATA_VAR)
   let data[a:key] = a:value
 endfunction
@@ -125,16 +122,8 @@ function! unite#sources#outline#remove_outline_data(...)
   call call('s:remove_outline_data', a:000)
 endfunction
 function! s:remove_outline_data(bufnr, key)
-  call s:_init_outline_data_if_needed(a:bufnr)
   let data = getbufvar(a:bufnr, s:OUTLINE_DATA_VAR)
   unlet data[a:key]
-endfunction
-
-function! s:_init_outline_data_if_needed(bufnr)
-  let bufvars = getbufvar(a:bufnr, '')
-  if !has_key(bufvars, s:OUTLINE_DATA_VAR)
-    call setbufvar(a:bufnr, s:OUTLINE_DATA_VAR, {})
-  endif
 endfunction
 
 " Returns the outline info for {filetype}. If not found, returns an empty
@@ -477,6 +466,7 @@ endfunction
 let s:SID = s:get_SID()
 delfunction s:get_SID
 
+let s:outline_data = {}
 let s:source = {
       \ 'name'       : 'outline',
       \ 'description': 'candidates from heading list',
@@ -487,10 +477,22 @@ let s:source = {
       \ }
 
 function! s:Source_Hooks_on_init(source_args, unite_context)
-  call s:update_buffer_changenr()
+  call s:unite_outline_initialize()
   let a:unite_context.source__outline_context_bufnr = bufnr('%')
 endfunction
 let s:source.hooks.on_init = function(s:SID . 'Source_Hooks_on_init')
+
+function! s:unite_outline_initialize()
+  let bufnr = bufnr('%')
+  let bufvars  = getbufvar(bufnr, '')
+  if !has_key(bufvars, s:OUTLINE_DATA_VAR)
+    call setbufvar(bufnr, s:OUTLINE_DATA_VAR, {})
+  endif
+  call s:update_buffer_changenr()
+endfunction
+
+function! s:unite_outline_cleanup(bufnr)
+endfunction
 
 function! s:Source_Hooks_on_syntax(source_args, unite_context)
   let bufnr = a:unite_context.source__outline_context_bufnr
@@ -1196,10 +1198,10 @@ function! s:normalize_heading(heading, context)
   return heading
 endfunction
 
-function! s:normalize_heading_word(heading_word)
-  let heading_word = substitute(substitute(a:heading_word, '^\s*', '', ''), '\s*$', '', '')
-  let heading_word = substitute(heading_word, '\s\+', ' ', 'g')
-  return heading_word
+function! s:normalize_heading_word(word)
+  let word = substitute(substitute(a:word, '^\s*', '', ''), '\s*$', '', '')
+  let word = substitute(word, '\s\+', ' ', 'g')
+  return word
 endfunction
 
 let s:SIGNATURE_RANGE = 10
@@ -1404,8 +1406,9 @@ let s:source.action_table.jump_list = s:action_table
 
 augroup plugin-unite-source-outline
   autocmd!
-  autocmd CursorHold * call s:on_cursor_hold()
+  autocmd CursorHold   * call s:on_cursor_hold()
   autocmd BufWritePost * call s:on_buf_write_post()
+  autocmd BufUnload    * call s:on_buf_unload()
 augroup END
 
 function! s:on_cursor_hold()
@@ -1413,7 +1416,7 @@ function! s:on_cursor_hold()
   if !s:has_outline_data(bufnr)
     return
   endif
-  call s:Util.print_debug('event', 'on_cursor_hold')
+  call s:Util.print_debug('event', 'on_cursor_hold #' . bufnr)
   call s:update_buffer_changenr()
   if s:should_update('hold')
     call s:update_headings(bufnr)
@@ -1425,13 +1428,15 @@ function! s:on_buf_write_post()
   if !s:has_outline_data(bufnr)
     return
   endif
-  call s:Util.print_debug('event', 'on_buf_write_post')
+  call s:Util.print_debug('event', 'on_buf_write_post #' . bufnr)
   call s:update_buffer_changenr()
   if s:should_update('write')
     call s:update_headings(bufnr)
   endif
 endfunction
 
+" Update the change count of the current buffer.
+"
 function! s:update_buffer_changenr()
   call s:set_outline_data(bufnr('%'), 'buffer_changenr', changenr())
 endfunction
@@ -1495,6 +1500,12 @@ function! s:get_outline_windows(bufnr)
     let winnr += 1
   endwhile
   return outline_wins
+endfunction
+
+function! s:on_buf_unload()
+  let bufnr = bufnr(unite#util#escape_file_searching(expand('<afile>')))
+  call s:Util.print_debug('event', 'on_buf_unload #' . bufnr)
+  call s:unite_outline_cleanup(bufnr)
 endfunction
 
 " vim: filetype=vim
