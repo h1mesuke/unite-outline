@@ -1182,7 +1182,6 @@ function! s:normalize_heading(heading, context)
         \ 'is_matched': 0,
         \ }, 'keep')
   let heading.line = a:context.lines[heading.lnum]
-  let heading.pattern = '^' . unite#util#escape_pattern(heading.line) . '$'
   let heading.signature = s:calc_signature(heading.lnum, a:context.lines)
   let outline_info = a:context.outline_info
   if a:context.extract_method !=# 'folding' && !has_key(heading, 'group')
@@ -1289,7 +1288,7 @@ function! s:create_candidate(heading, path)
         \ 'source': 'outline',
         \ 'kind'  : 'jump_list',
         \ 'action__path': a:path,
-        \ 'action__pattern'  : a:heading.pattern,
+        \ 'action__pattern'  : '^' . unite#util#escape_pattern(a:heading.line) . '$',
         \ 'action__signature': a:heading.signature,
         \
         \ 'source__heading'  : a:heading,
