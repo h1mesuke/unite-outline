@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-21
+" Updated : 2011-09-01
 " Version : 0.3.8
 " License : MIT license {{{
 "
@@ -130,19 +130,17 @@ call s:Tree.function('is_leaf')
 " Builds a tree structure from a List of elements, which are Dictionaries with
 " `level' attribute, and then returns the root node of the built tree.
 "
-" NOTE: This function allows discontinuous levels and build a tree from such
-" a sequence of levels as shown below:
+" NOTE: This function allows discontinuous levels and can build a tree from such
+" a sequence of levels well.
 "
-"                             root
-"                              |
-"                              +--1
-"   [1, 3, 5, 5, 2, ...]  =>   |  +--3
-"                              |  |  +--5
-"                              |  |  +--5
-"                              |  |
-"                              :  +--2
-"
-" Tree.flatten() function can corrects these discontinuous levels.
+"                                root              root
+"                                 |                 |
+"                                 +--1              +--1
+"    [1, 3, 5, 5, 2, ...]   =>    |  +--3      =>   |  +--2
+"                                 |  |  +--5        |  |  +--3
+"                                 |  |  +--5        |  |  +--3
+"                                 |  |              |  |
+"                                 :  +--2           :  +--2
 "
 function! s:Tree_build(elems)
   let root = s:Tree_new()
@@ -159,23 +157,31 @@ function! s:Tree_build(elems)
     call s:Tree_append_child(stack[-1], elem)
     call add(stack, elem)
   endfor
+  call s:correct_levels(root)
   return root
 endfunction
 call s:Tree.function('build')
 
-" Flatten a tree into a List.
-"
-" NOTE: This function also corrects the level of nodes in accordance with the
-" given tree's structure while flattening it.
+" Corrects the level of nodes in accordance with the given tree's structure.
 "
 "   root             root
 "    |                |
 "    +--1             +--1
 "    |  +--3          |  +--2
-"    |  |  +--5  =>   |  |  +--3  =>  [1, 2, 3, 3, 2, ...]
+"    |  |  +--5  =>   |  |  +--3
 "    |  |  +--5       |  |  +--3
 "    |  |             |  |
 "    :  +--2          :  +--2
+"
+function! s:correct_levels(node)
+  for child in a:node.children
+    let child.level = a:node.level + 1
+    call s:correct_levels(child)
+  endfor
+endfunction
+
+" Flattens a tree into a List and sets the level of nodes in accordance with
+" the given tree's structure.
 "
 function! s:Tree_flatten(node)
   let nodes = []
