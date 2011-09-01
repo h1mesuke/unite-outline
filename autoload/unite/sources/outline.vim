@@ -670,7 +670,7 @@ function! s:is_valid_candidates(candidates, options)
   endif
 endfunction
 
-function! s:is_valid_headings(headings, options)
+function! s:is_valid_headings(headings, context)
   let l_headings = a:headings.as_list
   let is_folding = (!empty(l_headings) && l_headings[0].type ==# 'folding')
   let last_method = (is_folding ? 'folding' : 'filetype')
@@ -702,7 +702,7 @@ function! s:get_headings(bufnr, options)
       let t_headings = s:FileCache.get(a:bufnr)
       call s:check_cache_compatibility(t_headings)
       let headings = s:Headings_new(t_headings)
-      if s:is_valid_headings(headings, options)
+      if s:is_valid_headings(headings, context)
         " Save the headings to the on-memory cache.
         call s:set_outline_data(a:bufnr, 'headings', headings)
         return headings
