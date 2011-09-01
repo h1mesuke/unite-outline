@@ -245,7 +245,7 @@ function! s:Ctags_extract_headings(context)
   endfor
 
   " Merge orphaned pseudo headings.
-  let pseudo_headings = filter(values(scope_table), '!has_key(v:val, "parent")')
+  let pseudo_headings = filter(values(scope_table), 'has_key(v:val, "__pseudo__")')
   if len(pseudo_headings) > 0
     for heading in pseudo_headings
       call s:Tree.append_child(root, heading)

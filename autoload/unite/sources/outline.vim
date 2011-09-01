@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-29
+" Updated : 2011-09-01
 " Version : 0.3.8
 " License : MIT license {{{
 "
@@ -593,7 +593,8 @@ function! s:create_context(bufnr, ...)
 endfunction
 
 function! s:is_valid_headings(headings, options)
-  let is_folding = (!empty(a:headings) && a:headings[0].type ==# 'folding')
+  let l_headings = a:headings.as_list
+  let is_folding = (!empty(l_headings) && l_headings[0].type ==# 'folding')
   let last_method = (is_folding ? 'folding' : 'filetype')
   if a:options.method ==# 'last'
     let a:options.method = last_method
@@ -620,14 +621,16 @@ function! s:get_headings(bufnr, options)
   if s:FileCache.has(a:bufnr)
     " Path B_2: Get headings from the persistent cache.
     try
-      let headings = s:FileCache.get(a:bufnr)
+      let t_headings = s:FileCache.get(a:bufnr)
+      call s:check_cache_compatibility(t_headings)
+      let headings = s:Headings_new(t_headings)
       if s:is_valid_headings(headings, options)
-        call s:ids_to_refs(headings)
         " Save the headings to the on-memory cache.
         call s:set_outline_data(a:bufnr, 'headings', headings)
         return headings
       endif
     catch /^CacheCompatibilityError:/
+      echomsg "fallbacked!"
       " Fallback to Path_B_3 silently.
     catch /^unite-outline:/
       call unite#util#print_error(v:exception)
@@ -638,12 +641,12 @@ function! s:get_headings(bufnr, options)
   let headings = s:extract_headings(context)
 
   let is_volatile = get(context.outline_info, 'is_volatile', 0)
-  let should_cache = (!is_volatile && !empty(headings))
+  let should_cache = (!is_volatile && !empty(headings.as_list))
   if should_cache
     " Save the headings to the cache.
     let is_persistant = (context.num_lines > g:unite_source_outline_cache_limit)
     if is_persistant
-      call s:FileCache.set(a:bufnr, s:refs_to_ids(headings))
+      call s:FileCache.set(a:bufnr, headings.as_tree)
     endif
     call s:set_outline_data(a:bufnr, 'headings', headings)
   else
@@ -656,6 +659,12 @@ function! s:get_headings(bufnr, options)
     endif
   endif
   return headings
+endfunction
+
+function! s:check_cache_compatibility(data)
+  if type(a:data) != type({})
+    throw 'CacheCompatibilityError:'
+  endif
 endfunction
 
 function! s:extract_headings(context)
@@ -762,50 +771,6 @@ function! s:get_reltime()
   return str2float(reltimestr(reltime()))
 endfunction
 
-" Substitutes references to each heading's parent and children with their id
-" numbers.
-"
-" NOTE: Built-in string() function can't dump an object that has any cyclic
-" references because of E724, nested too deep error; therefore, we need to
-" substitute references to each heading's parent and children with their id
-" numbers before their serialization.
-"
-function! s:refs_to_ids(headings)
-  let headings = copy(a:headings)
-  let headings = map(headings, 'copy(v:val)')
-  for heading in headings
-    let heading.parent = heading.parent.id
-    let heading.children = map(copy(heading.children), 'v:val.id')
-  endfor
-  return headings
-endfunction
-
-" Substitutes id numbers of headings with references to the headings
-" themselves.
-"
-function! s:ids_to_refs(headings)
-  try
-    let root = s:Tree.new()
-    let heading_table = {}
-    for heading in a:headings
-      let heading_table[heading.id] = heading
-    endfor
-    for heading in a:headings
-      if heading.parent == 0
-        call s:Tree.append_child(root, heading)
-      else
-        let heading.parent = heading_table[heading.parent]
-      endif
-      call map(heading.children, 'heading_table[v:val]')
-    endfor
-  catch
-    call s:Util.print_debug(v:throwpoint)
-    call s:Util.print_debug(v:exception)
-    throw "CacheCompatibilityError:"
-  endtry
-  return a:headings
-endfunction
-
 " Extract headings from the context buffer in its filetype specific way using
 " the filetype's outline info.
 "
@@ -832,10 +797,11 @@ function! s:extract_filetype_headings(context)
     call outline_info.initialize(a:context)
   endif
   if has_key(outline_info, 'extract_headings')
-    let headings = outline_info.extract_headings(a:context)
+    let lt_headings = outline_info.extract_headings(a:context)
+    " NOTE: lt_ prefix means `List or Tree'.
     let is_normalized = 0
   else
-    let headings = s:builtin_extract_headings(a:context)
+    let lt_headings = s:builtin_extract_headings(a:context)
     let is_normalized = 1
   endif
   if has_key(outline_info, 'finalize')
@@ -843,22 +809,28 @@ function! s:extract_filetype_headings(context)
   endif
 
   " Normalize headings.
-  if type(headings) == type({})
-    let tree = headings | unlet headings
-    let headings = s:Tree.flatten(tree)
-  else
-    let tree = s:Tree.build(headings)
-    let headings = s:Tree.flatten(tree) | " correct levels
-  endif
+  let headings = s:Headings_new(lt_headings)
   if !is_normalized
-    call map(headings, 's:normalize_heading(v:val, a:context)')
+    call map(headings.as_list, 's:normalize_heading(v:val, a:context)')
   endif
 
   " Filter headings.
   let ignore_types = unite#sources#outline#
         \get_filetype_option(buffer.filetype, 'ignore_types')
-  let headings = s:filter_headings(headings, ignore_types)
+  call s:filter_headings(headings, ignore_types)
 
+  return headings
+endfunction
+
+function! s:Headings_new(lt_headings)
+  let headings = {}
+  if type(a:lt_headings) == type({})
+    let headings.as_tree = a:lt_headings
+    let headings.as_list = s:Tree.flatten(a:lt_headings)
+  else
+    let headings.as_tree = s:Tree.build(a:lt_headings)
+    let headings.as_list = a:lt_headings
+  endif
   return headings
 endfunction
 
@@ -1065,7 +1037,7 @@ function! s:skip_until(pattern, from)
 endfunction
 
 function! s:extract_folding_headings()
-  let headings = []
+  let l_headings = []
   let curr_level = 0
   let lnum = 1 | let num_lines = line('$')
   while lnum < num_lines
@@ -1081,18 +1053,18 @@ function! s:extract_folding_headings()
             \ 'type' : 'folding',
             \ 'lnum' : heading_lnum,
             \ }
-      call add(headings, heading)
-      if len(headings) >= g:unite_source_outline_max_headings
+      call add(l_headings, heading)
+      if len(l_headings) >= g:unite_source_outline_max_headings
         call unite#print_message("[unite-outline] " .
-              \ "Too many headings, the extraction was interrupted.")
+              \ "Too many l_headings, the extraction was interrupted.")
         break
       endif
     endif
     let curr_level = foldlevel
     let lnum += 1
   endwhile
-  call map(headings, 's:normalize_heading(v:val)')
-  call s:Tree.build(headings)
+  call map(l_headings, 's:normalize_heading(v:val)')
+  let headings = s:Headings_new(l_headings)
   return headings
 endfunction
 
@@ -1185,10 +1157,10 @@ function! s:filter_headings(headings, ignore_types)
   if empty(a:ignore_types) | return a:headings | endif
   let headings = a:headings
 
-  " Remove comment headings.
+  " Remove comment a:headings.
   if index(a:ignore_types, 'comment') >= 0
-    call filter(headings, 'v:val.type !=# "comment"')
-    let headings = s:Tree.flatten(s:Tree.build(headings))
+    call filter(headings.as_list, 'v:val.type !=# "comment"')
+    let headings = s:Headings_new(headings.as_list)
   endif
 
   let ignore_types = map(copy(a:ignore_types), 'unite#util#escape_pattern(v:val)')
@@ -1200,16 +1172,17 @@ function! s:filter_headings(headings, ignore_types)
     return (a:heading.type =~# self.ignore_types_pattern)
   endfunction
   " Remove headings to be ignored.
-  let tree = s:Tree.get_root(headings[0])
-  call s:Tree.remove(tree, predicate)
-  let headings = s:Tree.flatten(tree)
+  call s:Tree.remove(headings.as_tree, predicate)
+  let headings = s:Headings_new(headings.as_tree)
+
   return headings
 endfunction
 
 function! s:convert_headings_to_candidates(headings, unite_context)
   let bufnr = a:unite_context.source__outline_context_bufnr
   let path = fnamemodify(bufname(bufnr), ':p')
-  let candidates = map(copy(a:headings), 's:create_candidate(v:val, path)')
+  let candidates = map(copy(a:headings.as_list), 's:create_candidate(v:val, path)')
+  let candidates[0].source__headings = a:headings
   return candidates
 endfunction
 
@@ -1229,7 +1202,6 @@ function! s:create_candidate(heading, path)
         \
         \ 'source__heading'  : a:heading,
         \ }
-  let a:heading.__unite_candidate__ = cand
   return cand
 endfunction
 

@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_matcher_glob.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-27
+" Updated : 2011-09-01
 " Version : 0.3.8
 " License : MIT license {{{
 "
@@ -45,7 +45,7 @@ function! s:matcher.filter(candidates, unite_context)
     return a:candidates
   endif
 
-  let tree = s:Tree.get_root(a:candidates[0].source__heading)
+  let tree = a:candidates[0].source__headings.as_tree
   let and = 0
   for input in split(a:unite_context.input, '\\\@<! ')
     let input = substitute(input, '\\ ', ' ', 'g')

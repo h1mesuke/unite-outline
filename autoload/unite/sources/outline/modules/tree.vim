@@ -38,15 +38,14 @@ endfunction
 let s:SID = s:get_SID()
 delfunction s:get_SID
 
-" Tree module provides functions to build, to handle, to filter a tree
-" structure.
+" Tree module provides functions to build and handle a tree structure.
 "
 " You can build a tree from a List, elements of which are Dictionaries with
 " `level' attribute, using Tree.build() function. Or, you can also do it one
 " node by one node manually using Tree.new() and Tree.append_child()
 " functions.
 "
-" The following example show how to build a tree in the latter way.
+" The following example shows how to build a tree in the latter way.
 "
 " == Example
 "
@@ -79,28 +78,13 @@ function! s:Tree_new()
 endfunction
 call s:Tree.function('new')
 
-" Returns the root node of the tree to which {node} belongs.
-"
-function! s:Tree_get_root(node)
-  let node = a:node
-  while 1
-    if has_key(node.parent, '__root__')
-      return node.parent
-    endif
-    let node = node.parent
-  endwhile
-endfunction
-call s:Tree.function('get_root')
-
 " Append {child} to a List of children of {node}.
-" The parent of {child} is set to {node}.
 "
 function! s:Tree_append_child(node, child)
   if !has_key(a:node, 'children')
     let a:node.children = []
   endif
   call add(a:node.children, a:child)
-  let a:child.parent = a:node
   " Ensure that all nodes have 'children'.
   if !has_key(a:child, 'children')
     let a:child.children = []
@@ -118,7 +102,7 @@ endfunction
 call s:Tree.function('remove_child')
 
 function! s:Tree_is_toplevel(node)
-  return has_key(a:node.parent, '__root__')
+  return (a:node.level == 1)
 endfunction
 call s:Tree.function('is_toplevel')
 
@@ -184,15 +168,16 @@ endfunction
 " the given tree's structure.
 "
 function! s:Tree_flatten(node)
-  let nodes = []
+  let elems = []
   for child in a:node.children
     let child.level = a:node.level + 1
-    call add(nodes, child)
-    let nodes += s:Tree_flatten(child)
+    call add(elems, child)
+    let elems += s:Tree_flatten(child)
   endfor
-  return nodes
+  return elems
 endfunction
 call s:Tree.function('flatten')
+
 
 " Marks nodes for which or one of whose children {predicate} returns True.
 "
