@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-01
+" Updated : 2011-09-02
 " Version : 0.3.8
 " License : MIT license {{{
 "
@@ -630,7 +630,6 @@ function! s:get_headings(bufnr, options)
         return headings
       endif
     catch /^CacheCompatibilityError:/
-      echomsg "fallbacked!"
       " Fallback to Path_B_3 silently.
     catch /^unite-outline:/
       call unite#util#print_error(v:exception)
