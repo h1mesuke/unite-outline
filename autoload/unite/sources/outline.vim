@@ -466,7 +466,6 @@ endfunction
 let s:SID = s:get_SID()
 delfunction s:get_SID
 
-let s:outline_data = {}
 let s:source = {
       \ 'name'       : 'outline',
       \ 'description': 'candidates from heading list',
@@ -485,8 +484,12 @@ let s:source.hooks.on_init = function(s:SID . 'Source_Hooks_on_init')
 function! s:unite_outline_initialize()
   let bufnr = bufnr('%')
   let bufvars  = getbufvar(bufnr, '')
+  if !exists('s:outline_data')
+    let s:outline_data = {}
+  endif
   if !has_key(bufvars, s:OUTLINE_DATA_VAR)
     call setbufvar(bufnr, s:OUTLINE_DATA_VAR, {})
+    call s:register_autocmds()
   endif
   call s:update_buffer_changenr()
 endfunction
@@ -1404,13 +1407,6 @@ let s:source.action_table.jump_list = s:action_table
 "-----------------------------------------------------------------------------
 " Auto-update
 
-augroup plugin-unite-source-outline
-  autocmd!
-  autocmd CursorHold   * call s:on_cursor_hold()
-  autocmd BufWritePost * call s:on_buf_write_post()
-  autocmd BufUnload    * call s:on_buf_unload()
-augroup END
-
 function! s:on_cursor_hold()
   let bufnr = bufnr('%')
   if !s:has_outline_data(bufnr)
@@ -1433,6 +1429,15 @@ function! s:on_buf_write_post()
   if s:should_update('write')
     call s:update_headings(bufnr)
   endif
+endfunction
+
+function! s:register_autocmds()
+  augroup plugin-unite-source-outline
+    autocmd! * <buffer>
+    autocmd CursorHold   <buffer> call s:on_cursor_hold()
+    autocmd BufWritePost <buffer> call s:on_buf_write_post()
+    autocmd BufUnload    <buffer> call s:on_buf_unload()
+  augroup END
 endfunction
 
 " Update the change count of the current buffer.
