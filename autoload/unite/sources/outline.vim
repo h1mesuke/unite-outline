@@ -738,10 +738,6 @@ function! s:get_headings(bufnr, options)
       call s:remove_outline_data(a:bufnr, 'headings')
     endif
   endif
-
-  " Update the change count of the headings.
-  call s:set_outline_data(a:bufnr, 'model_changenr', changenr())
-
   return headings
 endfunction
 
@@ -807,6 +803,10 @@ function! s:extract_headings(context)
       let a:context.extract_method = 'folding'
       let headings = s:extract_folding_headings(a:context)
     endif
+
+    " Update the change count of the headings.
+    call s:set_outline_data(a:context.buffer.nr, 'model_changenr', changenr())
+
     let success = 1
     return headings
 
