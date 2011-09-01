@@ -47,7 +47,7 @@ let s:OUTLINE_ALIASES = {
 
 let s:OUTLINE_CACHE_DIR = g:unite_data_directory . '/outline'
 
-" Rename the cache directory if its name is still old, dotted name.
+" Rename the cache directory if its name is still old, dotted style name.
 " See http://d.hatena.ne.jp/tyru/20110824/unite_file_mru
 let old_cache_dir = g:unite_data_directory . '/.outline'
 if isdirectory(s:OUTLINE_CACHE_DIR)
@@ -68,6 +68,7 @@ endif
 unlet old_cache_dir
 
 let s:OUTLINE_DATA_VAR = 'unite_source_outline_data'
+let s:OUTLINE_FILECACHE_FORMAT_VERSION = 1
 
 "-----------------------------------------------------------------------------
 " Functions
@@ -541,13 +542,13 @@ function! s:Source_gather_candidates(source_args, unite_context)
         " The context buffer has been changed since the last extraction.
         " Need to update all.
         call s:Util.print_debug('event', 'changenr: buffer = ' . buffer_changenr .
-              \ ', model = ' . model_changenr . ', unite = ?')
+              \ ', model = ' . model_changenr . ', unite = ? ')
         let options.is_force = 1
         let options.is_sync  = 0
       else
         let  unite_changenr = s:get_outline_data(bufnr, '__unite_changenr__', 0)
         call s:Util.print_debug('event', 'changenr: buffer = ' . buffer_changenr .
-              \ ', model = ' . model_changenr . ', unite = ' . unite_changenr)
+              \ ', model = ' . model_changenr . ', unite = ' . unite_changenr . ' ')
         if model_changenr != unite_changenr
           " Model data (headings) has been updated since the last gathering of
           " candidates.
@@ -687,6 +688,13 @@ function! s:is_valid_headings(headings, context)
   endif
 endfunction
 
+function! s:is_valid_filecache(data)
+  let format_version = '__unite_outline_filecache_format_version__'
+  return (type(a:data) == type({})
+        \ && has_key(a:data, format_version)
+        \ && a:data[format_version] == s:OUTLINE_FILECACHE_FORMAT_VERSION)
+endfunction
+
 function! s:get_headings(bufnr, options)
   let context = s:create_context(a:bufnr, a:options)
   call s:set_outline_data(a:bufnr, 'context', context)
@@ -703,16 +711,16 @@ function! s:get_headings(bufnr, options)
     " Path B_2: Get headings from the persistent cache.
     try
       let t_headings = s:FileCache.get(a:bufnr)
-      call s:check_cache_compatibility(t_headings)
-      let headings = s:Headings_new(t_headings)
-      if s:is_valid_headings(headings, context)
-        " Save the headings to the on-memory cache.
-        call s:set_outline_data(a:bufnr, 'headings', headings)
-        return headings
+      if s:is_valid_filecache(t_headings)
+        let headings = s:Headings_new(t_headings)
+        if s:is_valid_headings(headings, context)
+          " Save the headings to the on-memory cache.
+          call s:set_outline_data(a:bufnr, 'headings', headings)
+          return headings
+        endif
       endif
-    catch /^CacheCompatibilityError:/
-      " Fallback to Path_B_3 silently.
     catch /^unite-outline:/
+      " Fallback to Path_B_3.
       call unite#util#print_error(v:exception)
     endtry
   endif
@@ -726,6 +734,8 @@ function! s:get_headings(bufnr, options)
     " Save the headings to the cache.
     let is_persistant = (context.__num_lines__ > g:unite_source_outline_cache_limit)
     if is_persistant
+      let format_version = '__unite_outline_filecache_format_version__'
+      let headings.as_tree[format_version] = s:OUTLINE_FILECACHE_FORMAT_VERSION
       call s:FileCache.set(a:bufnr, headings.as_tree)
     endif
     call s:set_outline_data(a:bufnr, 'headings', headings)
@@ -739,12 +749,6 @@ function! s:get_headings(bufnr, options)
     endif
   endif
   return headings
-endfunction
-
-function! s:check_cache_compatibility(data)
-  if type(a:data) != type({})
-    throw 'CacheCompatibilityError:'
-  endif
 endfunction
 
 function! s:extract_headings(context)
