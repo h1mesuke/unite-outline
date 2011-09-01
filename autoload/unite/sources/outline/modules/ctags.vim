@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-25
+" Updated : 2011-09-01
 " Version : 0.3.8
 " License : MIT license {{{
 "
@@ -194,21 +194,20 @@ function! s:Ctags_extract_headings(context)
 
   " Build a heading tree processing a List of tag objects.
   let root = s:Tree.new()
-  let idx = 0 | let num_tags = len(tags)
-  while idx < num_tags
-    let tag = tags[idx]
+  for tag in tags
     " Create a heading from the tag object.
     if has_key(lang_info, 'create_heading')
       let heading = lang_info.create_heading(tag, a:context)
     else
       let heading = s:create_heading(tag, a:context)
     endif
-    if empty(heading) | let idx += 1 | continue | endif
+    if empty(heading) | continue | endif
 
     " Remove extra spaces to normalize the parameter list.
     let heading.word = substitute(substitute(heading.word, '(\s*', '(', ''), '\s*)', ')', '')
     " Append an ID suffix (#2, #3, ...) to the heading word if the heading is
     " the second or subsequent one that has the tag's name.
+    call s:count_tag_name(tag, tag_name_counter)
     let heading.word .= s:get_tag_name_id_suffix(tag, tag_name_counter)
 
     if tag.kind =~# scope_kinds_pattern
@@ -243,8 +242,7 @@ function! s:Ctags_extract_headings(context)
       " Group_B: The heading belongs to the toplevel.
       call s:Tree.append_child(root, heading)
     endif
-    let idx += 1
-  endwhile
+  endfor
 
   " Merge orphaned pseudo headings.
   let pseudo_headings = filter(values(scope_table), '!has_key(v:val, "parent")')
@@ -311,17 +309,26 @@ function! s:get_tag_access_mark(tag)
   return get(s:OOP_ACCESS_MARKS, access, '_') . ' '
 endfunction
 
+function! s:count_tag_name(tag, counter)
+  let name = a:tag.qualified_name
+  if has_key(a:counter, name)
+    let a:counter[name] += 1
+  else
+    let a:counter[name] = 1
+  endif
+endfunction
+
 " Returns an ID suffix (#2, #3, ...) of {tag}.
 " If the tag is the first one that has its name, returns empty String.
 "
 function! s:get_tag_name_id_suffix(tag, counter)
   let name = a:tag.qualified_name
-  if has_key(a:tag, 'signature') | let name .= a:tag.signature | endif
-  if has_key(a:counter, name)
-    let a:counter[name] += 1
+  if has_key(a:tag, 'signature')
+    let name .= a:tag.signature
+  endif
+  if has_key(a:counter, name) && a:counter[name] > 1
     return ' #' . a:counter[name]
   else
-    let a:counter[name] = 1
     return ''
   endif
 endfunction
