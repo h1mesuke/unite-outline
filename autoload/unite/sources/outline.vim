@@ -103,6 +103,9 @@ function! s:has_outline_data(bufnr, ...)
   endif
 endfunction
 
+" Returns the value of outline data {key} for buffer {bufnr}.
+" If the value isn't available, returns {default}.
+"
 function! unite#sources#outline#get_outline_data(...)
   return call('s:get_outline_data', a:000)
 endfunction
@@ -111,6 +114,8 @@ function! s:get_outline_data(bufnr, key, ...)
   return (a:0 ? get(data, a:key, a:1) : data[a:key])
 endfunction
 
+" Sets the value of outline data {key} for buffer {bufnr} to {value}.
+"
 function! unite#sources#outline#set_outline_data(...)
   call call('s:set_outline_data', a:000)
 endfunction
@@ -119,6 +124,8 @@ function! s:set_outline_data(bufnr, key, value)
   let data[a:key] = a:value
 endfunction
 
+" Removes the value of outline data {key} for buffer {bufnr}.
+"
 function! unite#sources#outline#remove_outline_data(...)
   call call('s:remove_outline_data', a:000)
 endfunction
@@ -289,6 +296,9 @@ function! s:normalize_heading_groups(outline_info)
   let a:outline_info.heading_group_map = group_map
 endfunction
 
+" Returns the value of filetype option {key} for {filetype}.
+" If the value isn't available, returns {default}.
+"
 function! unite#sources#outline#get_filetype_option(...)
   return call('s:get_filetype_option', a:000)
 endfunction
