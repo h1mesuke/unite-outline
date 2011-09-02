@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-02
+" Updated : 2011-09-03
 " Version : 0.3.8
 " License : MIT license {{{
 "
@@ -1307,9 +1307,9 @@ function! s:create_candidate(heading, path)
         \ 'source': 'outline',
         \ 'kind'  : 'jump_list',
         \ 'action__path': a:path,
+        \ 'action__line': a:heading.lnum,
         \ 'action__pattern'  : '^' . unite#util#escape_pattern(a:heading.line) . '$',
         \ 'action__signature': a:heading.signature,
-        \
         \ 'source__heading'  : a:heading,
         \ }
   return cand
