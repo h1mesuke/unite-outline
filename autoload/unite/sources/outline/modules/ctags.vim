@@ -32,8 +32,9 @@ endfunction
 
 "-----------------------------------------------------------------------------
 
-let s:Tree = unite#sources#outline#import('Tree')
-let s:Util = unite#sources#outline#import('Util')
+let s:Tree  = unite#sources#outline#import('Tree')
+let s:Util  = unite#sources#outline#import('Util')
+let s:Vital = vital#of('unite')
 
 function! s:get_SID()
   return matchstr(expand('<sfile>'), '<SNR>\d\+_')
@@ -99,16 +100,18 @@ call s:Ctags.function('supports')
 "
 function! s:execute_ctags(context)
   " Write the current content of the buffer to a temporary file.
+  let input = join(a:context.lines[1:], "\<NL>")
+  let input = s:Vital.iconv(input, &encoding, &termencoding)
   let temp_file = tempname()
-  if writefile(a:context.lines[1:], temp_file) == -1
+  if writefile(split(input, "\<NL>"), temp_file) == -1
     call unite#util#print_message(
           \ "[unite-outline] Couldn't make a temporary file at " . temp_file)
     return []
   endif
   " NOTE: If the auto-update is enabled, the buffer may have been changed
-  " since the last write. In this case, extracting headings from the file
-  " would cause a list index error because the buffer's content
-  " (a:context.lines) is different from the file's content.
+  " since the last write. Because the user expects the headings to be
+  " extracted from the buffer which he/she is watching now, we need to process
+  " the buffer's content not its file's content.
 
   let filetype = a:context.buffer.major_filetype
   " Assemble the command-line.
