@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-01
+" Updated : 2011-09-02
 " Version : 0.3.8
 " License : MIT license {{{
 "
@@ -39,11 +39,13 @@ let s:SID = s:get_SID()
 delfunction s:get_SID
 
 " Tree module provides functions to build and handle a tree structure.
+" There are two ways to build a Tree:
 "
-" You can build a tree from a List, elements of which are Dictionaries with
-" `level' attribute, using Tree.build() function. Or, you can also do it one
-" node by one node manually using Tree.new() and Tree.append_child()
-" functions.
+"   A.  Build a tree from a List, elements of which are Dictionaries with
+"       `level' attribute, using Tree.build(). 
+"
+"   B.  Build a tree one node by one node manually using Tree.new() and
+"       Tree.append_child().
 "
 " The following example shows how to build a tree in the latter way.
 "
@@ -85,7 +87,7 @@ function! s:Tree_append_child(node, child)
     let a:node.children = []
   endif
   call add(a:node.children, a:child)
-  " Ensure that all nodes have 'children'.
+  " Ensure that all nodes have `children'.
   if !has_key(a:child, 'children')
     let a:child.children = []
     " NOTE: While building a tree, all nodes of the tree pass through this
@@ -164,8 +166,8 @@ function! s:correct_levels(node)
   endfor
 endfunction
 
-" Flattens a tree into a List and sets the level of nodes in accordance with
-" the given tree's structure.
+" Flattens a tree into a List and corrects the level of nodes in accordance
+" with the given tree's structure.
 "
 function! s:Tree_flatten(node)
   let elems = []
@@ -178,27 +180,38 @@ function! s:Tree_flatten(node)
 endfunction
 call s:Tree.function('flatten')
 
+" NOTE: Fast but not correct the level of nodes.
+function! s:fast_flatten(node)
+  let elems = []
+  let stack = reverse(copy(a:node.children))
+  while !empty(stack)
+    let node = remove(stack, -1)
+    call add(elems, node)
+    let stack += reverse(copy(node.children))
+  endwhile
+  return elems
+endfunction
 
-" Marks nodes for which or one of whose children {predicate} returns True.
+" Sets the matched-marks of nodes for which or one of whose children
+" {predicate} returns True.
 "
-" * A node is matched for which {predicate} returns True.
-" * A node is marked when it has any marked child or is matched.
+" * A node is MATCHED for which {predicate} returns True.
+" * A node is MARKED when it has any marked child or is matched.
 "
-" NOTE: unite-outline's matcher see these flags to accomplish its tree-aware
-" filtering task.
+" NOTE: Before calling this function, the matched-marks of nodes must be
+" initalized by Tree.match_start().
 "
-function! s:Tree_match(node, predicate, ...)
-  let and = (a:0 ? a:1 : 0)
-  if !and
-    call s:init_marks(a:node)
-  endif
+" NOTE: unite-outline's matcher and formatter see these flags to accomplish
+" their tree-aware filtering and formatting tasks.
+"
+function! s:Tree_match(node, predicate)
   let child_marked = 0
   for child in a:node.children
     if !child.is_marked
       continue
     endif
     let child.is_matched = child.is_matched && a:predicate.call(child)
-    let child.is_marked = (s:Tree_match(child, a:predicate, 1) || child.is_matched)
+    let child.is_marked = (s:Tree_match(child, a:predicate) || child.is_matched)
     if child.is_marked
       let child_marked = 1
     endif
@@ -207,13 +220,15 @@ function! s:Tree_match(node, predicate, ...)
 endfunction
 call s:Tree.function('match')
 
-function! s:init_marks(node)
-  for child in a:node.children
-    let child.is_marked  = 1
-    let child.is_matched = 1
-    call s:init_marks(child)
+" Initializes the matched-marks of nodes.
+"
+function! s:Tree_match_start(node)
+  for elem in s:fast_flatten(a:node)
+    let elem.is_marked  = 1
+    let elem.is_matched = 1
   endfor
 endfunction
+call s:Tree.function('match_start')
 
 function! s:Tree_has_marked_child(node)
   for child in a:node.children

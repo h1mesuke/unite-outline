@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_matcher_glob.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-01
+" Updated : 2011-09-02
 " Version : 0.3.8
 " License : MIT license {{{
 "
@@ -41,12 +41,13 @@ let s:matcher = {
 " unite/autoload/filters/matcher_glob.vim
 "
 function! s:matcher.filter(candidates, unite_context)
+  let tree = a:candidates[0].source__headings.as_tree
+  call s:Tree.match_start(tree)
+
   if a:unite_context.input == '' || empty(a:candidates)
     return a:candidates
   endif
 
-  let tree = a:candidates[0].source__headings.as_tree
-  let and = 0
   for input in split(a:unite_context.input, '\\\@<! ')
     let input = substitute(input, '\\ ', ' ', 'g')
     " Use something like closure.
@@ -77,8 +78,7 @@ function! s:matcher.filter(candidates, unite_context)
       endif
     endif
     " Mark headings.
-    call s:Tree.match(tree, predicate, and)
-    let and = 1
+    call s:Tree.match(tree, predicate)
   endfor
   " Filter headings.
   let candidates = filter(copy(a:candidates), 'v:val.source__heading.is_marked')
