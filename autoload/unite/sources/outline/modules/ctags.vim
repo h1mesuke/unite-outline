@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-02
+" Updated : 2011-09-03
 " Version : 0.3.8
 " License : MIT license {{{
 "
@@ -97,26 +97,46 @@ call s:Ctags.function('supports')
 
 " Executes the Ctags and returns a List of tag objects.
 "
-function! s:execute_ctags(path, filetype)
+function! s:execute_ctags(context)
+  " Write the current content of the buffer to a temporary file.
+  let temp_file = tempname()
+  if writefile(a:context.lines[1:], temp_file) == -1
+    call unite#util#print_message(
+          \ "[unite-outline] Couldn't make a temporary file at " . temp_file)
+    return []
+  endif
+  " NOTE: If the auto-update is enabled, the buffer may have been changed
+  " since the last write. In this case, extracting headings from the file
+  " would cause a list index error because the buffer's content
+  " (a:context.lines) is different from the file's content.
+
+  let filetype = a:context.buffer.major_filetype
   " Assemble the command-line.
-  let lang_info = s:Ctags.lang_info[a:filetype]
+  let lang_info = s:Ctags.lang_info[filetype]
   let opts  = ' -f - --excmd=number --fields=afiKmsSzt --sort=no '
   let opts .= ' --language-force=' . lang_info.name . ' '
   let opts .= lang_info.ctags_options
 
-  let path = s:Util.Path.normalize(a:path)
+  let path = s:Util.Path.normalize(temp_file)
   let path = s:Util.String.shellescape(path)
 
-  let ctags_cmdline = s:Ctags.exe . opts . path
+  let cmdline = s:Ctags.exe . opts . path
 
   " Execute the Ctags.
-  let ctags_out = unite#util#system(ctags_cmdline)
+  let ctags_out = unite#util#system(cmdline)
   let status = unite#util#get_last_status()
   if status != 0
-    call unite#util#print_error(
-          \ "unite-outline: ctags failed with status " . status . ".")
+    call unite#util#print_message(
+          \ "[unite-outline] ctags failed with status " . status . ".")
     return []
   endif
+
+  " Delete the used temporary file.
+  if delete(temp_file) != 0
+    call unite#util#print_error(
+          \ "unite-outline: Couldn't delete a temporary file: " . temp_file)
+  endif
+
   let tag_lines = split(ctags_out, "\<NL>")
   try
     " Convert tag lines into tag objects.
@@ -184,8 +204,7 @@ function! s:Ctags_extract_headings(context)
   endif
 
   " Execute the Ctags and get a List of tag objects.
-  let path = a:context.buffer.path
-  let tags = s:execute_ctags(path, filetype)
+  let tags = s:execute_ctags(a:context)
 
   let lang_info = s:Ctags.lang_info[filetype]
   let scope_kinds_pattern = '^\%(' . join(lang_info.scope_kinds, '\|') . '\)$'
