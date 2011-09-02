@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-08-25
+Updated : 2011-09-03
 Version : 0.3.8
 License : MIT license {{{
 
@@ -105,6 +105,9 @@ License : MIT license {{{
 	|<Plug>(unite_redraw)|（デフォルトのキーマッピングでは <C-l>）を実行し
 	ます。
 
+	NOTE: バージョン 0.5.0 から見出しの自動更新が可能になりました。
+	詳細は|unite-outline-filetype-option-auto-update|を参照
+
 折り畳みから見出しを作成する ~
 
 	バッファに折り畳みが設定されていれば、それを元に見出しを作成することも
@@ -159,28 +162,57 @@ g:unite_source_outline_filetype_options
 	が使用できます。個別の設定がなされていないファイルタイプにはその設定が
 	適用されます。
 
-	初期値は以下の設定例に同じ
+	初期値は {}
 
 	設定例： >
-	let g:unite_source_outline_filetype_options = {}
-	let g:unite_source_outline_filetype_options['*'] = {
-	      \ 'ignore_types': [],
-	      \ }
+	let g:unite_source_outline_filetype_options = {
+	      \ '*': {
+	      \   'auto_update': 1,
+	      \   'auto_update_event': 'write',
+	      \ },
+	      \ 'cpp': {
+	      \   'auto_update': 0,
+	      \   'ignore_types': ['enum', 'typedef', 'macro'],
+	      \ },
+	      \ 'javascript': {
+	      \   'ignore_types': ['comment'],
+	      \ },
+	      \ 'markdown': {
+	      \   'auto_update_event': 'hold',
+	      \ },
+	      \}
 <
 	設定可能なオプション ~
 
-	ignore_types	リスト	*unite-outline-filetype-option-ignore-types*
+	auto_update		*unite-outline-filetype-option-auto-update*
+
+		見出しの自動更新を行うかどうか。
+		デフォルト値は 1
+
+	auto_update_event	*unite-outline-filetype-option-auto-update-event*
+
+		見出しの自動更新を行うタイミング
+		以下のいずれか。
+
+		値		見出しの更新契機
+		--------	----------------------------
+		"write"		|BufWritePost|
+		"hold"		|BufWritePost|, |CursorHold|
+
+		デフォルト値は "write"
+
+		NOTE: 見出しの更新は、前回の更新時からバッファの内容が変更され
+		ていた場合にのみ行われます。また、"hold" を使用する場合、
+		'updatetime' が見出しの更新間隔になりますので、適切な値に設定
+		して下さい。
+
+	ignore_types		*unite-outline-filetype-option-ignore-types*
 
 		非表示にしたい見出しの種類のリスト
 		指定可能な見出しの種類については outline info の定義を参照
 
-		設定例： >
-		let ftopts = g:unite_source_outline_filetype_options
-		let ftopts['*'].ignore_types = ['comment']
-		let ftopts.cpp = {}
-		let ftopts.cpp.ignore_types = ['macro', 'typedef', 'enum']
-		unlet ftopts
-<
+		デフォルト値は []
+
 g:unite_source_outline_max_headings	*g:unite_source_outline_max_headings*
 
 	抽出する見出し数の上限
@@ -207,7 +239,7 @@ g:unite_source_outline_highlight	*g:unite_source_outline_highlight*
 	見出し一覧のハイライトを指定するための辞書
 	見出しのグループごとに適用するハイライトを指定できます。
 
-	初期値は以下の設定例に同じ
+	初期値は {}
 
 	設定例： >
 	let g:unite_source_outline_highlight = {
@@ -244,7 +276,7 @@ g:unite_source_outline_highlight	*g:unite_source_outline_highlight*
 	nnoremap <silent> [unite]Z :<C-u>Unite -buffer-name=outline outline:filetype<CR>
 
 	call unite#set_buffer_name_option('outline', 'ignorecase', 1)
-	call unite#set_buffer_name_option('outline', 'smartcase', 1)
+	call unite#set_buffer_name_option('outline', 'smartcase',  1)
 <
 ==============================================================================
 Outline Info					*unite-outline-info*
@@ -526,10 +558,10 @@ extract_headings	関数（任意）	*unite-outline-info-extract_headings()*
 	設定されていると、見出しを抽出するために呼ばれます。
 	返値として見出し（辞書）のリストまたはツリーを返します。
 
-	この関数を定義することで、outline info独自の見出し抽出ロジックを実装で
-	きます。これにより、従来の正規表現を使ったパターンマッチによる方法では
-	見出しの抽出が困難な場合でも、外部の構文解析プログラムを利用するなどの
-	方法が可能になります。
+	この関数を定義することで、outline info独自の見出し抽出を実装できます。
+	これにより、従来の正規表現を使ったパターンマッチによる方法では見出しの
+	抽出が困難な場合でも、外部の構文解析プログラムを利用するなどの方法が可
+	能になります。
 
 	extract_headings() に渡される引数は以下の通りです。
 
@@ -546,8 +578,8 @@ extract_headings	関数（任意）	*unite-outline-info-extract_headings()*
 	見出しのツリーを返す ~
 
 	アウトラインを解析する過程で outline info が見出しのツリー構造を把握で
-	きる場合、extract_headings() にて抽出された見出しのツリーを構築し、そ
-	れを返値とすることができます。
+	きる場合、extract_headings() にて見出しのツリーを構築し、それを返値と
+	することができます。
 
 	見出しのツリーは以下のように作成します。
 
@@ -735,6 +767,18 @@ unite#sources#outline#get_default_outline_info( {filetype})
 	{filetype} のデフォルトの outline info を返します。
 	outline info が見つからない場合は空の辞書 {} を返します。
 
+				*unite#sources#outline#get_filetype_option()*
+unite#sources#outline#get_filetype_option( {filetype}, {key} [, {default}])
+
+	{filetype} のオプション {key} の値を返します。
+	設定値が見つからない場合、{default} が指定されていれば {default} を、
+	そうでないなら 0 を返します。
+
+					*unite#sources#outline#get_highlight()*
+unite#sources#outline#get_highlight( {name})
+
+	{name} に関連付けられたハイライトグループを返します。
+
 					*unite#sources#outline#import()*
 unite#sources#outline#import( {module})
 
@@ -742,7 +786,8 @@ unite#sources#outline#import( {module})
 >
 	let s:Util = unite#sources#outline#import('Util')
 <
-unite#sources#outline#clear_cache()	*unite#sources#outline#clear_cache()*
+				*unite#sources#outline#remove_cache_files()*
+unite#sources#outline#remove_cache_files()
 
 	ファイルに保存した見出しのキャッシュを削除します。
 
@@ -794,11 +839,6 @@ Util.neighbor_matchstr( {context}, {lnum}, {pattern} [, {range} [, {exclusive}]]
 
 ==============================================================================
 TODO						*unite-outline-todo*
-
-	*　見出し一覧の自動更新
-
-		バッファの変更を検出し、見出し一覧の更新を自動で行う仕組み。
-		できれば非同期にやりたいが……
 
 	* 絞り込み時の hlsearch
 
@@ -859,12 +899,18 @@ outline info 募集！
 
 https://github.com/h1mesuke/unite-outline/commits/master
 
+0.5.0	2011-09-03
+
+	* 見出しの自動更新を実装し、以下のファイルタイプオプションを追加
+	  - auto_update	 |unite-outline-filetype-option-auto-update|
+	  - auto_update_event
+
 0.3.8	2011-08-25
 
 	* 見出しの抽出を高速化
 	  これにともない、outline info の heading-1, heading, heading+1 に使用
 	  できる正規表現にいくつかの制約を導入
-				|unite-outline-info-heading-pattern-restrictions|
+			|unite-outline-info-heading-pattern-restrictions|
 
 	* ファイルタイプごとのオプション設定をまとめるため、以下の変数を追加
 	  -|g:unite_source_outline_filetype_options|

@@ -1,7 +1,7 @@
 *unite-outline.txt*	outline source for unite.vim
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-08-25
+Updated : 2011-09-03
 Version : 0.3.8
 License : MIT license {{{
 
@@ -45,7 +45,7 @@ CONTENTS					*unite-outline-contents*
 ==============================================================================
 INTRODUCTION					*unite-outline-introduction*
 
-	*unite-outline* is a source of |unite| which parses the current
+	*unite-outline* is an |unite|'s source which parses the current
 	buffer's content and extracts headings from it and then shows the list
 	of the headings using the user interface of unite.vim. When you select
 	a heading from the list, you can jump to the corresponding location of
@@ -95,6 +95,9 @@ UPDATE HEADINGS ~
 <
 	Or, do |<Plug>(unite_redraw)|, which is mapped to <C-l> by default, at
 	the heading list in Normal mode.
+
+	NOTE: From verion 0.5.0, unite-outline updates headings automatically.
+	See |unite-outline-filetype-option-auto-update| .
 
 FILTER HEADINGS ~
 
@@ -153,30 +156,60 @@ g:unite_source_outline_filetype_options
 	a filetype has no value for an option, the value of "*" for the option
 	is used.
 
-	Default value is shown in the following example.
+	Default value is {}
 
 	Example: >
-	let g:unite_source_outline_filetype_options = {}
-	let g:unite_source_outline_filetype_options['*'] = {
-	      \ 'ignore_types': [],
-	      \ }
+	let g:unite_source_outline_filetype_options = {
+	      \ '*': {
+	      \   'auto_update': 1,
+	      \   'auto_update_event': 'write',
+	      \ },
+	      \ 'cpp': {
+	      \   'auto_update': 0,
+	      \   'ignore_types': ['enum', 'typedef', 'macro'],
+	      \ },
+	      \ 'javascript': {
+	      \   'ignore_types': ['comment'],
+	      \ },
+	      \ 'markdown': {
+	      \   'auto_update_event': 'hold',
+	      \ },
+	      \}
 <
 	FILETYPE OPTIONS ~
 
-	ignore_types	List	*unite-outline-filetype-option-ignore-types*
+	auto_update		*unite-outline-filetype-option-auto-update*
+
+		Whether unite-outline update headings automatically or not.
+
+		The default value is 1.
+
+	auto_update_event	*unite-outline-filetype-option-auto-update-event*
+
+		Event that triggers the auto-update of headings.
+		One of the followings.
+
+		Value		Trigger(s)
+		--------	----------------------------
+		"write"		|BufWritePost|
+		"hold"		|BufWritePost|, |CursorHold|
+
+		The default value is "write".
+
+		NOTE: Headings are updated only when the buffer has been
+		changed since the last update. If you choice "hold" as
+		"auto_update_event", the interval of update is specified by
+		'updatetime'.
+
+	ignore_types		*unite-outline-filetype-option-ignore-types*
 
 		List of heading types to be ignored.
 
 		See the definition of the outline info to know about available
 		heading types.
 
-		Example: >
-		let ftopts = g:unite_source_outline_filetype_options
-		let ftopts['*'].ignore_types = ['comment']
-		let ftopts.cpp = {}
-		let ftopts.cpp.ignore_types = ['macro', 'typedef', 'enum']
-		unlet ftopts
-<
+		The default value is []
+
 g:unite_source_outline_max_headings	*g:unite_source_outline_max_headings*
 
 	Maximum number of headings.
@@ -203,7 +236,7 @@ g:unite_source_outline_highlight	*g:unite_source_outline_highlight*
 	Dictionary of highlight settings.
 	You can select the highlight for each heading groups.
 
-	Default value is shown in the following example.
+	Default value is {}
 
 	Example: >
 	let g:unite_source_outline_highlight = {
@@ -230,7 +263,7 @@ g:unite_source_outline_highlight	*g:unite_source_outline_highlight*
 	See |unite-outline-info-highlight_rules|.
 
 ------------------------------------------------------------------------------
-SETTINGS EXAMPLE					*unite-outline-settings-example*
+SETTINGS EXAMPLE			*unite-outline-settings-example*
 >
 	nnoremap [unite] <Nop>
 	nmap f [unite]
@@ -240,7 +273,7 @@ SETTINGS EXAMPLE					*unite-outline-settings-example*
 	nnoremap <silent> [unite]Z :<C-u>Unite -buffer-name=outline outline:filetype<CR>
 
 	call unite#set_buffer_name_option('outline', 'ignorecase', 1)
-	call unite#set_buffer_name_option('outline', 'smartcase', 1)
+	call unite#set_buffer_name_option('outline', 'smartcase',  1)
 <
 ==============================================================================
 OUTLINE INFO					*unite-outline-info*
@@ -255,7 +288,7 @@ OUTLINE INFO					*unite-outline-info*
 	When you try to show the heading list, the outline info for the
 	current buffer's filetype is searched. 
 	
-	The search order is as follows.
+	The search order is as follows:
 
 	[1] g:unite_source_outline_info.{filetype}
 	[2] outline#{filetype}#outline_info()
@@ -308,7 +341,7 @@ CREATE OUTLINE INFO				*unite-outline-info-create*
 ------------------------------------------------------------------------------
 ATTRIBUTES					*unite-outline-info-attributes*
 
-	The attributes of outline info are as follows.
+	The attributes of outline info are as follows:
 
 EXTRACTING HEADINGS BY CALLBACK ~
 
@@ -363,8 +396,8 @@ heading			String (Optional) 	*unite-outline-info-heading*
 
 	These restrictions exist to maximize the speed of pattern matching. If
 	you need any back references to extract headings, please use a pattern
-	that has no back references and matches loosely and filter the matched
-	lines strictly with create_heading() callback function.
+	that has no back references and matches loosely and then filter the
+	matched lines strictly again at create_heading() callback function.
 
 
 heading+1		String (Optional)	*unite-outline-info-heading+1*
@@ -393,7 +426,7 @@ create_heading		Funcref (Optional)	*unite-outline-info-create_heading()*
 	By defining this callback function, you can format the words of
 	headings and decide the heading level (indent) of them.
 
-	The arguments passed to create_heading() are as follows.
+	The arguments passed to create_heading() are as follows:
 
 	* {which}		String
 				Kind of the match
@@ -467,7 +500,7 @@ create_heading		Funcref (Optional)	*unite-outline-info-create_heading()*
 			If omitted, set to "generic".
 
 	If returns an empty Dictionary, it isn't considered as a heading and
-	is ignored.
+	ignored.
 
 	Example (for HTML): >
 	function! s:outline_info.create_heading(which, heading_line, matched_line, context)
@@ -547,12 +580,12 @@ extract_headings	Funcref (Optional)	*unite-outline-info-extract_headings()*
 	It should return a List of headings or a Tree of headings.
 
 	By defining this callback function, you can implement your original
-	logic of extracting and structuring headings. Even if it is so
-	difficult to extract headings by the pattern matching and callback
-	strategy by create_heading(), you can use any external programs like
-	ctags in extract_headings() to accomplish the extraction.
+	logic to extract headings. Even if it is so difficult to extract
+	headings by the pattern matching and callback strategy by
+	create_heading(), you can use any external programs like ctags in
+	extract_headings() to accomplish the extraction.
 
-	The arguments passed to extract_headings() are as follows.
+	The argument passed to extract_headings() is:
 
 	* {context}	Dictionary
 			Information about the current context.
@@ -568,10 +601,10 @@ extract_headings	Funcref (Optional)	*unite-outline-info-extract_headings()*
 	RETURNING A TREE OF HEADINGS ~
 
 	If the outline info can know the tree structure of extracted headings
-	in its extraction process, extract_headings() can return the headings
+	in its extracting process, extract_headings() can return the headings
 	as a Tree.
 
-	You can build a Tree of headings in the manner shown as the following
+	You can build a Tree of headings in the manner shown in the following
 	example.
 
 	Example: >
@@ -585,12 +618,12 @@ extract_headings	Funcref (Optional)	*unite-outline-info-extract_headings()*
 	call s:Tree.append_child(heading_B, heading_3)
 <
 	The headings at the top level must be children of the root node
-	created by Tree.new(). The relations between each nodes and its parent
-	can be made by Tree.append_child().
+	created by Tree.new(). The relations between each headings and its
+	children can be made by Tree.append_child().
 
 	As a result of the example code, a tree that has a structure shown in
-	the following figure is built. extract_headings() returns the root,
-	that never be displayed on the heading list window.
+	the following figure is built. extract_headings() returns the root
+	node, that never be displayed on the heading list window.
 >
 	root
 	 |
@@ -637,8 +670,7 @@ need_blank_between	Funcref (Optional)	*unite-outline-info-need_blank_between()*
 
 	By defining this callback function, you can implement your original
 	formatter of heading lists. Even if the built-in formatter doesn't
-	works expectedly, you can change the behaviour of the formatter with
-	your implemented one.
+	works expectedly, you can replace it with your implementation.
 
 	{memo} is a Dictionary for memoization. The Dictionary passed to
 	{memo} is the same instance during the formatting process. If you need
@@ -732,7 +764,7 @@ finalize		Funcref (Optional) 	*unite-outline-info-finalize()*
 EXTERNAL PROGRAMS			 *unite-outline-info-external-programs*
 
 	Some of the default outline infos use external program(s) to
-	accomplish its extracting task.
+	accomplish their extracting tasks.
 
 	The external programs must be executable for Vim, in other words, they
 	must be able to be executed by |system()| with the proper setting of
@@ -768,14 +800,26 @@ unite#sources#outline#get_default_outline_info( {filetype})
 	Returns the default outline info of {filetype}.
 	If not found, returns an empty Dictionary.
 
+				*unite#sources#outline#get_filetype_option()*
+unite#sources#outline#get_filetype_option( {filetype}, {key} [, {default}])
+
+	Returns a value of option {key} for {filetype}.
+	If the value of option {key} is not available, returns {default} if it
+	is given otherwise returns 0.
+					*unite#sources#outline#get_highlight()*
+unite#sources#outline#get_highlight( {name})
+
+	Returns a highlight group associated with {name}.
+
 					*unite#sources#outline#import()*
 unite#sources#outline#import( {module})
 
 	Imports a built-in module.
 >
 	let s:Util = unite#sources#outline#import('Util')
-
-unite#sources#outline#clear_cache()	*unite#sources#outline#clear_cache()*
+<
+				*unite#sources#outline#remove_cache_files()*
+unite#sources#outline#remove_cache_files()
 
 	Remove all cache files.
 
@@ -830,13 +874,11 @@ Util.neighbor_match( {context}, {lnum}, {pattern} [, {range} [, {exclusive}]])
 Util.neighbor_matchstr( {context}, {lnum}, {pattern} [, {range} [, {exclusive}]])
 
 	Variety of |unite-outline-Util.neighbor_match()|.
-	Returns the matched string not boolean value.
+	Returns the matched string not a boolean value.
 	If there's no match, returns an empty String.
 
 ==============================================================================
 TODO						*unite-outline-todo*
-
-	* Update heading lists automatically.
 
 	* hlsearch on narrowing
 
@@ -888,12 +930,19 @@ CHANHELOG					*unite-outline-changelog*
 
 https://github.com/h1mesuke/unite-outline/commits/master
 
+0.5.0	2011-9-03
+
+	* Implemented the auto-update feature and addes the following
+	  filetype specific options.
+	  - auto_update	 |unite-outline-filetype-option-auto-update|
+	  - auto_update_event
+
 0.3.8	2011-08-25
 
 	* Improved the speed of heading extraction.
 	  Some restrictions on the regular expressions used in heading-1,
 	  heading or heading+1 were introduced along with this change.
-				|unite-outline-info-heading-pattern-restrictions|
+			|unite-outline-info-heading-pattern-restrictions|
 
 	* Added |g:unite_source_outline_filetype_options| variable.
 	  g:unite_source_outline_ignore_heading_types variable was integrated
