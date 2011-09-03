@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-03
+" Updated : 2011-09-04
 " Version : 0.3.8
 " License : MIT license {{{
 "
@@ -67,8 +67,9 @@ else " if !isdirectory(s:OUTLINE_CACHE_DIR)
 endif
 unlet old_cache_dir
 
-let s:OUTLINE_DATA_VAR = 'unite_source_outline_data'
 let s:OUTLINE_FILECACHE_FORMAT_VERSION = 1
+
+let s:BUFVAR_OUTLINE_DATA = 'unite_source_outline_data'
 
 "-----------------------------------------------------------------------------
 " Functions
@@ -95,11 +96,11 @@ endfunction
 function! s:has_outline_data(bufnr, ...)
   if a:0
     let key = a:1
-    let data = getbufvar(a:bufnr, s:OUTLINE_DATA_VAR)
+    let data = getbufvar(a:bufnr, s:BUFVAR_OUTLINE_DATA)
     return has_key(data, key)
   else
     let bufvars = getbufvar(a:bufnr, '')
-    return has_key(bufvars, s:OUTLINE_DATA_VAR)
+    return has_key(bufvars, s:BUFVAR_OUTLINE_DATA)
   endif
 endfunction
 
@@ -110,7 +111,7 @@ function! unite#sources#outline#get_outline_data(...)
   return call('s:get_outline_data', a:000)
 endfunction
 function! s:get_outline_data(bufnr, key, ...)
-  let data = getbufvar(a:bufnr, s:OUTLINE_DATA_VAR)
+  let data = getbufvar(a:bufnr, s:BUFVAR_OUTLINE_DATA)
   return (a:0 ? get(data, a:key, a:1) : data[a:key])
 endfunction
 
@@ -120,7 +121,7 @@ function! unite#sources#outline#set_outline_data(...)
   call call('s:set_outline_data', a:000)
 endfunction
 function! s:set_outline_data(bufnr, key, value)
-  let data = getbufvar(a:bufnr, s:OUTLINE_DATA_VAR)
+  let data = getbufvar(a:bufnr, s:BUFVAR_OUTLINE_DATA)
   let data[a:key] = a:value
 endfunction
 
@@ -130,7 +131,7 @@ function! unite#sources#outline#remove_outline_data(...)
   call call('s:remove_outline_data', a:000)
 endfunction
 function! s:remove_outline_data(bufnr, key)
-  let data = getbufvar(a:bufnr, s:OUTLINE_DATA_VAR)
+  let data = getbufvar(a:bufnr, s:BUFVAR_OUTLINE_DATA)
   unlet data[a:key]
 endfunction
 
@@ -487,29 +488,29 @@ let s:source = {
       \ }
 
 function! s:Source_Hooks_on_init(source_args, unite_context)
+  let a:unite_context.source__outline_source_bufnr = bufnr('%')
   call s:unite_outline_initialize()
-  let a:unite_context.source__outline_context_bufnr = bufnr('%')
 endfunction
 let s:source.hooks.on_init = function(s:SID . 'Source_Hooks_on_init')
 
+" Initialize the outline data and register autocmds if the current buffer
+" hasn't initialized yet.
+"
 function! s:unite_outline_initialize()
   let bufnr = bufnr('%')
   let bufvars  = getbufvar(bufnr, '')
   if !exists('s:outline_data')
     let s:outline_data = {}
   endif
-  if !has_key(bufvars, s:OUTLINE_DATA_VAR)
-    call setbufvar(bufnr, s:OUTLINE_DATA_VAR, {})
+  if !has_key(bufvars, s:BUFVAR_OUTLINE_DATA)
+    let bufvars[s:BUFVAR_OUTLINE_DATA] = {}
     call s:register_autocmds()
   endif
   call s:update_buffer_changenr()
 endfunction
 
-function! s:unite_outline_cleanup(bufnr)
-endfunction
-
 function! s:Source_Hooks_on_syntax(source_args, unite_context)
-  let bufnr = a:unite_context.source__outline_context_bufnr
+  let bufnr = a:unite_context.source__outline_source_bufnr
   let context = s:get_outline_data(bufnr, 'context')
   let outline_info = context.outline_info
   if context.extract_method ==# 'filetype'
@@ -542,7 +543,7 @@ function! s:Source_gather_candidates(source_args, unite_context)
     set magic
 
     let options = s:parse_source_arguments(a:source_args, a:unite_context)
-    let bufnr = a:unite_context.source__outline_context_bufnr
+    let bufnr = a:unite_context.source__outline_source_bufnr
 
     let auto_update = s:get_filetype_option(getbufvar(bufnr, '&filetype'), 'auto_update', 0)
     if auto_update
@@ -1290,7 +1291,7 @@ endfunction
 
 function! s:convert_headings_to_candidates(headings, unite_context)
   if empty(a:headings.as_list) | return [] | endif
-  let bufnr = a:unite_context.source__outline_context_bufnr
+  let bufnr = a:unite_context.source__outline_source_bufnr
   let path = fnamemodify(bufname(bufnr), ':p')
   let candidates = map(copy(a:headings.as_list), 's:create_candidate(v:val, path)')
   let candidates[0].source__headings = a:headings
@@ -1422,12 +1423,20 @@ let s:source.action_table.jump_list = s:action_table
 "-----------------------------------------------------------------------------
 " Auto-update
 
+function! s:register_autocmds()
+  augroup plugin-unite-source-outline
+    autocmd! * <buffer>
+    autocmd CursorHold   <buffer> call s:on_cursor_hold()
+    autocmd BufWritePost <buffer> call s:on_buf_write_post()
+  augroup END
+endfunction
+
 function! s:on_cursor_hold()
   let bufnr = bufnr('%')
   if !s:has_outline_data(bufnr)
     return
   endif
-  call s:Util.print_debug('event', 'on_cursor_hold #' . bufnr)
+  call s:Util.print_debug('event', 'on_cursor_hold at buffer #' . bufnr)
   call s:update_buffer_changenr()
   if s:should_update('hold')
     call s:update_headings(bufnr)
@@ -1439,20 +1448,11 @@ function! s:on_buf_write_post()
   if !s:has_outline_data(bufnr)
     return
   endif
-  call s:Util.print_debug('event', 'on_buf_write_post #' . bufnr)
+  call s:Util.print_debug('event', 'on_buf_write_post at buffer #' . bufnr)
   call s:update_buffer_changenr()
   if s:should_update('write')
     call s:update_headings(bufnr)
   endif
-endfunction
-
-function! s:register_autocmds()
-  augroup plugin-unite-source-outline
-    autocmd! * <buffer>
-    autocmd CursorHold   <buffer> call s:on_cursor_hold()
-    autocmd BufWritePost <buffer> call s:on_buf_write_post()
-    autocmd BufUnload    <buffer> call s:on_buf_unload()
-  augroup END
 endfunction
 
 " Update the change count of the current buffer.
@@ -1488,8 +1488,8 @@ function! s:update_headings(bufnr)
   " Update Model data (headings).
   call s:get_headings(a:bufnr, { 'event': 'auto_update', 'is_force': 1 })
   " Update View (unite.vim) if the outline window exists.
-  let outline_wins = s:get_outline_windows(a:bufnr)
-  for winnr in outline_wins
+  let outline_winnrs = s:find_outline_windows(a:bufnr)
+  for winnr in outline_winnrs
     call s:Util.print_debug('event', 'redraw outline window #' . winnr)
     call unite#force_redraw(winnr)
   endfor
@@ -1498,34 +1498,29 @@ endfunction
 " Returns a List of winnrs of the windows that are displaying the heading list
 " of the buffer {bufnr}.
 "
-function! s:get_outline_windows(bufnr)
-  let outline_wins = []
+function! s:find_outline_windows(src_bufnr)
+  let outline_winnrs = []
   let winnr = 1
   while winnr <= winnr('$')
-    let wbufnr = winbufnr(winnr)
-    if getbufvar(wbufnr, '&filetype') ==# 'unite'
-      try
-        let unite = getbufvar(wbufnr, 'unite')
+    let win_bufnr = winbufnr(winnr)
+    try
+      " NOTE: This code depands on the current implementation of unite.vim.
+      if getbufvar(win_bufnr, '&filetype') ==# 'unite'
+        let unite = getbufvar(win_bufnr, 'unite')
         for source in unite.sources
           if source.name ==# 'outline' &&
-                \ source.unite__context.source__outline_context_bufnr == a:bufnr
-            call add(outline_wins, winnr)
+                \ source.unite__context.source__outline_source_bufnr == a:src_bufnr
+            call add(outline_winnrs, winnr)
           endif
         endfor
-      catch
-        call unite#util#print_error(v:throwpoint)
-        call unite#util#print_error(v:exception)
-      endtry
-    endif
+      endif
+    catch
+      call unite#util#print_error(v:throwpoint)
+      call unite#util#print_error(v:exception)
+    endtry
     let winnr += 1
   endwhile
-  return outline_wins
-endfunction
-
-function! s:on_buf_unload()
-  let bufnr = bufnr(unite#util#escape_file_searching(expand('<afile>')))
-  call s:Util.print_debug('event', 'on_buf_unload #' . bufnr)
-  call s:unite_outline_cleanup(bufnr)
+  return outline_winnrs
 endfunction
 
 " vim: filetype=vim

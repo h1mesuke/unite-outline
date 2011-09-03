@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_formatter.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-03
+" Updated : 2011-09-04
 " Version : 0.3.8
 " License : MIT license {{{
 "
@@ -47,7 +47,7 @@ let s:formatter = {
 function! s:formatter.filter(candidates, unite_context)
   if empty(a:candidates) | return a:candidates | endif
 
-  let bufnr = a:unite_context.source__outline_context_bufnr
+  let bufnr = a:unite_context.source__outline_source_bufnr
   let context = unite#sources#outline#get_outline_data(bufnr, 'context')
 
   " Insert blanks for readability.
