@@ -1289,6 +1289,7 @@ function! s:filter_headings(headings, ignore_types)
 endfunction
 
 function! s:convert_headings_to_candidates(headings, unite_context)
+  if empty(a:headings.as_list) | return [] | endif
   let bufnr = a:unite_context.source__outline_context_bufnr
   let path = fnamemodify(bufname(bufnr), ':p')
   let candidates = map(copy(a:headings.as_list), 's:create_candidate(v:val, path)')
