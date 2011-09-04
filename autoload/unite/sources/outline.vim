@@ -568,7 +568,7 @@ function! s:Source_gather_candidates(source_args, unite_context)
       let buffer_changenr = s:get_outline_data(bufnr, 'buffer_changenr', 0)
       let  model_changenr = s:get_outline_data(bufnr,  'model_changenr', 0)
       if model_changenr != buffer_changenr
-        " The context buffer has been changed since the last extraction.
+        " The source buffer has been changed since the last extraction.
         " Need to update all.
         call s:Util.print_debug('event', 'changenr: buffer = ' . buffer_changenr .
               \ ', model = ' . model_changenr . ', unite = ? ')
@@ -623,7 +623,7 @@ function! s:Source_gather_candidates(source_args, unite_context)
     return candidates
 
   catch /^NoWindowError:/
-    call unite#print_message("[unite-outline] The context buffer has no window.")
+    call unite#print_message("[unite-outline] The source buffer has no window.")
     return []
 
   catch
@@ -907,7 +907,7 @@ function! s:get_reltime()
   return str2float(reltimestr(reltime()))
 endfunction
 
-" Extract headings from the context buffer in its filetype specific way using
+" Extract headings from the source buffer in its filetype specific way using
 " the filetype's outline info.
 "
 function! s:extract_filetype_headings(context)
