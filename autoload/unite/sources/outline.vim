@@ -1531,24 +1531,23 @@ function! s:find_outline_buffers(src_bufnr)
   let outline_bufnrs = []
   let bufnr = 1
   while bufnr <= bufnr('$')
-    if bufwinnr(bufnr) < 1
-      continue
+    if bufwinnr(bufnr) >= 0
+      try
+        " NOTE: This code depands on the current implementation of unite.vim.
+        if getbufvar(bufnr, '&filetype') ==# 'unite'
+          let unite = getbufvar(bufnr, 'unite')
+          for source in unite.sources
+            if source.name ==# 'outline' &&
+                  \ source.unite__context.source__outline_source_bufnr == a:src_bufnr
+              call add(outline_bufnrs, bufnr)
+            endif
+          endfor
+        endif
+      catch
+        call unite#util#print_error(v:throwpoint)
+        call unite#util#print_error(v:exception)
+      endtry
     endif
-    try
-      " NOTE: This code depands on the current implementation of unite.vim.
-      if getbufvar(bufnr, '&filetype') ==# 'unite'
-        let unite = getbufvar(bufnr, 'unite')
-        for source in unite.sources
-          if source.name ==# 'outline' &&
-                \ source.unite__context.source__outline_source_bufnr == a:src_bufnr
-            call add(outline_bufnrs, bufnr)
-          endif
-        endfor
-      endif
-    catch
-      call unite#util#print_error(v:throwpoint)
-      call unite#util#print_error(v:exception)
-    endtry
     let bufnr += 1
   endwhile
   return outline_bufnrs
@@ -1574,28 +1573,27 @@ endfunction
 function! s:swap_headings(outline_buffer_ids, new_bufnr)
   let bufnr = 1
   while bufnr <= bufnr('$')
-    if bufwinnr(bufnr) < 1
-      continue
+    if bufwinnr(bufnr) >= 0
+      try
+        " NOTE: This code Depands on the current implementation of unite.vim.
+        if getbufvar(bufnr, '&filetype') ==# 'unite'
+          let unite = getbufvar(bufnr, 'unite')
+          for source in unite.sources
+            if source.name ==# 'outline' &&
+                  \ index(a:outline_buffer_ids,
+                  \ source.unite__context.source__outline_buffer_id) >= 0
+              let source.unite__context.source__outline_source_bufnr = a:new_bufnr
+              let source.unite__context.source__outline_is_swap = 1
+              call s:Util.print_debug('event', 'redraw outline buffer #' . bufnr)
+              call unite#force_redraw(bufwinnr(bufnr))
+            endif
+          endfor
+        endif
+      catch
+        call unite#util#print_error(v:throwpoint)
+        call unite#util#print_error(v:exception)
+      endtry
     endif
-    try
-      " NOTE: This code depands on the current implementation of unite.vim.
-      if getbufvar(bufnr, '&filetype') ==# 'unite'
-        let unite = getbufvar(bufnr, 'unite')
-        for source in unite.sources
-          if source.name ==# 'outline' &&
-                \ index(a:outline_buffer_ids,
-                \ source.unite__context.source__outline_buffer_id) >= 0
-            let source.unite__context.source__outline_source_bufnr = a:new_bufnr
-            let source.unite__context.source__outline_is_swap = 1
-            call s:Util.print_debug('event', 'redraw outline buffer #' . bufnr)
-            call unite#force_redraw(bufwinnr(bufnr))
-          endif
-        endfor
-      endif
-    catch
-      call unite#util#print_error(v:throwpoint)
-      call unite#util#print_error(v:exception)
-    endtry
     let bufnr += 1
   endwhile
 endfunction
