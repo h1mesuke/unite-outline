@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-04
+" Updated : 2011-09-05
 " Version : 0.3.8
 " License : MIT license {{{
 "
@@ -70,6 +70,7 @@ unlet old_cache_dir
 let s:OUTLINE_FILECACHE_FORMAT_VERSION = 1
 
 let s:BUFVAR_OUTLINE_DATA = 'unite_source_outline_data'
+let s:WINVAR_OUTLINE_BUFFER_IDS = 'unite_source_outline_buffer_ids'
 
 "-----------------------------------------------------------------------------
 " Functions
@@ -478,6 +479,7 @@ endfunction
 let s:SID = s:get_SID()
 delfunction s:get_SID
 
+let s:outline_window_id = 1
 let s:source = {
       \ 'name'       : 'outline',
       \ 'description': 'candidates from heading list',
@@ -490,6 +492,7 @@ let s:source = {
 function! s:Source_Hooks_on_init(source_args, unite_context)
   let a:unite_context.source__outline_source_bufnr = bufnr('%')
   call s:unite_outline_initialize()
+  call s:unite_outline_attach_window(a:unite_context)
 endfunction
 let s:source.hooks.on_init = function(s:SID . 'Source_Hooks_on_init')
 
@@ -507,6 +510,21 @@ function! s:unite_outline_initialize()
     call s:register_autocmds()
   endif
   call s:update_buffer_changenr()
+endfunction
+
+" Associate the current buffer's window with the outline window where the
+" headings from the buffer will be displayed.
+"
+function! s:unite_outline_attach_window(unite_context)
+  let winnr = winnr()
+  let winvars  = getwinvar(winnr, '')
+  if !has_key(winvars, s:WINVAR_OUTLINE_BUFFER_IDS)
+    let winvars[s:WINVAR_OUTLINE_BUFFER_IDS] = []
+  endif
+  let outline_win_ids = winvars[s:WINVAR_OUTLINE_BUFFER_IDS]
+  call add(outline_win_ids, s:outline_window_id)
+  let a:unite_context.source__outline_buffer_id = s:outline_window_id
+  let s:outline_window_id += 1
 endfunction
 
 function! s:Source_Hooks_on_syntax(source_args, unite_context)
@@ -639,6 +657,10 @@ function! s:parse_source_arguments(source_args, unite_context)
   endfor
   if a:unite_context.is_redraw
     let options.is_force = 1
+  endif
+  if has_key(a:unite_context, 'source__outline_is_swap')
+    unlet a:unite_context.source__outline_is_swap
+    let options.is_force = 0
   endif
   return options
 endfunction
@@ -1431,6 +1453,11 @@ function! s:register_autocmds()
   augroup END
 endfunction
 
+augroup plugin-unite-source-outline-win-enter
+  autocmd!
+  autocmd BufWinEnter * call s:on_buf_win_enter()
+augroup END
+
 function! s:on_cursor_hold()
   let bufnr = bufnr('%')
   if !s:has_outline_data(bufnr)
@@ -1521,6 +1548,52 @@ function! s:find_outline_windows(src_bufnr)
     let winnr += 1
   endwhile
   return outline_winnrs
+endfunction
+
+function! s:on_buf_win_enter()
+  let winnr = winnr()
+  let winvars  = getwinvar(winnr, '')
+  if !has_key(winvars, s:WINVAR_OUTLINE_BUFFER_IDS)
+    return
+  endif
+  let new_bufnr = bufnr('%')
+  let old_bufnr = bufnr('#')
+  call s:Util.print_debug('event', 'on_buf_win_enter at window #' . winnr .
+        \ ' from buffer #' . old_bufnr . ' to #' . new_bufnr)
+  call s:unite_outline_initialize()
+  call s:swap_headings(winvars[s:WINVAR_OUTLINE_BUFFER_IDS], new_bufnr)
+endfunction
+
+" Swaps the heading lists displayed in the outline buffers whose buffer ids
+" are one of {outline_buffer_ids} for the heading list of buffer {new_bufnr}.
+"
+function! s:swap_headings(outline_buffer_ids, new_bufnr)
+  let bufnr = 1
+  while bufnr <= bufnr('$')
+    if bufwinnr(bufnr) < 1
+      continue
+    endif
+    try
+      " NOTE: This code depands on the current implementation of unite.vim.
+      if getbufvar(bufnr, '&filetype') ==# 'unite'
+        let unite = getbufvar(bufnr, 'unite')
+        for source in unite.sources
+          if source.name ==# 'outline' &&
+                \ index(a:outline_buffer_ids,
+                \ source.unite__context.source__outline_buffer_id) >= 0
+            let source.unite__context.source__outline_source_bufnr = a:new_bufnr
+            let source.unite__context.source__outline_is_swap = 1
+            call s:Util.print_debug('event', 'redraw outline buffer #' . bufnr)
+            call unite#force_redraw(bufwinnr(bufnr))
+          endif
+        endfor
+      endif
+    catch
+      call unite#util#print_error(v:throwpoint)
+      call unite#util#print_error(v:exception)
+    endtry
+    let bufnr += 1
+  endwhile
 endfunction
 
 " vim: filetype=vim
