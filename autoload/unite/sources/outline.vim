@@ -1514,30 +1514,34 @@ function! s:update_headings(bufnr)
   call s:Util.print_debug('event', 'update_headings')
   " Update Model data (headings).
   call s:get_headings(a:bufnr, { 'event': 'auto_update', 'is_force': 1 })
-  " Update View (unite.vim) if the outline window exists.
-  let outline_winnrs = s:find_outline_windows(a:bufnr)
-  for winnr in outline_winnrs
-    call s:Util.print_debug('event', 'redraw outline window #' . winnr)
-    call unite#force_redraw(winnr)
+  " Update View (unite.vim' buffer) if the visible outline buffer exists.
+  let outline_bufnrs = s:find_outline_buffers(a:bufnr)
+  " NOTE: An outline buffer is an unite.vim's buffer that is displaying the
+  " candidates from outline source.
+  for bufnr in outline_bufnrs
+    call s:Util.print_debug('event', 'redraw outline buffer #' . bufnr)
+    call unite#force_redraw(bufwinnr(bufnr))
   endfor
 endfunction
 
-" Returns a List of winnrs of the windows that are displaying the heading list
-" of the buffer {bufnr}.
+" Returns a List of bufnrs of the outline buffers that are displaying the
+" heading list of the buffer {src_bufnr}.
 "
-function! s:find_outline_windows(src_bufnr)
-  let outline_winnrs = []
-  let winnr = 1
-  while winnr <= winnr('$')
-    let win_bufnr = winbufnr(winnr)
+function! s:find_outline_buffers(src_bufnr)
+  let outline_bufnrs = []
+  let bufnr = 1
+  while bufnr <= bufnr('$')
+    if bufwinnr(bufnr) < 1
+      continue
+    endif
     try
       " NOTE: This code depands on the current implementation of unite.vim.
-      if getbufvar(win_bufnr, '&filetype') ==# 'unite'
-        let unite = getbufvar(win_bufnr, 'unite')
+      if getbufvar(bufnr, '&filetype') ==# 'unite'
+        let unite = getbufvar(bufnr, 'unite')
         for source in unite.sources
           if source.name ==# 'outline' &&
                 \ source.unite__context.source__outline_source_bufnr == a:src_bufnr
-            call add(outline_winnrs, winnr)
+            call add(outline_bufnrs, bufnr)
           endif
         endfor
       endif
@@ -1545,9 +1549,9 @@ function! s:find_outline_windows(src_bufnr)
       call unite#util#print_error(v:throwpoint)
       call unite#util#print_error(v:exception)
     endtry
-    let winnr += 1
+    let bufnr += 1
   endwhile
-  return outline_winnrs
+  return outline_bufnrs
 endfunction
 
 function! s:on_buf_win_enter()
