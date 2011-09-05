@@ -1540,17 +1540,18 @@ function! s:find_outline_buffers(src_bufnr)
   let outline_bufnrs = []
   let bufnr = 1
   while bufnr <= bufnr('$')
-    if bufwinnr(bufnr) >= 0
+    if bufwinnr(bufnr) > 0
       try
         " NOTE: This code depands on the current implementation of unite.vim.
-        if getbufvar(bufnr, '&filetype') ==# 'unite'
+        if s:is_unite_buffer(bufnr)
           let unite = getbufvar(bufnr, 'unite')
-          for source in unite.sources
-            if source.name ==# 'outline' &&
-                  \ source.unite__context.source__outline_source_bufnr == a:src_bufnr
+          let outline_source = s:Unite_find_outline_source(unite)
+          if !empty(outline_source)
+            let unite_context = outline_source.unite__context
+            if unite_context.source__outline_source_bufnr == a:src_bufnr
               call add(outline_bufnrs, bufnr)
             endif
-          endfor
+          endif
         endif
       catch
         call unite#util#print_error(v:throwpoint)
@@ -1562,14 +1563,27 @@ function! s:find_outline_buffers(src_bufnr)
   return outline_bufnrs
 endfunction
 
+function! s:is_unite_buffer(bufnr)
+  return (getbufvar(a:bufnr, '&filetype') ==# 'unite')
+endfunction
+
+function! s:Unite_find_outline_source(unite)
+  let result = filter(copy(a:unite.sources), 'v:val.name ==# "outline"')
+  if empty(result)
+    return {}
+  else
+    return result[0]
+  endif
+endfunction
+
 function! s:on_buf_win_enter()
   let winnr = winnr()
   if !s:has_outline_buffer_ids(winnr)
     return
   endif
   let new_bufnr = bufnr('%')
-  if s:is_outline_buffer(new_bufnr)
-    " NOTE: When -no-split
+  if s:is_unite_buffer(new_bufnr)
+    " NOTE: When -no-split.
     return
   endif
   let old_bufnr = bufnr('#')
@@ -1579,31 +1593,27 @@ function! s:on_buf_win_enter()
   call s:swap_headings(s:get_outline_buffer_ids(winnr), new_bufnr)
 endfunction
 
-function! s:is_outline_buffer(bufnr)
-  return (getbufvar(a:bufnr, '&filetype') ==# 'unite')
-endfunction
-
 " Swaps the heading lists displayed in the outline buffers whose buffer ids
 " are one of {outline_buffer_ids} for the heading list of buffer {new_bufnr}.
 "
 function! s:swap_headings(outline_buffer_ids, new_bufnr)
   let bufnr = 1
   while bufnr <= bufnr('$')
-    if bufwinnr(bufnr) >= 0
+    if bufwinnr(bufnr) > 0
       try
-        " NOTE: This code Depands on the current implementation of unite.vim.
-        if getbufvar(bufnr, '&filetype') ==# 'unite'
+        " NOTE: This code depands on the current implementation of unite.vim.
+        if s:is_unite_buffer(bufnr)
           let unite = getbufvar(bufnr, 'unite')
-          for source in unite.sources
-            if source.name ==# 'outline' &&
-                  \ index(a:outline_buffer_ids,
-                  \ source.unite__context.source__outline_buffer_id) >= 0
-              let source.unite__context.source__outline_source_bufnr = a:new_bufnr
-              let source.unite__context.source__outline_is_swap = 1
+          let outline_source = s:Unite_find_outline_source(unite)
+          if !empty(outline_source)
+            let unite_context = outline_source.unite__context
+            if index(a:outline_buffer_ids, unite_context.source__outline_buffer_id) >= 0
+              let unite_context.source__outline_source_bufnr = a:new_bufnr
+              let unite_context.source__outline_is_swap = 1
               call s:Util.print_debug('event', 'redraw outline buffer #' . bufnr)
               call unite#force_redraw(bufwinnr(bufnr))
             endif
-          endfor
+          endif
         endif
       catch
         call unite#util#print_error(v:throwpoint)
