@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-05
+" Updated : 2011-09-06
 " Version : 0.3.8
 " License : MIT license {{{
 "
@@ -1568,11 +1568,19 @@ function! s:on_buf_win_enter()
     return
   endif
   let new_bufnr = bufnr('%')
+  if s:is_outline_buffer(new_bufnr)
+    " NOTE: When -no-split
+    return
+  endif
   let old_bufnr = bufnr('#')
   call s:Util.print_debug('event', 'on_buf_win_enter at window #' . winnr .
         \ ' from buffer #' . old_bufnr . ' to #' . new_bufnr)
   call s:unite_outline_initialize()
   call s:swap_headings(s:get_outline_buffer_ids(winnr), new_bufnr)
+endfunction
+
+function! s:is_outline_buffer(bufnr)
+  return (getbufvar(a:bufnr, '&filetype') ==# 'unite')
 endfunction
 
 " Swaps the heading lists displayed in the outline buffers whose buffer ids
