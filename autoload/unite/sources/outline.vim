@@ -875,7 +875,7 @@ function! s:extract_Headings(context)
     wincmd p
 
     " Restore the Vim options.
-    let &lazyredraw = save_lazyredraw
+    let &lazyredraw  = save_lazyredraw
     let &winheight   = save_winheight
     let &winwidth    = save_winwidth
     let &eventignore = save_eventignore
@@ -1433,7 +1433,7 @@ function! s:adjust_scroll(best_winline)
   normal! zt
   let save_cursor = getpos('.')
   let winl = 1
-  " Scroll the cursor line down.
+  " Scroll the cursor line down to the best position.
   while winl <= a:best_winline
     let prev_winl = winl
     execute "normal! \<C-y>"
