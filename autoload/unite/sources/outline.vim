@@ -136,6 +136,16 @@ function! s:remove_outline_data(bufnr, key)
   unlet data[a:key]
 endfunction
 
+function! s:has_outline_buffer_ids(winnr)
+  let winvars  = getwinvar(a:winnr, '')
+  return has_key(winvars, s:WINVAR_OUTLINE_BUFFER_IDS)
+endfunction
+
+function! s:get_outline_buffer_ids(winnr)
+  let winvars  = getwinvar(a:winnr, '')
+  return winvars[s:WINVAR_OUTLINE_BUFFER_IDS]
+endfunction
+
 " Returns the outline info for {filetype}. If not found, returns an empty
 " Dictionary.
 "
@@ -1555,8 +1565,7 @@ endfunction
 
 function! s:on_buf_win_enter()
   let winnr = winnr()
-  let winvars  = getwinvar(winnr, '')
-  if !has_key(winvars, s:WINVAR_OUTLINE_BUFFER_IDS)
+  if !s:has_outline_buffer_ids(winnr)
     return
   endif
   let new_bufnr = bufnr('%')
@@ -1564,7 +1573,7 @@ function! s:on_buf_win_enter()
   call s:Util.print_debug('event', 'on_buf_win_enter at window #' . winnr .
         \ ' from buffer #' . old_bufnr . ' to #' . new_bufnr)
   call s:unite_outline_initialize()
-  call s:swap_headings(winvars[s:WINVAR_OUTLINE_BUFFER_IDS], new_bufnr)
+  call s:swap_headings(s:get_outline_buffer_ids(winnr), new_bufnr)
 endfunction
 
 " Swaps the heading lists displayed in the outline buffers whose buffer ids
