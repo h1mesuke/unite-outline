@@ -934,7 +934,7 @@ function! s:extract_filetype_headings(context)
       call unite#print_message("[unite-outline] " .
             \ "Sorry, " . toupper(buffer.filetype) . " is not supported.")
     endif
-    return []
+    return s:Headings_new([])
   endif
 
   " Extract headings.
