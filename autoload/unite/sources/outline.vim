@@ -489,7 +489,7 @@ endfunction
 let s:SID = s:get_SID()
 delfunction s:get_SID
 
-let s:outline_window_id = 1
+let s:outline_buffer_id = 1
 let s:source = {
       \ 'name'       : 'outline',
       \ 'description': 'candidates from heading list',
@@ -500,9 +500,11 @@ let s:source = {
       \ }
 
 function! s:Source_Hooks_on_init(source_args, unite_context)
+  let a:unite_context.source__outline_buffer_id = s:outline_buffer_id
   let a:unite_context.source__outline_source_bufnr = bufnr('%')
   call s:unite_outline_initialize()
-  call s:unite_outline_attach_window(a:unite_context)
+  call s:unite_outline_attach(s:outline_buffer_id)
+  let s:outline_buffer_id += 1
 endfunction
 let s:source.hooks.on_init = function(s:SID . 'Source_Hooks_on_init')
 
@@ -522,19 +524,16 @@ function! s:unite_outline_initialize()
   call s:update_buffer_changenr()
 endfunction
 
-" Associate the current buffer's window with the outline window where the
-" headings from the buffer will be displayed.
+" Associate the current buffer's window with the outline buffer {buffer_id}
+" where the headings from the buffer will be displayed.
 "
-function! s:unite_outline_attach_window(unite_context)
+function! s:unite_outline_attach(buffer_id)
   let winnr = winnr()
   let winvars  = getwinvar(winnr, '')
   if !has_key(winvars, s:WINVAR_OUTLINE_BUFFER_IDS)
     let winvars[s:WINVAR_OUTLINE_BUFFER_IDS] = []
   endif
-  let outline_win_ids = winvars[s:WINVAR_OUTLINE_BUFFER_IDS]
-  call add(outline_win_ids, s:outline_window_id)
-  let a:unite_context.source__outline_buffer_id = s:outline_window_id
-  let s:outline_window_id += 1
+  call add(winvars[s:WINVAR_OUTLINE_BUFFER_IDS], a:buffer_id)
 endfunction
 
 function! s:Source_Hooks_on_syntax(source_args, unite_context)
