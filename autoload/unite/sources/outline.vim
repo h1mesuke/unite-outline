@@ -606,7 +606,7 @@ function! s:Source_gather_candidates(source_args, unite_context)
 
     " Path B: Candidates are invalid or haven't been cached, so try to get
     " headings.
-    let headings = s:get_headings(bufnr, options)
+    let headings = s:get_Headings(bufnr, options)
 
     " Convert the headings into candidates.
     let candidates = s:convert_headings_to_candidates(headings, a:unite_context)
@@ -716,7 +716,7 @@ function! s:is_valid_candidates(candidates, options)
   endif
 endfunction
 
-function! s:is_valid_headings(headings, context)
+function! s:is_valid_Headings(headings, context)
   let l_headings = a:headings.as_list
   let is_folding = (!empty(l_headings) && l_headings[0].type ==# 'folding')
   let last_method = (is_folding ? 'folding' : 'filetype')
@@ -737,14 +737,14 @@ function! s:is_valid_filecache(data)
         \ && a:data[format_version] == s:OUTLINE_FILECACHE_FORMAT_VERSION)
 endfunction
 
-function! s:get_headings(bufnr, options)
+function! s:get_Headings(bufnr, options)
   let context = s:create_context(a:bufnr, a:options)
   call s:set_outline_data(a:bufnr, 'context', context)
 
   if s:has_outline_data(a:bufnr, 'headings')
     " Path B_1: Get headings from the on-memory cache.
     let headings = s:get_outline_data(a:bufnr, 'headings')
-    if s:is_valid_headings(headings, context)
+    if s:is_valid_Headings(headings, context)
       return headings
     endif
   endif
@@ -755,7 +755,7 @@ function! s:get_headings(bufnr, options)
       let t_headings = s:FileCache.get(a:bufnr)
       if s:is_valid_filecache(t_headings)
         let headings = s:Headings_new(t_headings)
-        if s:is_valid_headings(headings, context)
+        if s:is_valid_Headings(headings, context)
           " Save the headings to the on-memory cache.
           call s:set_outline_data(a:bufnr, 'headings', headings)
           return headings
@@ -768,7 +768,7 @@ function! s:get_headings(bufnr, options)
   endif
 
   " Path B_3: Get headings by parsing the buffer.
-  let headings = s:extract_headings(context)
+  let headings = s:extract_Headings(context)
 
   let is_volatile = get(context.outline_info, 'is_volatile', 0)
   let should_cache = (!is_volatile && !empty(headings.as_list))
@@ -793,7 +793,7 @@ function! s:get_headings(bufnr, options)
   return headings
 endfunction
 
-function! s:extract_headings(context)
+function! s:extract_Headings(context)
   let winnr = bufwinnr(a:context.buffer.nr)
   if winnr == -1
     throw "NoWindowError:"
@@ -843,11 +843,11 @@ function! s:extract_headings(context)
       " Path B_3_a: Extract headings in filetype-specific way using the
       " filetype's outline info.
       let a:context.extract_method = 'filetype'
-      let headings = s:extract_filetype_headings(a:context)
+      let headings = s:extract_filetype_Headings(a:context)
     else
       " Path B_3_b: Extract headings using folds' information.
       let a:context.extract_method = 'folding'
-      let headings = s:extract_folding_headings(a:context)
+      let headings = s:extract_folding_Headings(a:context)
     endif
 
     " Update the change count of the headings.
@@ -919,7 +919,7 @@ endfunction
 " Extract headings from the source buffer in its filetype specific way using
 " the filetype's outline info.
 "
-function! s:extract_filetype_headings(context)
+function! s:extract_filetype_Headings(context)
   let buffer  = a:context.buffer
   if a:context.is_force
     " Re-source the outline info if updated.
@@ -961,7 +961,7 @@ function! s:extract_filetype_headings(context)
   " Filter headings.
   let ignore_types =
         \ unite#sources#outline#get_filetype_option(buffer.filetype, 'ignore_types')
-  let headings = s:filter_headings(headings, ignore_types)
+  let headings = s:filter_Headings(headings, ignore_types)
 
   return headings
 endfunction
@@ -1179,7 +1179,7 @@ function! s:skip_until(pattern, from)
   return lnum
 endfunction
 
-function! s:extract_folding_headings()
+function! s:extract_folding_Headings()
   let l_headings = []
   let curr_level = 0
   let lnum = 1 | let num_lines = line('$')
@@ -1295,7 +1295,7 @@ else
 endif
 
 " Heading Type Filter
-function! s:filter_headings(headings, ignore_types)
+function! s:filter_Headings(headings, ignore_types)
   if empty(a:ignore_types) | return a:headings | endif
   let headings = a:headings
 
@@ -1522,7 +1522,7 @@ endfunction
 function! s:update_headings(bufnr)
   call s:Util.print_debug('event', 'update_headings')
   " Update Model data (headings).
-  call s:get_headings(a:bufnr, { 'event': 'auto_update', 'is_force': 1 })
+  call s:get_Headings(a:bufnr, { 'event': 'auto_update', 'is_force': 1 })
   " Update View (unite.vim' buffer) if the visible outline buffer exists.
   let outline_bufnrs = s:find_outline_buffers(a:bufnr)
   " NOTE: An outline buffer is an unite.vim's buffer that is displaying the
