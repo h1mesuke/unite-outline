@@ -1,7 +1,7 @@
 *unite-outline.txt*	outline source for unite.vim
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-09-03
+Updated : 2011-09-06
 Version : 0.3.8
 License : MIT license {{{
 
@@ -328,7 +328,8 @@ CREATE OUTLINE INFO				*unite-outline-info-create*
 
 	      *	Define outline#{filetype}#outline_info() in the file.
 
-      *	Returns the outline info from the autoload function as the return value.
+      *	Returns the outline info from the autoload function as the return
+	value.
 
 	As a result of the benefit of autoload functions, loading of the
 	outline infos defined in this manner is delayed until they are
@@ -415,8 +416,8 @@ heading+1		String (Optional)	*unite-outline-info-heading+1*
 	      \ 'heading'  : '^#\+',
 	      \ 'heading+1': '^[-=]\+$',
 	      \ }
-<
-create_heading		Funcref (Optional)	*unite-outline-info-create_heading()*
+<					 *unite-outline-info-create_heading()*
+create_heading		Funcref (Optional)
 
 	create_heading( {which}, {heading-line}, {matched-line}, {context})
 
@@ -638,8 +639,8 @@ extract_headings	Funcref (Optional)	*unite-outline-info-extract_headings()*
 	each headings isn't required to have "level" attribute in this case.
 
 FORMATTING ~
-
-heading_groups		Dictionary (Optional)	*unite-outline-info-heading_groups*
+					*unite-outline-info-heading_groups*
+heading_groups		Dictionary (Optional)
 
 	Dictionary used for categorizing headings to heading groups.
 	unite-outline automatically adds "group" attribute to each headings
@@ -658,8 +659,8 @@ heading_groups		Dictionary (Optional)	*unite-outline-info-heading_groups*
 	  \   'macro'    : ['macro'],
 	  \ },
 	  \}
-<
-need_blank_between	Funcref (Optional)	*unite-outline-info-need_blank_between()*
+<				 *unite-outline-info-need_blank_between()*
+need_blank_between	Funcref (Optional)
 
 	need_blank_between( {heading-1}, {heading-2}, {memo})
 
@@ -704,8 +705,8 @@ not_match_patterns	List (Optional)	*unite-outline-info-not_match_patterns*
 	keywords.
 
 SYNTAX HIGHLIGHTING ~
-
-highlight_rules		Dictionary (Optional)	*unite-outline-info-highlight_rules*
+					*unite-outline-info-highlight_rules*
+highlight_rules		Dictionary (Optional)
 
 	List of highlight rules, that are Dictionaries.
 	Syntax highlights are defined in the order in the List before
@@ -930,7 +931,7 @@ CHANHELOG					*unite-outline-changelog*
 
 https://github.com/h1mesuke/unite-outline/commits/master
 
-0.5.0	2011-9-03
+0.5.0	2011-9-06
 
 	* Implemented the auto-update feature and addes the following
 	  filetype specific options.
