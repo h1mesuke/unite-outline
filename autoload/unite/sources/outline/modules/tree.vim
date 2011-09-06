@@ -2,7 +2,7 @@
 " File    : autoload/unite/source/outline/modules/tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
 " Updated : 2011-09-02
-" Version : 0.3.8
+" Version : 0.5.0
 " License : MIT license {{{
 "
 "   Permission is hereby granted, free of charge, to any person obtaining
