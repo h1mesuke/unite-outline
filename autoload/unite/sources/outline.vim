@@ -771,23 +771,17 @@ function! s:get_Headings(bufnr, options)
   let headings = s:extract_Headings(context)
 
   let is_volatile = get(context.outline_info, 'is_volatile', 0)
-  let should_cache = (!is_volatile && !empty(headings.as_list))
-  if should_cache
+  if !is_volatile
     " Save the headings to the cache.
+    call s:set_outline_data(a:bufnr, 'headings', headings)
     let is_persistant = (context.__num_lines__ > g:unite_source_outline_cache_limit)
     if is_persistant
       let format_version = '__unite_outline_filecache_format_version__'
       let headings.as_tree[format_version] = s:OUTLINE_FILECACHE_FORMAT_VERSION
       call s:FileCache.set(a:bufnr, headings.as_tree)
-    endif
-    call s:set_outline_data(a:bufnr, 'headings', headings)
-  else
-    " Remove the invalid cache.
-    if s:FileCache.has(a:bufnr)
+    elseif s:FileCache.has(a:bufnr)
+      " Remove the invalid file cache.
       call s:FileCache.remove(a:bufnr)
-    endif
-    if s:has_outline_data(a:bufnr, 'headings')
-      call s:remove_outline_data(a:bufnr, 'headings')
     endif
   endif
   return headings
