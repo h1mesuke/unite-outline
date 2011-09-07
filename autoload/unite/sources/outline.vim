@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-06
+" Updated : 2011-09-07
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -620,7 +620,7 @@ function! s:Source_gather_candidates(source_args, unite_context)
       else
         call s:set_outline_data(bufnr, '__unite_changenr__', buffer_changenr)
       endif
-      if g:unite_source_outline_event_debug
+      if get(g:, 'unite_source_outline_event_debug', 0)
         let buffer_changenr = s:get_outline_data(bufnr, 'buffer_changenr', 0)
         let  model_changenr = s:get_outline_data(bufnr,  'model_changenr', 0)
         let  unite_changenr = s:get_outline_data(bufnr, '__unite_changenr__', 0)
