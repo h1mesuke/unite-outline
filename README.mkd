@@ -1,0 +1,42 @@
+# unite-outline
+
+## Introduction
+
+unite-outline is an [unite.vim](http://github.com/Shougo/unite.vim)'s source
+which parses the current buffer's content and extracts headings from it and
+then shows the list of the headings using the user interface of unite.vim.
+When you select a heading from the list, you can jump to the corresponding
+location of the buffer.
+
+The methods for extracting headings can be implemented for each individual
+filetypes. You can customize them as you like with Vim script and can also
+create new ones for unsupported filetypes.
+
+## Install
+
+Install the distributed files into your Vim script directory which is usually
+~/.vim/, or $HOME/vimfiles on Windows.
+
+You can show the heading list of the current buffer with ":Unite outline"
+command if you succeeded the installation (and unite-outline supports the
+filetype of the buffer).
+
+## Usage
+
+To show the heading list of the current buffer, execute |:Unite| command with
+"outline" as a source parameter.
+
+    :Unite outline
+
+unite-outline parses the current buffer's content and extracts headings from
+it and then shows the list of the headings using the user interface of
+unite.vim. When you select a heading from the list that appears, you can jump
+to the corresponding location of the buffer.
+
+See :help unite-outline for more details.
+
+
+## Screenshots
+
+See [unite-outline's wiki](http://github.com/h1mesuke/unite-outline/wiki).
+
