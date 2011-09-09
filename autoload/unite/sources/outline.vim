@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-07
+" Updated : 2011-09-10
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -815,7 +815,7 @@ function! s:extract_Headings(context)
     " to a small value.
     set lazyredraw
 
-    " Switch: current window -> context window
+    " Switch: current window -> source buffer's window
     execute winnr . 'wincmd w'
     " Save the cursor and scroll.
     let save_cursor  = getpos('.')
@@ -865,7 +865,7 @@ function! s:extract_Headings(context)
     normal! zt
     call setpos('.', save_cursor)
     let &scrolloff = save_scrolloff
-    " Switch: current window <- context window
+    " Switch: current window <- source buffer's window
     wincmd p
 
     " Restore the Vim options.
