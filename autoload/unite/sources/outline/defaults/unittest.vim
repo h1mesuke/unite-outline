@@ -12,7 +12,7 @@
 " Version: 0.0.5
 
 " h1mesuke/vim-unittest - GitHub
-" https://github.com/h1mesuke/vim-unittest
+" http://github.com/h1mesuke/vim-unittest
 
 function! unite#sources#outline#defaults#unittest#outline_info()
   return s:outline_info
