@@ -108,23 +108,6 @@ License : MIT license {{{
 	NOTE: バージョン 0.5.0 から見出しの自動更新が可能になりました。
 	詳細は|unite-outline-filetype-option-auto-update|を参照
 
-折り畳みから見出しを作成する ~
-
-	バッファに折り畳みが設定されていれば、それを元に見出しを作成することも
-	できます。
->
-	:Unite outline:folding
-<
-	この方法は、バッファのファイルタイプに対応する outline info がない場合
-	でも使えます。（'foldmethod' によっては、折り畳みから有用な見出しが作
-	成できないことがあります）
-
-	ファイルタイプ固有の見出し抽出に戻す場合は
->
-	:Unite outline:filetype
-<
-	とします。
-
 ==============================================================================
 設定						*unite-outline-settings*
 
@@ -272,8 +255,6 @@ g:unite_source_outline_highlight	*g:unite_source_outline_highlight*
 	nmap f [unite]
 
 	nnoremap <silent> [unite]o :<C-u>Unite -buffer-name=outline outline<CR>
-	nnoremap <silent> [unite]z :<C-u>Unite -buffer-name=outline outline:folding<CR>
-	nnoremap <silent> [unite]Z :<C-u>Unite -buffer-name=outline outline:filetype<CR>
 
 	call unite#set_buffer_name_option('outline', 'ignorecase', 1)
 	call unite#set_buffer_name_option('outline', 'smartcase',  1)

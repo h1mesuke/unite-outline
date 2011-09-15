@@ -103,21 +103,6 @@ FILTER HEADINGS ~
 
 	See |unite-usage|.
 
-CREATE HEADINGS FROM FOLDINGS ~
-
-	You can also create headings from the foldings of the buffer.
->
-	:Unite outline:folding
-<
-	This method can be used even if there is no outline info for the
-	filetype of the buffer. (However, by unsuitable settings of folding,
-	you may not get useful headings from the foldings).
-
-	To go back to the heading list extracted in the filetype specific way,
-	execute the following.
->
-	:Unite outline:filetype
-<
 ==============================================================================
 SETTINGS					*unite-outline-settings*
 
@@ -269,8 +254,6 @@ SETTINGS EXAMPLE			*unite-outline-settings-example*
 	nmap f [unite]
 
 	nnoremap <silent> [unite]o :<C-u>Unite -buffer-name=outline outline<CR>
-	nnoremap <silent> [unite]z :<C-u>Unite -buffer-name=outline outline:folding<CR>
-	nnoremap <silent> [unite]Z :<C-u>Unite -buffer-name=outline outline:filetype<CR>
 
 	call unite#set_buffer_name_option('outline', 'ignorecase', 1)
 	call unite#set_buffer_name_option('outline', 'smartcase',  1)
