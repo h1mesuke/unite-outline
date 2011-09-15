@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/review.vim
 " Author  : AKAMATSU Yuki <y.akamatsu@ukstudio.jp>
-" Updated : 2011-08-29
+" Updated : 2011-09-15
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -23,11 +23,9 @@ let s:outline_info = {
       \ }
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
-  let level = strlen(matchstr(a:heading_line, '^=\+'))
-  let word  = substitute(a:heading_line, '^=\+\s*', '', '')
   let heading = {
-        \ 'word' : word,
-        \ 'level': level,
+        \ 'word' : substitute(a:heading_line, '^=\+\s*', '', ''),
+        \ 'level': strlen(matchstr(a:heading_line, '^=\+')),
         \ 'type' : 'generic',
         \ }
   if heading.word !~ '^\[/'
