@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-03
+" Updated : 2011-09-23
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -395,15 +395,16 @@ function! s:Ctags.lang_info.cpp.create_heading(tag, context)
     else
       let heading.word .= ' ' . s:get_param_list(a:context, a:tag.lnum)
     endif
-  else
-    if heading.type ==# 'macro'
-      if line =~# '#undef\>'
-        let ignore = 1
-      elseif line =~# a:tag.name . '('
-        let heading.word .= ' ' . s:get_param_list(a:context, a:tag.lnum)
-        let heading.group = 'function'
-      endif
+  elseif heading.type ==# 'macro'
+    if line =~# '#undef\>'
+      let ignore = 1
+    elseif line =~# a:tag.name . '('
+      let heading.word .= ' ' . s:get_param_list(a:context, a:tag.lnum)
+      let heading.word .= ' : ' . a:tag.kind
+    else
+      let heading.word .= ' => ' . matchstr(line, a:tag.name . '\zs.*$')
     endif
+  else
     let heading.word .= ' : ' . a:tag.kind
   endif
   if has_key(a:tag, 'implementation')
