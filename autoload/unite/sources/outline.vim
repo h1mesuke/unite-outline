@@ -159,23 +159,31 @@ function! unite#sources#outline#get_default_outline_info(filetype)
   return s:get_outline_info(a:filetype, 1)
 endfunction
 
+let s:outline_info = {}
+let s:default_outline_info = {}
+
 function! s:get_outline_info(filetype, ...)
-  let is_default = (a:0 ? a:1 : 0)
+  let [use_default, reload] = (a:000 + [0, 0])[0:1]
+  let memo = (use_default ? s:default_outline_info : s:outline_info)
+  if !reload && has_key(memo, a:filetype)
+    return memo[a:filetype]
+  endif
   for filetype in s:resolve_filetype(a:filetype)
-    let outline_info = s:load_outline_info(filetype, is_default)
-    if !empty(outline_info) | return outline_info | endif
+    let outline_info = s:load_outline_info(filetype, use_default)
+    if !empty(outline_info)| break | endif
   endfor
-  return {}
+  let memo[a:filetype] = outline_info
+  return outline_info
 endfunction
 
 " Try to load the outline info for {filetype}. If couldn't load, returns an
 " empty Dictionary.
 "
-function! s:load_outline_info(filetype, is_default)
+function! s:load_outline_info(filetype, use_default)
   if has_key(g:unite_source_outline_info, a:filetype)
     return g:unite_source_outline_info[a:filetype]
   endif
-  let oinfo_dirs = (a:is_default ? s:OUTLINE_INFO_PATH[-1:] : s:OUTLINE_INFO_PATH)
+  let oinfo_dirs = (a:use_default ? s:OUTLINE_INFO_PATH[-1:] : s:OUTLINE_INFO_PATH)
   for dir in oinfo_dirs
     let load_func  = substitute(substitute(dir, '^autoload/', '', ''), '/', '#', 'g')
     let load_func .= substitute(a:filetype, '\.', '_', 'g') . '#outline_info'
@@ -869,9 +877,9 @@ endfunction
 "
 function! s:extract_filetype_headings(context)
   let buffer  = a:context.buffer
-  if a:context.is_force
+  if a:context.is_force && a:context.event ==# 'user'
     " Re-source the outline info if updated.
-    let a:context.outline_info = s:get_outline_info(buffer.filetype)
+    let a:context.outline_info = s:get_outline_info(buffer.filetype, 0, 1)
   endif
   let outline_info = a:context.outline_info
   if empty(outline_info)
