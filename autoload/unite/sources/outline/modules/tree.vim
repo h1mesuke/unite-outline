@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-02
+" Updated : 2011-09-22
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -38,16 +38,16 @@ endfunction
 let s:SID = s:get_SID()
 delfunction s:get_SID
 
-" Tree module provides functions to build and handle a tree structure.
+" Tree module provides functions to build a tree structure.
 " There are two ways to build a Tree:
 "
-"   A.  Build a tree from a List, elements of which are Dictionaries with
-"       `level' attribute, using Tree.build(). 
+"   A.  Build a Tree from a List of objects with the level attribute using
+"       Tree.build(). 
 "
-"   B.  Build a tree one node by one node manually using Tree.new() and
+"   B.  Build a Tree one node by one node manually using Tree.new() and
 "       Tree.append_child().
 "
-" The following example shows how to build a tree in the latter way.
+" The following example shows how to build a Tree in the latter way.
 "
 " == Example
 "
@@ -72,6 +72,7 @@ delfunction s:get_SID
 "        +--heading_3
 "
 let s:Tree = unite#sources#outline#modules#base#new('Tree', s:SID)
+let s:Tree.MAX_DEPTH = 20
 
 " Creates a new root node.
 "
@@ -90,33 +91,16 @@ function! s:Tree_append_child(node, child)
   " Ensure that all nodes have `children'.
   if !has_key(a:child, 'children')
     let a:child.children = []
-    " NOTE: While building a tree, all nodes of the tree pass through this
+    " NOTE: While building a Tree, all nodes of the Tree pass through this
     " function as a:child.
   endif
 endfunction
 call s:Tree.function('append_child')
 
-" Remove {child} from a List of children of {node}.
-"
-function! s:Tree_remove_child(node, child)
-  call remove(a:node.children, index(a:node.children, a:child))
-endfunction
-call s:Tree.function('remove_child')
-
-function! s:Tree_is_toplevel(node)
-  return (a:node.level == 1)
-endfunction
-call s:Tree.function('is_toplevel')
-
-function! s:Tree_is_leaf(node)
-  return empty(a:node.children)
-endfunction
-call s:Tree.function('is_leaf')
-
 " Builds a tree structure from a List of elements, which are Dictionaries with
-" `level' attribute, and then returns the root node of the built tree.
+" `level' attribute, and then returns the root node of the built Tree.
 "
-" NOTE: This function allows discontinuous levels and can build a tree from such
+" NOTE: This function allows discontinuous levels and can build a Tree from such
 " a sequence of levels well.
 "
 "                                root              root
@@ -131,7 +115,7 @@ call s:Tree.function('is_leaf')
 function! s:Tree_build(elems)
   let root = s:Tree_new()
   if empty(a:elems) | return root | endif
-  " Build a tree.
+  " Build a Tree.
   let stack = [root]
   for elem in a:elems
     " Forget about the current children...
@@ -143,12 +127,12 @@ function! s:Tree_build(elems)
     call s:Tree_append_child(stack[-1], elem)
     call add(stack, elem)
   endfor
-  call s:correct_levels(root)
+  call s:normalize_levels(root)
   return root
 endfunction
 call s:Tree.function('build')
 
-" Corrects the level of nodes in accordance with the given tree's structure.
+" Normalize the level of nodes in accordance with the given Tree's structure.
 "
 "   root             root
 "    |                |
@@ -159,15 +143,14 @@ call s:Tree.function('build')
 "    |  |             |  |
 "    :  +--2          :  +--2
 "
-function! s:correct_levels(node)
+function! s:normalize_levels(node)
   for child in a:node.children
     let child.level = a:node.level + 1
-    call s:correct_levels(child)
+    call s:normalize_levels(child)
   endfor
 endfunction
 
-" Flattens a tree into a List and corrects the level of nodes in accordance
-" with the given tree's structure.
+" Flattens a Tree into a List with setting the levels of nodes.
 "
 function! s:Tree_flatten(node)
   let elems = []
@@ -180,77 +163,113 @@ function! s:Tree_flatten(node)
 endfunction
 call s:Tree.function('flatten')
 
-" NOTE: Fast but not correct the level of nodes.
+"-----------------------------------------------------------------------------
+" Tree.List
+
+" Tree.List module provides functions to process a List of objects with the
+" level attribute in tree-aware way. 
+"
+let s:List = unite#sources#outline#modules#base#new('List', s:SID)
+let s:Tree.List = s:List
+
+" Normalize the levels of {objs}.
+"
+function! s:List_normalize_levels(objs)
+  let tree = s:Tree_build(a:objs)
+  let objs = s:fast_flatten(tree)
+  return objs
+endfunction
+call s:List.function('normalize_levels')
+
+" Flattens a Tree into a List without setting the levels of nodes.
+"
 function! s:fast_flatten(node)
-  let elems = []
+  let objs = []
+  " Push toplevel nodes.
   let stack = reverse(copy(a:node.children))
   while !empty(stack)
+    " Pop a node.
     let node = remove(stack, -1)
-    call add(elems, node)
+    call add(objs, node)
+    " Push the node's children.
     let stack += reverse(copy(node.children))
   endwhile
-  return elems
+  return objs
 endfunction
 
-" Sets the matched-marks of nodes for which or one of whose children
-" {predicate} returns True.
+" Resets the matched-marks of the candidates.
 "
-" * A node is MATCHED for which {predicate} returns True.
-" * A node is MARKED when it has any marked child or is matched.
+function! s:List_reset_marks(candidates)
+  if empty(a:candidates) | return a:candidates | endif
+  let cand1 = a:candidates[0]
+  let cand1.is_matched = 1
+  let cand1.source__is_marked  = 1
+  let prev_cand = cand1
+  for cand in a:candidates[1:]
+    let cand.is_matched = 1
+    let cand.source__is_marked  = 1
+    let prev_cand.source__has_marked_child =
+          \ prev_cand.source__heading_level < cand.source__heading_level
+    let prev_cand = cand
+  endfor
+  let cand.source__has_marked_child  = 0
+endfunction
+call s:List.function('reset_marks')
+
+" Marks the matched candidates and their ancestors.
 "
-" NOTE: Before calling this function, the matched-marks of nodes must be
-" initalized by Tree.match_start().
+" * A candidate is MATCHED for which eval({pred}) returns True.
+" * A candidate is MARKED when any its child has been marked.
 "
 " NOTE: unite-outline's matcher and formatter see these flags to accomplish
 " their tree-aware filtering and formatting tasks.
 "
-function! s:Tree_match(node, predicate)
-  let child_marked = 0
-  for child in a:node.children
-    if !child.is_marked
+function! s:List_mark(candidates, pred, ...)
+  let pred = substitute(a:pred, '\<v:val\>', 'cand', 'g')
+  let mark_reserved = map(range(0, s:Tree.MAX_DEPTH), 0)
+  for cand in reverse(copy(a:candidates))
+    if !cand.source__is_marked
       continue
     endif
-    let child.is_matched = child.is_matched && a:predicate.call(child)
-    let child.is_marked = (s:Tree_match(child, a:predicate) || child.is_matched)
-    if child.is_marked
-      let child_marked = 1
+    let cand.is_matched = cand.is_matched && eval(pred)
+    if cand.is_matched
+      let matched_level = cand.source__heading_level
+      if 1 < matched_level
+        let mark_reserved[1 : matched_level - 1] = map(range(matched_level - 1), 1)
+      endif
+    endif
+    let cand.source__is_marked = cand.is_matched
+    if mark_reserved[cand.source__heading_level]
+      let cand.source__is_marked = 1
+      let cand.source__has_marked_child = 1
+      let mark_reserved[cand.source__heading_level] = 0
+    else
+      let cand.source__has_marked_child = 0
     endif
   endfor
-  return child_marked
 endfunction
-call s:Tree.function('match')
+call s:List.function('mark')
 
-" Initializes the matched-marks of nodes.
+" Remove the matched headings and their descendants.
 "
-function! s:Tree_match_start(node)
-  for elem in s:fast_flatten(a:node)
-    let elem.is_marked  = 1
-    let elem.is_matched = 1
-  endfor
-endfunction
-call s:Tree.function('match_start')
-
-function! s:Tree_has_marked_child(node)
-  for child in a:node.children
-    if child.is_marked
-      return 1
+function! s:List_remove(headings, pred)
+  let pred = substitute(a:pred, '\<v:val\>', 'head', 'g')
+  let matched_level = s:Tree.MAX_DEPTH + 1
+  let headings = []
+  for head in a:headings
+    if head.level <= matched_level
+      if eval(pred)
+        let matched_level = head.level
+      else
+        let matched_level = s:Tree.MAX_DEPTH + 1
+        call add(headings, head)
+      endif
     endif
   endfor
-  return 0
+  return headings
 endfunction
-call s:Tree.function('has_marked_child')
+call s:List.function('remove')
 
-" Remove nodes for which {predicate} returns True WITH their descendants.
-"
-function! s:Tree_remove(node, predicate, ...)
-  for child in a:node.children
-    if a:predicate.call(child)
-      call s:Tree_remove_child(a:node, child)
-      continue
-    endif
-    call s:Tree_remove(child, a:predicate)
-  endfor
-endfunction
-call s:Tree.function('remove')
+unlet s:List
 
 " vim: filetype=vim
