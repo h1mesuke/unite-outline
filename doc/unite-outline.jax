@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-09-13
+Updated : 2011-09-23
 Version : 0.5.0
 License : MIT license {{{
 
@@ -400,7 +400,7 @@ create_heading		関数（任意） 	*unite-outline-info-create_heading()*
 
 	設定されていると、heading-1, heading, heading+1 によるマッチが成功する
 	たびに呼び出されます。
-	返値として見出し（辞書）を返します。
+	返値として見出しオブジェクト（辞書）を返します。
 
 	この関数を定義することで、見出し一覧に設定する文字列の整形、および
 	見出しレベル（インデント）の設定が行えます。
@@ -617,29 +617,44 @@ heading_groups		辞書（任意）	*unite-outline-info-heading_groups*
 <
 need_blank_between	関数（任意）	*unite-outline-info-need_blank_between()*
 
-	need_blank_between( {heading-1}, {heading-2}, {memo})
+	need_blank_between( {cand-1}, {cand-2}, {memo})
 
 	設定されていると、見出し一覧の表示に先立って順次呼び出されます。
-	真を返すと、兄弟関係にある見出し {heading-1} と {heading-2} の間に空行
-	が挿入されます。
+	真を返すと、兄弟関係にある見出し {cand-1} と {cand-2} の間に空行が挿入
+	されます。
 
 	この関数を定義することで、見出し一覧における空行の挿入を制御できます。
 	heading_groups属性の設定による空行の挿入結果が期待通りにならない場合、
 	この関数を定義してその振舞いを変更できます。
+
+	NOTE: {cand-1}, {cand-2} は見出しオブジェクトではなく、見出しオブジェ
+	クトを元に作成された unite.vim の候補オブジェクトです。属性の名前が見
+	出しオブジェクトとは異なるので注意して下さい。（詳細は
+	|unite-notation-{candidate}|を参照）
+
+		属性名の対応表
+
+		見出し		候補
+		--------	----------------------
+		id		source__heading_id
+		word		abbr
+		level		source__heading_level
+		type		source__heading_type
+		group		source__heading_group
 
 	{memo} はメモ化のための辞書で、一連の呼び出しの間、同じ辞書が使い回さ
 	れます。見出しについて何らかの計算を行う場合は、結果をメモ化することで
 	同じ計算を２回行わずに済みます。
 
 	定義例（Python用）： >
-	function! s:outline_info.need_blank_between(head1, head2, memo)
-	  if a:head1.group == 'function' && a:head2.group == 'function'
+	function! s:outline_info.need_blank_between(cand1, cand2, memo)
+	  if a:cand1.source__heading_group == 'function' &&
+	   \ a:cand2.source__heading_group == 'function'
 	    " Don't insert a blank between two sibling functions.
 	    return 0
 	  else
-	    return (a:head1.group != a:head2.group ||
-		  \ s:Util.has_marked_child(a:head1, a:memo) ||
-		  \ s:Util.has_marked_child(a:head2, a:memo))
+	    return (a:cand1.source__heading_group != a:cand2.source__heading_group ||
+	          \ a:cand1.source__has_marked_child || a:cand2.source__has_marked_child)
 	  endif
 	endfunction
 <
@@ -879,6 +894,13 @@ outline info 募集！
 更新履歴					*unite-outline-changelog*
 
 http://github.com/h1mesuke/unite-outline/commits/master
+
+0.5.1	2011-09-xx
+
+	* 内部データの管理を改善
+
+	* 見出しの絞り込みを高速化
+	  - 再帰呼び出しをなくし、反復的に処理するように改善
 
 0.5.0	2011-09-06
 

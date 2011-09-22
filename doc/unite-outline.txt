@@ -1,7 +1,7 @@
 *unite-outline.txt*	outline source for unite.vim
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-09-13
+Updated : 2011-09-23
 Version : 0.5.0
 License : MIT license {{{
 
@@ -645,16 +645,30 @@ heading_groups		Dictionary (Optional)
 <				 *unite-outline-info-need_blank_between()*
 need_blank_between	Funcref (Optional)
 
-	need_blank_between( {heading-1}, {heading-2}, {memo})
+	need_blank_between( {cand-1}, {cand-2}, {memo})
 
 	If defined, called for each headings with its next sibling during the
 	formatting process of the headings.
-	If returns True, a blank line is inserted between {heading-1} and
-	{heading-2}.
+	If returns True, a blank line is inserted between {cand-1} and
+	{cand-2}.
 
 	By defining this callback function, you can implement your original
 	formatter of heading lists. Even if the built-in formatter doesn't
 	works expectedly, you can replace it with your implementation.
+
+	NOTE: {cand-1}, {cand-2} are not Heading objects. They are unite.vim's
+	Candidate objects created from Heading objects. So, their attribute
+	names are different from Headings'. See |unite-notation-{candidate}|.
+	    
+	    	ATTRIBUTE NAME MAPPING TABLE~
+
+		Heading		Unite's Candidate
+		--------	----------------------
+		id		source__heading_id
+		word		abbr
+		level		source__heading_level
+		type		source__heading_type
+		group		source__heading_group
 
 	{memo} is a Dictionary for memoization. The Dictionary passed to
 	{memo} is the same instance during the formatting process. If you need
@@ -662,18 +676,18 @@ need_blank_between	Funcref (Optional)
 	calculation for the heading by using the last result saved to {memo}.
 
 	NOTE: Memoization is a very effective strategy here because most of
-	headings are passed to this function twice. The first time as
-	{heading-2} and the second time as {heading-1}.
+	headings are passed to this function twice. The first time as {cand-2}
+	and the second time as {cand-1}.
 
 	Example (for Python): >
-	function! s:outline_info.need_blank_between(head1, head2, memo)
-	  if a:head1.group == 'function' && a:head2.group == 'function'
+	function! s:outline_info.need_blank_between(cand1, cand2, memo)
+	  if a:cand1.source__heading_group == 'function' &&
+	   \ a:cand2.source__heading_group == 'function'
 	    " Don't insert a blank between two sibling functions.
 	    return 0
 	  else
-	    return (a:head1.group != a:head2.group ||
-		  \ s:Util.has_marked_child(a:head1, a:memo) ||
-		  \ s:Util.has_marked_child(a:head2, a:memo))
+	    return (a:cand1.source__heading_group != a:cand2.source__heading_group ||
+	          \ a:cand1.source__has_marked_child || a:cand2.source__has_marked_child)
 	  endif
 	endfunction
 <
@@ -913,6 +927,13 @@ INCORRECT STRUCTURED TREE ~
 CHANHELOG					*unite-outline-changelog*
 
 http://github.com/h1mesuke/unite-outline/commits/master
+
+0.5.1	2011-09-xx
+
+	* Refactoring the internal data management.
+
+	*  Improve the speed of tree-aware matching.
+	  - No recursive calls. The matcher does its task iteratively.
 
 0.5.0	2011-9-06
 
