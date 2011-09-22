@@ -838,7 +838,7 @@ function! s:extract_headings(context)
       else
         call s:Util.print_progress("Extract headings...done.")
       endif
-      call s:benchmark_stop(start_time)
+      call s:benchmark_stop(start_time, a:context.__num_lines__)
     endif
   endtry
 endfunction
@@ -851,11 +851,10 @@ function! s:benchmark_start()
   endif
 endfunction
 
-function! s:benchmark_stop(start_time)
+function! s:benchmark_stop(start_time, num_lines)
   if get(g:, 'unite_source_outline_profile', 0) && has("reltime")
-    let num_lines = line('$')
     let used_time = s:get_reltime() - a:start_time
-    let used_time_100l = used_time * (str2float("100") / num_lines)
+    let used_time_100l = used_time * (str2float("100") / a:num_lines)
     call s:Util.print_progress("unite-outline: used=" . string(used_time) .
           \ "s, 100l=". string(used_time_100l) . "s")
   endif
