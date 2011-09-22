@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-22
+" Updated : 2011-09-23
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -52,16 +52,14 @@ let s:OUTLINE_CACHE_DIR = g:unite_data_directory . '/outline'
 let old_cache_dir = g:unite_data_directory . '/.outline'
 if isdirectory(s:OUTLINE_CACHE_DIR)
   if isdirectory(old_cache_dir) 
-    call unite#print_message("[unite-outline] " .
-          \ "Warning: Please remove the old cache directory: ")
+    call unite#print_message("[unite-outline] Warning: Please remove the old cache directory: ")
     call unite#print_message("[unite-outline] " . old_cache_dir)
   endif
 else " if !isdirectory(s:OUTLINE_CACHE_DIR)
   if isdirectory(old_cache_dir)
     if rename(old_cache_dir, s:OUTLINE_CACHE_DIR) != 0
       let s:OUTLINE_CACHE_DIR = old_cache_dir
-      call unite#util#print_error(
-            \ "unite-outline: Couldn't rename the cache directory.")
+      call unite#util#print_error("unite-outline: Couldn't rename the cache directory.")
     endif
   endif
 endif
@@ -381,8 +379,7 @@ function! unite#sources#outline#get_highlight(...)
 endfunction
 function! s:get_highlight(name)
   return (has_key(g:unite_source_outline_highlight, a:name)
-        \ ? g:unite_source_outline_highlight[a:name]
-        \ : s:default_highlight[a:name])
+        \ ? g:unite_source_outline_highlight[a:name] : s:default_highlight[a:name])
 endfunction
 
 function! unite#sources#outline#import(name, ...)
@@ -915,8 +912,7 @@ function! s:extract_filetype_headings(context)
   endif
 
   " Filter headings.
-  let ignore_types =
-        \ unite#sources#outline#get_filetype_option(buffer.filetype, 'ignore_types')
+  let ignore_types = unite#sources#outline#get_filetype_option(buffer.filetype, 'ignore_types')
   let headings = s:filter_headings(headings, ignore_types)
 
   return headings
