@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/ruby.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-29
+" Updated : 2011-09-22
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -75,24 +75,24 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
       let heading.word = substitute(heading.word, '\s*{.*$', '', '')
     endif
     if heading.word =~ '^\s*module\>'
-      " module
+      " Module
       let heading.type = 'module'
       let heading.word = matchstr(heading.word, '^\s*module\s\+\zs\h\w*') . ' : module'
     elseif heading.word =~ '^\s*class\>'
       if heading.word =~ '\s\+<<\s\+'
-        " eigen class
+        " Eigen Class
         let heading.type = 'eigen_class'
       else
-        " class
+        " Class
         let heading.type = 'class'
         let heading.word = matchstr(heading.word, '^\s*class\s\+\zs\h\w*') . ' : class'
       endif
     elseif heading.word =~ '^\s*def\>'
       if heading.word =~ '#{'
-        " meta method
+        " Meta Method
         let heading.type = 'meta_method'
       else
-        " method
+        " Method
         let heading.type = 'method'
         let heading.word = substitute(heading.word, '\<def\s*', '', '')
       endif
@@ -103,14 +103,13 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   return heading
 endfunction
 
-function! s:outline_info.need_blank_between(head1, head2, memo)
-  if a:head1.group == 'method' && a:head2.group == 'method'
+function! s:outline_info.need_blank_between(cand1, cand2, memo)
+  if a:cand1.source__heading_group == 'method' && a:cand2.source__heading_group == 'method'
     " Don't insert a blank between two sibling methods.
     return 0
   else
-    return (a:head1.group != a:head2.group ||
-          \ s:Util.has_marked_child(a:head1, a:memo) ||
-          \ s:Util.has_marked_child(a:head2, a:memo))
+    return (a:cand1.source__heading_group != a:cand2.source__heading_group ||
+          \ a:cand1.source__has_marked_child || a:cand2.source__has_marked_child)
   endif
 endfunction
 

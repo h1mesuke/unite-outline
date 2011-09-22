@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/php.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-29
+" Updated : 2011-09-22
 "
 " Contributed by hamaco
 "
@@ -108,14 +108,13 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   return heading
 endfunction
 
-function! s:outline_info.need_blank_between(head1, head2, memo)
-  if a:head1.group == 'function' && a:head2.group == 'function'
+function! s:outline_info.need_blank_between(cand1, cand2, memo)
+  if a:cand1.source__heading_group == 'function' && a:cand2.source__heading_group == 'function'
     " Don't insert a blank between two sibling functions.
     return 0
   else
-    return (a:head1.group != a:head2.group ||
-          \ s:Util.has_marked_child(a:head1, a:memo) ||
-          \ s:Util.has_marked_child(a:head2, a:memo))
+    return (a:cand1.source__heading_group != a:cand2.source__heading_group ||
+          \ a:cand1.source__has_marked_child || a:cand2.source__has_marked_child)
   endif
 endfunction
 
