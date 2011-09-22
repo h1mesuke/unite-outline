@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_matcher_glob.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-03
+" Updated : 2011-09-21
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -43,8 +43,7 @@ let s:matcher = {
 function! s:matcher.filter(candidates, unite_context)
   if empty(a:candidates) | return a:candidates | endif
 
-  let tree = a:candidates[0].source__headings.as_tree
-  call s:Tree.match_start(tree)
+  call s:Tree.List.reset_marks(a:candidates)
 
   if a:unite_context.input == ''
     return a:candidates
@@ -52,41 +51,29 @@ function! s:matcher.filter(candidates, unite_context)
 
   for input in split(a:unite_context.input, '\\\@<! ')
     let input = substitute(input, '\\ ', ' ', 'g')
-    " Use something like closure.
-    let predicate = {}
     if input =~ '^!'
+      if input == '!'
+        continue
+      endif
       " Exclusion
-      let predicate.input = unite#escape_match(input)
-      let g:unite_source_outline_input = ''
-      function predicate.call(heading)
-        return (a:heading.keyword !~ self.input[1:])
-      endfunction
+      let input = unite#escape_match(input)
+      let pred = 'v:val.word !~ ' . string(input[1:])
     elseif input =~ '\\\@<!\*'
       " Wildcard
-      let predicate.input = unite#escape_match(input)
-      function predicate.call(heading)
-        return (a:heading.keyword =~ self.input)
-      endfunction
+      let input = unite#escape_match(input)
+      let pred = 'v:val.word =~ ' . string(input)
     else
-      let predicate.input = substitute(input, '\\\(.\)', '\1', 'g')
-      if &ignorecase
-        function predicate.call(heading)
-          return (stridx(tolower(a:heading.keyword), self.input) != -1)
-        endfunction
-      else
-        function predicate.call(heading)
-          return (stridx(a:heading.keyword, self.input) != -1)
-        endfunction
-      endif
+      let input = substitute(input, '\\\(.\)', '\1', 'g')
+      let pred = &ignorecase ?
+            \ printf('stridx(tolower(v:val.word), %s) != -1', string(tolower(input))) :
+            \ printf('stridx(v:val.word, %s) != -1', string(input))
     endif
     " Mark headings.
-    call s:Tree.match(tree, predicate)
+    call s:Tree.List.mark(a:candidates, pred)
   endfor
+
   " Filter headings.
-  let candidates = filter(copy(a:candidates), 'v:val.source__heading.is_marked')
-  for cand in candidates
-    let cand.is_matched = cand.source__heading.is_matched
-  endfor
+  let candidates = filter(copy(a:candidates), 'v:val.source__is_marked')
   return candidates
 endfunction
 
