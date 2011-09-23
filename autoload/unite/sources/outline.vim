@@ -1159,18 +1159,22 @@ endfunction
 
 function! s:normalize_heading(heading, context)
   let outline_info = a:context.outline_info
-  let group_map = outline_info.heading_group_map
   let a:heading.id = s:heading_id
   let a:heading.word = s:normalize_heading_word(a:heading.word)
   call extend(a:heading, {
         \ 'level': 1,
         \ 'type' : 'generic',
-        \ 'group': get(group_map, a:heading.type, 'generic'),
         \ 'lnum' : a:context.heading_lnum,
         \ 'keyword': a:heading.word,
         \ }, 'keep')
   let a:heading.line = a:context.lines[a:heading.lnum]
   let a:heading.signature = s:calc_signature(a:heading.lnum, a:context.lines)
+  " group
+  if !has_key(a:heading, 'group')
+    let group_map = outline_info.heading_group_map
+    let a:heading.group = get(group_map, a:heading.type, 'generic')
+  endif
+  " keyword => candidate.word
   if has_key(outline_info, '__not_match_pattern__')
     let a:heading.keyword =
           \ substitute(a:heading.word, outline_info.__not_match_pattern__, '', 'g')
