@@ -38,9 +38,9 @@ let s:outline_info = {
       \   { 'name'   : 'type',
       \     'pattern': '/\S\+\ze : \%(class\|enum\|struct\|typedef\)/' },
       \   { 'name'   : 'function',
-      \     'pattern': '/  \%(operator\>.*\|\h\w*\)\ze\s*(/' },
+      \     'pattern': '/\(operator\>.*\|\h\w*\)\ze\s*(/' },
       \   { 'name'   : 'macro',
-      \     'pattern': '/\h\w*\ze \%(=>\|(.*).* : macro\)/' },
+      \     'pattern': '/\h\w*\ze\%( (.*)\)\= : macro/' },
       \ ],
       \}
 
