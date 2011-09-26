@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/tree.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-22
+" Updated : 2011-09-27
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -201,18 +201,18 @@ endfunction
 "
 function! s:List_reset_marks(candidates)
   if empty(a:candidates) | return a:candidates | endif
-  let cand1 = a:candidates[0]
-  let cand1.is_matched = 1
-  let cand1.source__is_marked  = 1
-  let prev_cand = cand1
-  for cand in a:candidates[1:]
+  let prev_cand = {
+        \ 'is_matched': 1, 'source__is_marked': 1,
+        \ 'source__heading_level': 0,
+        \ }
+  for cand in a:candidates
     let cand.is_matched = 1
-    let cand.source__is_marked  = 1
+    let cand.source__is_marked = 1
     let prev_cand.source__has_marked_child =
           \ prev_cand.source__heading_level < cand.source__heading_level
     let prev_cand = cand
   endfor
-  let cand.source__has_marked_child  = 0
+  let cand.source__has_marked_child = 0
 endfunction
 call s:List.function('reset_marks')
 
