@@ -751,8 +751,8 @@ function! s:get_candidates(bufnr, context)
 endfunction
 
 function! s:extract_headings(context)
-  let winnr = bufwinnr(a:context.buffer.nr)
-  if winnr == -1
+  let src_winnr = bufwinnr(a:context.buffer.nr)
+  if src_winnr == -1
     throw "NoWindowError:"
   endif
 
@@ -779,7 +779,8 @@ function! s:extract_headings(context)
     set lazyredraw
 
     " Switch: current window -> source buffer's window
-    execute winnr . 'wincmd w'
+    let cur_winnr = winnr()
+    execute src_winnr . 'wincmd w'
     " Save the cursor and scroll.
     let save_cursor  = getpos('.')
     let save_topline = line('w0')
@@ -829,7 +830,7 @@ function! s:extract_headings(context)
     call setpos('.', save_cursor)
     let &scrolloff = save_scrolloff
     " Switch: current window <- source buffer's window
-    wincmd p
+    execute cur_winnr . 'wincmd w'
 
     " Restore the Vim options.
     let &lazyredraw  = save_lazyredraw
