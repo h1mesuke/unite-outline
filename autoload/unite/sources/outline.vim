@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-30
+" Updated : 2011-10-01
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -1500,7 +1500,11 @@ function! s:find_outline_buffers(src_bufnr)
 endfunction
 
 function! s:is_unite_buffer(bufnr)
-  return (getbufvar(a:bufnr, '&filetype') ==# 'unite')
+  if unite#is_win()
+    return (bufname(a:bufnr) =~# '^\[unite\]')
+  else
+    return (bufname(a:bufnr) =~# '^\*unite\*')
+  endif
 endfunction
 
 function! s:Unite_find_outline_source(unite)
