@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-23
+" Updated : 2011-09-30
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -1171,7 +1171,7 @@ function! s:normalize_heading(heading, context)
   let a:heading.signature = s:calc_signature(a:heading.lnum, a:context.lines)
   " group
   if !has_key(a:heading, 'group')
-    let group_map = outline_info.heading_group_map
+    let group_map = get(outline_info, 'heading_group_map', {})
     let a:heading.group = get(group_map, a:heading.type, 'generic')
   endif
   " keyword => candidate.word
