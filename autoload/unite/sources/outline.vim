@@ -515,7 +515,7 @@ endfunction
 let s:source.hooks.on_init = function(s:SID . 'Source_Hooks_on_init')
 
 " Initialize the outline data and register autocmds if the current buffer
-" hasn't initialized yet.
+" hasn't been initialized yet.
 "
 function! s:unite_outline_initialize()
   let bufnr = bufnr('%')
@@ -560,7 +560,7 @@ function! s:Source_Hooks_on_syntax(source_args, unite_context)
     endif
   else
     " Method: Folding
-    " Now folding headings are not highlighted at all.
+    " NOTE: Now folding headings are not highlighted at all.
   endif
 endfunction
 let s:source.hooks.on_syntax = function(s:SID . 'Source_Hooks_on_syntax')
@@ -1243,12 +1243,10 @@ function! s:filter_headings(headings, ignore_types)
     let headings = s:Tree.List.normalize_levels(headings)
     call remove(ignore_types, idx)
   endif
-
+  " Remove headings to be ignored.
   call map(ignore_types, 'unite#util#escape_pattern(v:val)')
   let ignore_types_pattern = '^\%(' . join(ignore_types, '\|') . '\)$'
-  " Use something like closure.
   let pred = 'v:val.type =~# ' . string(ignore_types_pattern)
-  " Remove headings to be ignored.
   let headings = s:Tree.List.remove(headings, pred)
   return headings
 endfunction
