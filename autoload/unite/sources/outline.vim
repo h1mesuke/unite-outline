@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-01
+" Updated : 2011-10-02
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -1144,7 +1144,7 @@ function! s:extract_folding_headings(context)
             \ 'type' : 'folding',
             \ 'lnum' : heading_lnum,
             \ }
-      call add(headings, heading)
+      call add(headings, s:normalize_heading(heading, a:context))
       if len(headings) >= g:unite_source_outline_max_headings
         call unite#print_message("[unite-outline] " .
               \ "Too many headings, the extraction was interrupted.")
@@ -1154,7 +1154,6 @@ function! s:extract_folding_headings(context)
     let curr_level = foldlevel
     let lnum += 1
   endwhile
-  call map(headings, 's:normalize_heading(v:val, a:context)')
   return headings
 endfunction
 
