@@ -560,7 +560,7 @@ function! s:Source_Hooks_on_syntax(source_args, unite_context)
     endif
   else
     " Method: Folding
-    " NOTE: Now folding headings are not highlighted at all.
+    " NOTE: Folding headings are not highlighted at all.
   endif
 endfunction
 let s:source.hooks.on_syntax = function(s:SID . 'Source_Hooks_on_syntax')
@@ -576,11 +576,7 @@ function! s:Source_gather_candidates(source_args, unite_context)
     set magic
 
     let bufnr = a:unite_context.source__outline_source_bufnr
-
-    " Update the context Dictionary.
     let options = s:parse_source_arguments(a:source_args, a:unite_context)
-    let context = s:create_context(bufnr, options)
-    call s:set_outline_data(bufnr, 'context', context)
 
     let auto_update = s:get_filetype_option(getbufvar(bufnr, '&filetype'), 'auto_update', 0)
     if auto_update
@@ -591,40 +587,11 @@ function! s:Source_gather_candidates(source_args, unite_context)
         " Need to update the candidates.
         call s:Util.print_debug('event', 'changenr: buffer = ' . buffer_changenr .
               \ ', model = ' . model_changenr)
-        let context.is_force = 1
+        let options.is_force = 1
       endif
     endif
 
-    if !context.is_force && s:has_outline_data(bufnr, 'candidates')
-      " Path A: Get candidates from the buffer local cache.
-      let candidates = s:get_outline_data(bufnr, 'candidates')
-      if s:is_valid_candidates(candidates, context)
-        return candidates
-      endif
-    endif
-
-    if !context.is_force && s:FileCache.has(bufnr)
-      " Path B: Get candidates from the file cache.
-      try
-        let cache_data = s:FileCache.get(bufnr)
-        if s:is_valid_filecache(cache_data)
-          let candidates = cache_data.candidates
-          if s:is_valid_candidates(candidates, context)
-            " Save the candidates to the buffer local cache.
-            call s:set_outline_data(bufnr, 'candidates', candidates)
-            return candidates
-          endif
-        endif
-        " Fallback to Path C.
-      catch /^unite-outline:/
-        call unite#util#print_error(v:exception)
-      endtry
-    endif
-
-    " Path C: Candidates are invalid or haven't been cached, so try to get
-    " candidates by extracting headings from the buffer.
-    let candidates = s:get_candidates(bufnr, context)
-    " NOTE: s:get_candidates() update the cache too.
+    let candidates = s:get_candidates(bufnr, options)
 
     if auto_update
       if get(g:, 'unite_source_outline_event_debug', 0)
@@ -727,17 +694,50 @@ function! s:is_valid_filecache(cache_data)
         \ && a:cache_data[s:FILECACHE_FORMAT_VERSION_KEY] == s:FILECACHE_FORMAT_VERSION)
 endfunction
 
-function! s:get_candidates(bufnr, context)
+function! s:get_candidates(bufnr, options)
+  " Update the context Dictionary.
+  let context = s:create_context(a:bufnr, a:options)
+  call s:set_outline_data(a:bufnr, 'context', context)
+
+  if !context.is_force && s:has_outline_data(a:bufnr, 'candidates')
+    " Path A: Get candidates from the buffer local cache.
+    let candidates = s:get_outline_data(a:bufnr, 'candidates')
+    if s:is_valid_candidates(candidates, context)
+      return candidates
+    endif
+  endif
+
+  if !context.is_force && s:FileCache.has(a:bufnr)
+    " Path B: Get candidates from the file cache.
+    try
+      let cache_data = s:FileCache.get(a:bufnr)
+      if s:is_valid_filecache(cache_data)
+        let candidates = cache_data.candidates
+        if s:is_valid_candidates(candidates, context)
+          " Save the candidates to the buffer local cache.
+          call s:set_outline_data(a:bufnr, 'candidates', candidates)
+          return candidates
+        endif
+      endif
+      " Fallback to Path C.
+    catch /^unite-outline:/
+      call unite#util#print_error(v:exception)
+    endtry
+  endif
+
+  " Path C: Candidates are invalid or haven't been cached, so try to get
+  " candidates by extracting headings from the buffer.
+
   " Get headings by parsing the buffer.
-  let headings = s:extract_headings(a:context)
+  let headings = s:extract_headings(context)
   " Convert the headings into candidates.
   let candidates = s:convert_headings_to_candidates(headings, a:bufnr)
 
-  let is_volatile = get(a:context.outline_info, 'is_volatile', 0)
+  let is_volatile = get(context.outline_info, 'is_volatile', 0)
   if !is_volatile
     " Save the candidates to the buffer local cache.
     call s:set_outline_data(a:bufnr, 'candidates', candidates)
-    let is_persistant = (a:context.__num_lines__ > g:unite_source_outline_cache_limit)
+    let is_persistant = (context.__num_lines__ > g:unite_source_outline_cache_limit)
     if is_persistant
       let cache_data = { 'candidates': candidates }
       let cache_data[s:FILECACHE_FORMAT_VERSION_KEY] = s:FILECACHE_FORMAT_VERSION
@@ -1453,11 +1453,8 @@ endfunction
 
 function! s:update_headings(bufnr)
   call s:Util.print_debug('event', 'update_headings')
-  " Update the context Dictionary.
-  let context = s:create_context(a:bufnr, { 'event': 'auto_update', 'is_force': 1 })
-  call s:set_outline_data(a:bufnr, 'context', context)
   " Update the Model data (headings).
-  call s:get_candidates(a:bufnr, context)
+  call s:get_candidates(a:bufnr, { 'event': 'auto_update', 'is_force': 1 })
 
   " Update the View (unite.vim' buffer) if the visible outline buffer exists.
   let outline_bufnrs = s:find_outline_buffers(a:bufnr)
