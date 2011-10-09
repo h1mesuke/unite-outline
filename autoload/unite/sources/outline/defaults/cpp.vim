@@ -43,6 +43,8 @@ let s:outline_info = {
       \     'pattern': '/\h\w*\ze .*=> /' },
       \   { 'name'   : 'expanded',
       \     'pattern': '/ => \zs.*/' },
+      \   { 'name'   : 'id',
+      \     'pattern': '/ \zs#\d\+/' },
       \ ],
       \}
 

@@ -438,6 +438,7 @@ let s:default_highlight = {
       \ 'comment' : 'Comment',
       \ 'expanded': 'Constant',
       \ 'function': 'Function',
+      \ 'id'      : 'Special',
       \ 'macro'   : 'Macro',
       \ 'method'  : 'Function',
       \ 'normal'  : g:unite_abbr_highlight,
