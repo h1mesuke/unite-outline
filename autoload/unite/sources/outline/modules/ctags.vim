@@ -212,7 +212,9 @@ function! s:Ctags_extract_headings(context)
   let lang_info = s:Ctags.lang_info[filetype]
   let scope_kinds_pattern = '^\%(' . join(lang_info.scope_kinds, '\|') . '\)$'
   let scope_table = {}
-  let tag_name_counter = {}
+
+  " Tag name counter
+  let s:counter = {}
 
   " Build a heading tree processing a List of tag objects.
   let root = s:Tree.new()
@@ -227,10 +229,6 @@ function! s:Ctags_extract_headings(context)
 
     " Remove extra spaces to normalize the parameter list.
     let heading.word = substitute(substitute(heading.word, '(\s*', '(', ''), '\s*)', ')', '')
-    " Append an ID suffix (#2, #3, ...) to the heading word if the heading is
-    " the second or subsequent one that has the tag's name.
-    call s:count_tag_name(tag, tag_name_counter)
-    let heading.word .= s:get_tag_name_id_suffix(tag, tag_name_counter)
 
     if tag.kind =~# scope_kinds_pattern
       " The heading has its scope, in other words, it is able to have child
@@ -265,6 +263,7 @@ function! s:Ctags_extract_headings(context)
       call s:Tree.append_child(root, heading)
     endif
   endfor
+  unlet! s:counter
 
   " Merge orphaned pseudo headings.
   let pseudo_headings = filter(values(scope_table), 'has_key(v:val, "__pseudo__")')
@@ -331,26 +330,19 @@ function! s:get_tag_access_mark(tag)
   return get(s:OOP_ACCESS_MARKS, access, '_') . ' '
 endfunction
 
-function! s:count_tag_name(tag, counter)
-  let name = a:tag.qualified_name
-  if has_key(a:counter, name)
-    let a:counter[name] += 1
-  else
-    let a:counter[name] = 1
-  endif
-endfunction
-
-" Returns an ID suffix (#2, #3, ...) of {tag}.
-" If the tag is the first one that has its name, returns empty String.
+" Count up {tag}'s name and returns an ID suffix (#2, #3, ...) for {tag}.
+" If the {tag} is the first one that has the name, returns empty String.
 "
-function! s:get_tag_name_id_suffix(tag, counter)
+function! s:get_tag_id(tag)
   let name = a:tag.qualified_name
   if has_key(a:tag, 'signature')
     let name .= a:tag.signature
   endif
-  if has_key(a:counter, name) && a:counter[name] > 1
-    return ' #' . a:counter[name]
+  if has_key(s:counter, name)
+    let s:counter[name] += 1
+    return ' #' . s:counter[name]
   else
+    let s:counter[name] = 1
     return ''
   endif
 endfunction
@@ -399,6 +391,7 @@ function! s:Ctags.lang_info.cpp.create_heading(tag, context)
     else
       let heading.word .= ' ' . s:get_param_list(a:context, a:tag.lnum)
     endif
+    let heading.word .= s:get_tag_id(a:tag)
   elseif heading.type ==# 'macro'
     " Macro
     if line =~# '#undef\>'
@@ -409,11 +402,12 @@ function! s:Ctags.lang_info.cpp.create_heading(tag, context)
         let heading.word .= ' ' . s:get_param_list(a:context, a:tag.lnum)
       endif
       " Append what the macro will be expanded to.
-      let heading.word .= ' => ' . s:get_expanded(a:context, a:tag.lnum, a:tag.name)
+      let heading.word .= s:get_tag_id(a:tag) .
+            \ ' => ' . s:get_expanded(a:context, a:tag.lnum, a:tag.name)
     endif
   else
     " Otehrs
-    let heading.word .= ' : ' . a:tag.kind
+    let heading.word .= s:get_tag_id(a:tag) . ' : ' . a:tag.kind
   endif
   if has_key(a:tag, 'implementation')
     let heading.word .= ' <' . a:tag.implementation . '>'
