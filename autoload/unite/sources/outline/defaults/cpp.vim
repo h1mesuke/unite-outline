@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/cpp.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-23
+" Updated : 2011-10-10
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -34,13 +34,15 @@ let s:outline_info = {
       \
       \ 'highlight_rules': [
       \   { 'name'   : 'parameter_list',
-      \     'pattern': '/(.*)/' },
+      \     'pattern': '/\%(=> .*\)\@<!\zs([^=]*)/' },
       \   { 'name'   : 'type',
       \     'pattern': '/\S\+\ze : \%(class\|enum\|struct\|typedef\)/' },
       \   { 'name'   : 'function',
-      \     'pattern': '/\(operator\>.*\|\h\w*\)\ze\s*(/' },
+      \     'pattern': '/\%(=> .*\)\@<!\(operator\>.*\|\h\w*\)\ze\s*(/' },
       \   { 'name'   : 'macro',
-      \     'pattern': '/\h\w*\ze\%( (.*)\)\= : macro/' },
+      \     'pattern': '/\h\w*\ze\%( (.*)\)\= => /' },
+      \   { 'name'   : 'expanded',
+      \     'pattern': '/ => \zs.*/' },
       \ ],
       \}
 

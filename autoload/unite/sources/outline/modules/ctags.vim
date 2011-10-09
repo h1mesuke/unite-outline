@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-02
+" Updated : 2011-10-10
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -300,7 +300,7 @@ endfunction
 
 " Creates a pseudo heading from {tag}.
 " Pseudo headings are the headings whose tags don't exists actually because
-" they are ones of the other file.
+" maybe they belong to the other files.
 "
 function! s:create_pseudo_heading(tag)
   let heading = {
@@ -355,6 +355,7 @@ function! s:get_tag_name_id_suffix(tag, counter)
   endif
 endfunction
 
+" TODO: Specifying ctags's -I option from some variable.
 "-----------------------------------------------------------------------------
 " C/C++
 "
@@ -388,28 +389,48 @@ function! s:Ctags.lang_info.cpp.create_heading(tag, context)
         \ }
   let ignore = 0
   if heading.type ==# 'function'
+    " Function
     if a:tag.name =~# '^[[:upper:]_]\{3,}$'
+      " Application of a macro was incorrectly parsed as a function
+      " definition.
       let ignore = 1
     elseif has_key(a:tag, 'signature')
       let heading.word .= ' ' . a:tag.signature
     else
       let heading.word .= ' ' . s:get_param_list(a:context, a:tag.lnum)
     endif
-  else
-    if heading.type ==# 'macro'
-      if line =~# '#undef\>'
-        let ignore = 1
-      elseif line =~# a:tag.name . '('
+  elseif heading.type ==# 'macro'
+    " Macro
+    if line =~# '#undef\>'
+      let ignore = 1
+    else
+      " Append its parameter list if exists.
+      if line =~# a:tag.name . '('
         let heading.word .= ' ' . s:get_param_list(a:context, a:tag.lnum)
-        let heading.group = 'function'
       endif
+      " Append what the macro will be expanded to.
+      let heading.word .= ' => ' . s:get_expanded(a:context, a:tag.lnum, a:tag.name)
     endif
+  else
+    " Otehrs
     let heading.word .= ' : ' . a:tag.kind
   endif
   if has_key(a:tag, 'implementation')
     let heading.word .= ' <' . a:tag.implementation . '>'
   endif
   return ignore ? {} : heading
+endfunction
+
+function! s:get_expanded(context, lnum, macro)
+  let line = a:context.lines[a:lnum]
+  let expanded = matchstr(line, a:macro . '\%(([^)]*)\)\=\s\+\zs.*')
+  let lnum = a:lnum + 1
+  while strlen(expanded) < 10 && expanded =~ '\\\s*$'
+    let expanded = substitute(expanded, '\\\s*$', '', '')
+    let expanded .= a:context.lines[lnum]
+  endwhile
+  let expanded = substitute(expanded, '\\\s*$', ' ...', '')
+  return expanded
 endfunction
 
 let s:Ctags.lang_info.c = copy(s:Ctags.lang_info.cpp)

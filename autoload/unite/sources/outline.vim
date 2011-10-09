@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-02
+" Updated : 2011-10-10
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -436,6 +436,7 @@ endif
 
 let s:default_highlight = {
       \ 'comment' : 'Comment',
+      \ 'expanded': 'Constant',
       \ 'function': 'Function',
       \ 'macro'   : 'Macro',
       \ 'method'  : 'Function',
