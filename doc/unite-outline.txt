@@ -1,7 +1,7 @@
 *unite-outline.txt*	outline source for unite.vim
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-09-23
+Updated : 2011-10-10
 Version : 0.5.0
 License : MIT license {{{
 
@@ -46,8 +46,8 @@ CONTENTS					*unite-outline-contents*
 INTRODUCTION					*unite-outline-introduction*
 
 	*unite-outline* is an |unite|'s source which parses the current
-	buffer's content and extracts headings from it and then shows the list
-	of the headings using the user interface of unite.vim. When you select
+	buffer's content and extracts headings from the buffer and then shows
+	the list of the headings with unite.vim's interface. When you select
 	a heading from the list, you can jump to the corresponding location of
 	the buffer.
 
@@ -76,10 +76,9 @@ SHOW HEADINGS ~
 	:Unite outline
 <
 	unite-outline parses the current buffer's content and extracts
-	headings from it and then shows the list of the headings using the
-	user interface of unite.vim. When you select a heading from the list
-	that appears, you can jump to the corresponding location of the
-	buffer.
+	headings from the buffer. And then, it shows the list of the headings
+	with unite.vim's interface. When you select a heading from the list,
+	you can jump to the corresponding location of the buffer.
 
 	In most cases, extracted headings are cached. Because unite-outline
 	reuses the cached data as possible, subsequent executions for the
@@ -93,8 +92,8 @@ UPDATE HEADINGS ~
 >
 	:Unite outline:!
 <
-	Or, do |<Plug>(unite_redraw)|, which is mapped to <C-l> by default, at
-	the heading list in Normal mode.
+	Or, execute |<Plug>(unite_redraw)|, which is mapped to <C-l> by
+	default, at the heading list in Normal mode.
 
 	NOTE: From verion 0.5.0, unite-outline updates headings automatically.
 	See |unite-outline-filetype-option-auto-update| .
@@ -139,7 +138,7 @@ g:unite_source_outline_filetype_options
 
 	The generic filetype "*", that means all filetypes,  is available. If
 	a filetype has no value for an option, the value of "*" for the option
-	is used.
+	is applied.
 
 	Default value is {}
 
@@ -151,7 +150,6 @@ g:unite_source_outline_filetype_options
 	      \ },
 	      \ 'cpp': {
 	      \   'auto_update': 0,
-	      \   'ignore_types': ['enum', 'typedef', 'macro'],
 	      \ },
 	      \ 'javascript': {
 	      \   'ignore_types': ['comment'],
@@ -167,7 +165,7 @@ g:unite_source_outline_filetype_options
 
 		Whether unite-outline update headings automatically or not.
 
-		The default value is 1.
+		Default value is 1.
 
 	auto_update_event	*unite-outline-filetype-option-auto-update-event*
 
@@ -179,11 +177,11 @@ g:unite_source_outline_filetype_options
 		"write"		|BufWritePost|
 		"hold"		|BufWritePost|, |CursorHold|
 
-		The default value is "write".
+		Default value is "write".
 
 		NOTE: Headings are updated only when the buffer has been
 		changed since the last update. If you choice "hold" as
-		"auto_update_event", the interval of update is specified by
+		"auto_update_event", the interval of updates is specified by
 		'updatetime'.
 
 	ignore_types		*unite-outline-filetype-option-ignore-types*
@@ -193,7 +191,7 @@ g:unite_source_outline_filetype_options
 		See the definition of the outline info to know about available
 		heading types.
 
-		The default value is []
+		Default value is []
 
 g:unite_source_outline_max_headings	*g:unite_source_outline_max_headings*
 
@@ -219,14 +217,16 @@ g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
 g:unite_source_outline_highlight	*g:unite_source_outline_highlight*
 
 	Dictionary of highlight settings.
-	You can select the highlight for each heading groups.
+	You can change the highlight for each heading groups.
 
 	Default value is {}
 
 	Example: >
 	let g:unite_source_outline_highlight = {
 	      \ 'comment' : 'Comment',
+	      \ 'expanded': 'Constant',
 	      \ 'function': 'Function',
+	      \ 'id'      : 'Special',
 	      \ 'macro'   : 'Macro',
 	      \ 'method'  : 'Function',
 	      \ 'normal'  : g:unite_abbr_highlight,
@@ -242,8 +242,8 @@ g:unite_source_outline_highlight	*g:unite_source_outline_highlight*
 	      \ 'parameter_list': g:unite_abbr_highlight,
 	      \ }
 <
-	The patterns to specify the region to be highlighted are defined in
-	each filetypes' outline info.
+	The patterns to specify the regions to be highlighted are defined in
+	each filetypes' outline infos.
 
 	See |unite-outline-info-highlight_rules|.
 
@@ -265,7 +265,7 @@ OUTLINE INFO					*unite-outline-info*
 	of extracting headings. Usually, it has some regexp patterns of
 	headings and a callback function to create a heading from a line.
 
-	You can customize the creation of heading list as you like by creating
+	You can customize the creation of a heading list as you like by creating
 	your own outline infos or modifying the default ones.
 
 	When you try to show the heading list, the outline info for the
@@ -297,7 +297,7 @@ CREATE OUTLINE INFO				*unite-outline-info-create*
 	      \ },
 	      \}
 <
-    [B]	Define an autoload function to return the outline info. [Recommended]
+    [B]	Define an autoload function to return the outline info. [RECOMMENDED]
 
       *	Create a file {filetype}.vim at
 	$HOME/.vim/autoload/unite/sources/outline/
@@ -332,7 +332,7 @@ EXTRACTING HEADINGS BY CALLBACK ~
 heading-1		String (Optional)	*unite-outline-info-heading-1*
 
 	Pattern that matches to the PREVIOUS line of a heading line.
-	By setting this attribute, the outline info can extracts the headings
+	By setting this attribute, the outline info can extract the headings
 	that follow a decoration line. For example,
 >
 	=========================================
@@ -387,7 +387,7 @@ heading			String (Optional) 	*unite-outline-info-heading*
 heading+1		String (Optional)	*unite-outline-info-heading+1*
 
 	Pattern that matches to the NEXT line of a heading line.
-	By setting this attributes, the outline info can extracts the headings
+	By setting this attribute, the outline info can extract the headings
 	that are followed by a decoration line like Markdown's headings. For
 	example,
 >
@@ -606,8 +606,8 @@ extract_headings	Funcref (Optional)	*unite-outline-info-extract_headings()*
 	children can be made by Tree.append_child().
 
 	As a result of the example code, a tree that has a structure shown in
-	the following figure is built. extract_headings() returns the root
-	node, that never be displayed on the heading list window.
+	the following figure is built. extract_headings() must returns the
+	root node, that never be displayed on the heading list window.
 >
 	root
 	 |
@@ -768,7 +768,7 @@ EXTERNAL PROGRAMS			 *unite-outline-info-external-programs*
 	must be able to be executed by |system()| with the proper setting of
 	PATH environment variable.
 
-	C, C++, Java, Python ~
+	C, C++, Java ~
 
 		* Exuberant Ctags (Required)
 		  http://ctags.sourceforge.net/
@@ -928,7 +928,7 @@ CHANHELOG					*unite-outline-changelog*
 
 http://github.com/h1mesuke/unite-outline/commits/master
 
-0.5.1	2011-09-xx
+0.5.1	2011-10-xx
 
 	* Refactoring the internal data management.
 

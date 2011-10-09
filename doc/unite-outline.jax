@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-09-23
+Updated : 2011-10-10
 Version : 0.5.0
 License : MIT license {{{
 
@@ -155,7 +155,6 @@ g:unite_source_outline_filetype_options
 	      \ },
 	      \ 'cpp': {
 	      \   'auto_update': 0,
-	      \   'ignore_types': ['enum', 'typedef', 'macro'],
 	      \ },
 	      \ 'javascript': {
 	      \   'ignore_types': ['comment'],
@@ -220,14 +219,16 @@ g:unite_source_outline_cache_limit	*g:unite_source_outline_cache_limit*
 g:unite_source_outline_highlight	*g:unite_source_outline_highlight*
 
 	見出し一覧のハイライトを指定するための辞書
-	見出しのグループごとに適用するハイライトを指定できます。
+	見出しのグループごとに適用するハイライトを変更できます。
 
 	初期値は {}
 
 	設定例： >
 	let g:unite_source_outline_highlight = {
 	      \ 'comment' : 'Comment',
+	      \ 'expanded': 'Constant',
 	      \ 'function': 'Function',
+	      \ 'id'      : 'Special',
 	      \ 'macro'   : 'Macro',
 	      \ 'method'  : 'Function',
 	      \ 'normal'  : g:unite_abbr_highlight,
@@ -733,7 +734,7 @@ finalize		関数（任意） 		*unite-outline-info-finalize()*
 	グラムが実行可能である（PATH が通っており、|system()|から呼び出せる）
 	必要があります。
 
-	C, C++, Java, Python ~
+	C, C++, Java ~
 
 		* Exuberant Ctags（必須）
 		  http://ctags.sourceforge.net/
@@ -895,7 +896,7 @@ outline info 募集！
 
 http://github.com/h1mesuke/unite-outline/commits/master
 
-0.5.1	2011-09-xx
+0.5.1	2011-10-xx
 
 	* 内部データの管理を改善
 

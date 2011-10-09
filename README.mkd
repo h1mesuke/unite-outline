@@ -3,8 +3,8 @@
 ## Introduction
 
 unite-outline is an [unite.vim](http://github.com/Shougo/unite.vim)'s source
-which parses the current buffer's content and extracts headings from it and
-then shows the list of the headings using the user interface of unite.vim.
+which parses the current buffer's content and extracts headings from the
+buffer and then shows the list of the headings with unite.vim's interface.
 When you select a heading from the list, you can jump to the corresponding
 location of the buffer.
 
@@ -29,12 +29,11 @@ To show the heading list of the current buffer, execute |:Unite| command with
     :Unite outline
 
 unite-outline parses the current buffer's content and extracts headings from
-it and then shows the list of the headings using the user interface of
-unite.vim. When you select a heading from the list that appears, you can jump
-to the corresponding location of the buffer.
+the buffer. And then, it shows the list of the headings with unite.vim's
+interface. When you select a heading from the list, you can jump to the
+corresponding location of the buffer.
 
 See :help unite-outline for more details.
-
 
 ## Screenshots
 
