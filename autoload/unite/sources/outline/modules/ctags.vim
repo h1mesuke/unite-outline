@@ -420,10 +420,11 @@ function! s:get_expanded(context, lnum, macro)
   let expanded = matchstr(line, a:macro . '\%(([^)]*)\)\=\s\+\zs.*')
   let lnum = a:lnum + 1
   while strlen(expanded) < 10 && expanded =~ '\\\s*$'
-    let expanded = substitute(expanded, '\\\s*$', '', '')
-    let expanded .= a:context.lines[lnum]
+    let expanded .= substitute(a:context.lines[lnum], '^\s*', ' ', '')
+    let lnum += 1
   endwhile
   let expanded = substitute(expanded, '\\\s*$', ' ...', '')
+  let expanded = substitute(expanded, '\s*\\\s*', ' ', 'g')
   return expanded
 endfunction
 
