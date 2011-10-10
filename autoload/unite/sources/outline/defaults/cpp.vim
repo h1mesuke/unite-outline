@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for C++
-" Version: 0.1.9
+" Version: 0.2.0
 
 function! unite#sources#outline#defaults#cpp#outline_info()
   return s:outline_info
@@ -30,6 +30,7 @@ let s:outline_info = {
       \
       \ 'not_match_patterns': [
       \   s:Util.shared_pattern('*', 'parameter_list'),
+      \   ' => .*',
       \ ],
       \
       \ 'highlight_rules': [
