@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-10
+" Updated : 2011-10-14
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -149,27 +149,19 @@ endfunction
 " Dictionary.
 "
 function! unite#sources#outline#get_outline_info(filetype)
-  return s:get_outline_info(a:filetype, 0)
-endfunction
-
-" Returns the default outline info for {filetype}. If not found, returns an
-" empty Dictionary.
-"
-function! unite#sources#outline#get_default_outline_info(filetype)
-  return s:get_outline_info(a:filetype, 1)
+  return s:get_outline_info(a:filetype)
 endfunction
 
 let s:outline_info = {}
-let s:default_outline_info = {}
 
 function! s:get_outline_info(filetype, ...)
-  let [use_default, reload] = (a:000 + [0, 0])[0:1]
-  let memo = (use_default ? s:default_outline_info : s:outline_info)
+  let reload = (a:0 ? a:1 : 0)
+  let memo = s:outline_info
   if !reload && has_key(memo, a:filetype)
     return memo[a:filetype]
   endif
   for filetype in s:resolve_filetype(a:filetype)
-    let outline_info = s:load_outline_info(filetype, use_default)
+    let outline_info = s:load_outline_info(filetype)
     if !empty(outline_info)| break | endif
   endfor
   let memo[a:filetype] = outline_info
@@ -179,12 +171,11 @@ endfunction
 " Try to load the outline info for {filetype}. If couldn't load, returns an
 " empty Dictionary.
 "
-function! s:load_outline_info(filetype, use_default)
+function! s:load_outline_info(filetype)
   if has_key(g:unite_source_outline_info, a:filetype)
     return g:unite_source_outline_info[a:filetype]
   endif
-  let oinfo_dirs = (a:use_default ? s:OUTLINE_INFO_PATH[-1:] : s:OUTLINE_INFO_PATH)
-  for dir in oinfo_dirs
+  for dir in s:OUTLINE_INFO_PATH
     let load_func  = substitute(substitute(dir, '^autoload/', '', ''), '/', '#', 'g')
     let load_func .= substitute(a:filetype, '\.', '_', 'g') . '#outline_info'
     try
@@ -882,7 +873,7 @@ function! s:extract_filetype_headings(context)
   let buffer  = a:context.buffer
   if a:context.is_force && a:context.event ==# 'user'
     " Re-source the outline info if updated.
-    let a:context.outline_info = s:get_outline_info(buffer.filetype, 0, 1)
+    let a:context.outline_info = s:get_outline_info(buffer.filetype, 1)
   endif
   let outline_info = a:context.outline_info
   if empty(outline_info)

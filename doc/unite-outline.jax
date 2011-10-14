@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-10-10
+Updated : 2011-10-14
 Version : 0.5.0
 License : MIT license {{{
 
@@ -756,12 +756,6 @@ unite#sources#outline#alias( {alias}, {source})
 unite#sources#outline#get_outline_info( {filetype})
 
 	{filetype} の outline info を返します。
-	outline info が見つからない場合は空の辞書 {} を返します。
-
-			*unite#sources#outline#get_default_outline_info()*
-unite#sources#outline#get_default_outline_info( {filetype})
-
-	{filetype} のデフォルトの outline info を返します。
 	outline info が見つからない場合は空の辞書 {} を返します。
 
 				*unite#sources#outline#get_filetype_option()*
