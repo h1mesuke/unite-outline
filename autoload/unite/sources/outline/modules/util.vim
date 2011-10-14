@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-22
+" Updated : 2011-10-14
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -45,8 +45,8 @@ let s:Util = unite#sources#outline#modules#base#new('Util', s:SID)
 
 function! s:Util_get_indent_level(context, lnum)
   let line = a:context.lines[a:lnum]
-  let sw = a:context.buffer.shiftwidth
-  let ts = a:context.buffer.tabstop
+  let sw = a:context.buffer.sw
+  let ts = a:context.buffer.ts
   let indent = substitute(matchstr(line, '^\s*'), '\t', repeat(' ', ts), 'g')
   return strlen(indent) / sw + 1
 endfunction

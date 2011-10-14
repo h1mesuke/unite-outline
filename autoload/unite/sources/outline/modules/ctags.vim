@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-10
+" Updated : 2011-10-14
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -113,7 +113,7 @@ function! s:execute_ctags(context)
   " extracted from the buffer which he/she is watching now, we need to process
   " the buffer's content not its file's content.
 
-  let filetype = a:context.buffer.major_filetype
+  let filetype = a:context.buffer.filetype
   " Assemble the command-line.
   let lang_info = s:Ctags.lang_info[filetype]
   let opts  = ' -f - --excmd=number --fields=afiKmsSzt --sort=no '
@@ -196,7 +196,7 @@ endfunction
 " returns a tree of the headings.
 "
 function! s:Ctags_extract_headings(context)
-  let filetype = a:context.buffer.major_filetype
+  let filetype = a:context.buffer.filetype
   if !s:Ctags_exists()
     call unite#print_message("[unite-outline] Sorry, Exuberant Ctags required.")
     return []
