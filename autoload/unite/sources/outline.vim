@@ -160,95 +160,41 @@ function! unite#sources#outline#get_outline_info(filetype)
   return s:get_outline_info(a:filetype)
 endfunction
 
-let s:outline_info_memo = {}
-
 function! s:get_outline_info(filetype, ...)
   let reload = (a:0 ? a:1 : 0)
-  let memo = s:outline_info_memo
-  if !reload && has_key(memo, a:filetype)
-    return memo[a:filetype]
-  endif
   for filetype in s:resolve_filetype(a:filetype)
-    let outline_info = s:load_outline_info(filetype)
-    if !empty(outline_info)| break | endif
-  endfor
-  let memo[a:filetype] = outline_info
-  return outline_info
-endfunction
-
-" Try to load the outline info for {filetype}. If couldn't load, returns an
-" empty Dictionary.
-"
-function! s:load_outline_info(filetype)
-  if has_key(g:unite_source_outline_info, a:filetype)
-    return g:unite_source_outline_info[a:filetype]
-  endif
-  for dir in s:OUTLINE_INFO_PATH
-    let load_func  = substitute(substitute(dir, '^autoload/', '', ''), '/', '#', 'g')
-    let load_func .= substitute(a:filetype, '\.', '_', 'g') . '#outline_info'
-    try
-      call {load_func}()
-    catch /^Vim\%((\a\+)\)\=:E117:/
-      " E117: Unknown function:
-      continue
-    endtry
-    try
-      let scr_path = s:find_autoload_script(load_func)
-    catch /^ScriptNotFoundError:/
-      " The user moved his/her outline info somewhere!
-      continue
-    endtry
-    call s:update_script(scr_path)
-    " Load the outline info.
-    let outline_info = {load_func}()
-    let outline_info = s:initialize_outline_info(outline_info)
-    return outline_info
-  endfor
-  return {}
-endfunction
-
-" Returns a full pathname of the script file where function {funcname} is
-" defined.
-"
-function! s:find_autoload_script(funcname)
-  if !exists('s:autoload_scripts')
-    let s:autoload_scripts = {}
-  endif
-  if has_key(s:autoload_scripts, a:funcname)
-    let path =  s:autoload_scripts[a:funcname]
-    if filereadable(path)
-      return s:autoload_scripts[a:funcname]
-    else
-      " The script was moved somewhere for some reason...
-      unlet s:autoload_scripts[a:funcname]
+    if has_key(g:unite_source_outline_info, filetype)
+      return g:unite_source_outline_info[filetype]
     endif
-  endif
-  let path_list = split(a:funcname, '#')
-  let rel_path = 'autoload/' . join(path_list[:-2], '/') . '.vim'
-  let path = get(split(globpath(&runtimepath, rel_path), "\<NL>"), 0, '')
-  if empty(path)
-    throw "ScriptNotFoundError: Script file not found for " . a:funcname
-  else
-    let s:autoload_scripts[a:funcname] = path
-  endif
-  return path
+    for dir in s:OUTLINE_INFO_PATH
+      let load_func  = substitute(substitute(dir, '^autoload/', '', ''), '/', '#', 'g')
+      let load_func .= substitute(filetype, '\.', '_', 'g') . '#outline_info'
+      try
+        let outline_info = {load_func}()
+      catch /^Vim\%((\a\+)\)\=:E117:/
+        " E117: Unknown function:
+        continue
+      endtry
+      if reload
+        let outline_info = s:reload_outline_info(load_func)
+      endif
+      call s:initialize_outline_info(outline_info)
+      return outline_info
+    endfor
+  endfor
 endfunction
 
-" Re-sources script file {path} if the script has been modified since the last
-" sourcing.
+" Reloads the outline info for {load_func}.
 "
-function! s:update_script(path)
-  if !exists('s:file_mtime_table')
-    let s:file_mtime_table = {}
-  endif
-  let path = fnamemodify(a:path, ':p')
-  let new_ftime = getftime(path)
-  let old_ftime = get(s:file_mtime_table, path, new_ftime)
-  if new_ftime > old_ftime
-    source `=path`
-  endif
-  let s:file_mtime_table[path] = new_ftime
-  return (new_ftime > old_ftime)
+function! s:reload_outline_info(load_func)
+  " path#to#filetype#outline_info() -> autoload/path/to/filetype.vim
+  let path_list = split(a:load_func, '#')
+  let rel_path = 'autoload/' . join(path_list[:-2], '/') . '.vim'
+  let script_path = get(split(globpath(&runtimepath, rel_path), "\<NL>"), 0, '')
+  " Reload the outline info.
+  let script_path = fnamemodify(script_path, ':p')
+  source `=script_path`
+  return {a:load_func}()
 endfunction
 
 function! s:initialize_outline_info(outline_info)
@@ -265,7 +211,6 @@ function! s:initialize_outline_info(outline_info)
           \ '\%(' . join(a:outline_info.not_match_patterns, '\|') . '\)'
   endif
   let a:outline_info.__initialized__ = 1
-  return a:outline_info
 endfunction
 
 function! s:normalize_skip_info(outline_info)
