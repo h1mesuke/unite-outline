@@ -35,14 +35,15 @@ let s:OUTLINE_INFO_PATH = [
       \ 'autoload/unite/sources/outline/defaults/',
       \ ]
 
+" NOTE: source <- [aliases...]
 let s:OUTLINE_ALIASES = {
-      \ 'c'       : 'cpp',
-      \ 'cfg'     : 'dosini',
-      \ 'mkd'     : 'markdown',
-      \ 'plaintex': 'tex',
-      \ 'snippet' : 'conf',
-      \ 'xhtml'   : 'html',
-      \ 'zsh'     : 'sh',
+      \ 'markdown': ['mkd'],
+      \ 'cpp'     : ['c'],
+      \ 'dosini'  : ['cfg'],
+      \ 'tex'     : ['plaintex'],
+      \ 'conf'    : ['snippet'],
+      \ 'html'    : ['xhtml'],
+      \ 'sh'      : ['zsh'],
       \ }
 
 let s:OUTLINE_CACHE_DIR = g:unite_data_directory . '/outline'
@@ -82,10 +83,16 @@ endfunction
 " Defines an alias of {filetype}.
 "
 function! unite#sources#outline#alias(alias, filetype)
-  if !exists('s:filetype_alias_table')
-    let s:filetype_alias_table = {}
-  endif
-  let s:filetype_alias_table[a:alias] = a:filetype
+  call s:define_filetype_aliases(a:filetype, a:alias)
+endfunction
+
+let s:{"filetype"}_alias_table = {}
+" NOTE: Workaround for Vim's syntax highlight bug.
+
+function! s:define_filetype_aliases(filetype, ...)
+  for alias in a:000
+    let s:filetype_alias_table[alias] = a:filetype
+  endfor
 endfunction
 
 " Accessor functions for the outline data, that is a Dictionary assigned to
@@ -456,25 +463,10 @@ endif
 "---------------------------------------
 " Aliases
 
-function! s:define_filetype_aliases()
-  " NOTE: If the user has his/her own outline info for a filetype, not define
-  " it as an alias of the other filetype by default.
-  let user_oinfos = {}
-  for path in s:OUTLINE_INFO_PATH[:-2]
-    let oinfo_paths = split(globpath(&rtp, path . '*.vim'), "\<NL>")
-    for filetype in map(oinfo_paths, 'matchstr(v:val, "\\w\\+\\ze\\.vim$")')
-      let filetype = substitute(filetype, '_', '.', 'g')
-      let user_oinfos[filetype] = 1
-    endfor
-  endfor
-  for [alias, filetype] in items(s:OUTLINE_ALIASES)
-    if !has_key(user_oinfos, alias)
-      call unite#sources#outline#alias(alias, filetype)
-    endif
-  endfor
-endfunction
 " Define the default filetype aliases.
-call s:define_filetype_aliases()
+for [filetype, aliases] in items(s:OUTLINE_ALIASES)
+  call call('s:define_filetype_aliases', [filetype] + aliases)
+endfor
 
 "-----------------------------------------------------------------------------
 " Source
