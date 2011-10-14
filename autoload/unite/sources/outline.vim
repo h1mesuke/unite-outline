@@ -49,6 +49,7 @@ let s:OUTLINE_CACHE_DIR = g:unite_data_directory . '/outline'
 
 " Rename the cache directory if its name is still old, dotted style name.
 " See http://d.hatena.ne.jp/tyru/20110824/unite_file_mru
+"
 let old_cache_dir = g:unite_data_directory . '/.outline'
 if isdirectory(s:OUTLINE_CACHE_DIR)
   if isdirectory(old_cache_dir) 
@@ -152,11 +153,11 @@ function! unite#sources#outline#get_outline_info(filetype)
   return s:get_outline_info(a:filetype)
 endfunction
 
-let s:outline_info = {}
+let s:outline_info_memo = {}
 
 function! s:get_outline_info(filetype, ...)
   let reload = (a:0 ? a:1 : 0)
-  let memo = s:outline_info
+  let memo = s:outline_info_memo
   if !reload && has_key(memo, a:filetype)
     return memo[a:filetype]
   endif
@@ -501,16 +502,16 @@ let s:source = {
 function! s:Source_Hooks_on_init(source_args, unite_context)
   let a:unite_context.source__outline_buffer_id = s:outline_buffer_id
   let a:unite_context.source__outline_source_bufnr = bufnr('%')
-  call s:unite_outline_initialize()
-  call s:unite_outline_attach(s:outline_buffer_id)
+  call s:initialize_outline_data()
+  call s:attach_outline_buffer(s:outline_buffer_id)
   let s:outline_buffer_id += 1
 endfunction
 let s:source.hooks.on_init = function(s:SID . 'Source_Hooks_on_init')
 
-" Initialize the outline data and register autocmds if the current buffer
-" hasn't been initialized yet.
+" Initialize the current buffer's outline data and register autocommands to
+" manage the data if the buffer hasn't been initialized yet.
 "
-function! s:unite_outline_initialize()
+function! s:initialize_outline_data()
   let bufnr = bufnr('%')
   let bufvars  = getbufvar(bufnr, '')
   if !exists('s:outline_data')
@@ -526,7 +527,7 @@ endfunction
 " Associate the current buffer's window with the outline buffer {buffer_id}
 " where the headings from the buffer will be displayed.
 "
-function! s:unite_outline_attach(buffer_id)
+function! s:attach_outline_buffer(buffer_id)
   let winnr = winnr()
   let winvars  = getwinvar(winnr, '')
   if !has_key(winvars, s:WINVAR_OUTLINE_BUFFER_IDS)
@@ -1122,11 +1123,11 @@ endfunction
 
 function! s:extract_folding_headings(context)
   let headings = []
-  let curr_level = 0
+  let cur_level = 0
   let lnum = 1 | let num_lines = line('$')
   while lnum < num_lines
     let foldlevel = foldlevel(lnum)
-    if foldlevel > curr_level
+    if foldlevel > cur_level
       let heading_lnum = lnum
       if &l:foldmethod ==# 'indent'
         let heading_lnum -=1
@@ -1144,7 +1145,7 @@ function! s:extract_folding_headings(context)
         break
       endif
     endif
-    let curr_level = foldlevel
+    let cur_level = foldlevel
     let lnum += 1
   endwhile
   return headings
@@ -1519,7 +1520,7 @@ function! s:on_buf_win_enter()
   let old_bufnr = bufnr('#')
   call s:Util.print_debug('event', 'on_buf_win_enter at window #' . winnr .
         \ ' from buffer #' . old_bufnr . ' to #' . new_bufnr)
-  call s:unite_outline_initialize()
+  call s:initialize_outline_data()
   call s:swap_headings(s:get_outline_buffer_ids(winnr), new_bufnr)
 endfunction
 
