@@ -593,13 +593,11 @@ function! s:create_context(bufnr, ...)
         \ 'minor_filetype': get(compound_filetypes, 1, ''),
         \ 'compound_filetypes': compound_filetypes,
         \ })
-  let outline_info = s:get_outline_info(buffer.filetype)
   let context = {
         \ 'buffer': buffer,
         \ 'event' : 'user',
         \ 'is_force': 0,
         \ 'extract_method': 'last',
-        \ 'outline_info': outline_info,
         \ }
   call extend(context, (a:0 ? a:1 : {}))
   return context
@@ -629,6 +627,14 @@ function! s:get_candidates(bufnr, options)
   " Update the context Dictionary.
   let context = s:create_context(a:bufnr, a:options)
   call s:set_outline_data(a:bufnr, 'context', context)
+  " If triggered by <C-l>, reload the outline info.
+  if context.is_force || !s:has_outline_data(a:bufnr, 'outline_info')
+    let outline_info = s:get_outline_info(context.buffer.filetype, context.is_force)
+    call s:set_outline_data(a:bufnr, 'outline_info', outline_info)
+  else
+    let outline_info = s:get_outline_data(a:bufnr, 'outline_info')
+  end
+  let context.outline_info = outline_info
 
   if !context.is_force && s:has_outline_data(a:bufnr, 'candidates')
     " Path A: Get candidates from the buffer local cache.
