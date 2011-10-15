@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/html.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-17
+" Updated : 2011-10-15
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for HTML
-" Version: 0.0.7
+" Version: 0.0.8
 
 function! unite#sources#outline#defaults#html#outline_info()
   return s:outline_info
@@ -17,11 +17,16 @@ endfunction
 
 let s:Util = unite#sources#outline#import('Util')
 
+"---------------------------------------
+" Patterns
+
+let s:heading_tags = ['head', '[hH][1-6]']
+
 "-----------------------------------------------------------------------------
 " Outline Info
 
 let s:outline_info = {
-      \ 'heading': '<[hH][1-6][^>]*>',
+      \ 'heading': '<\%(' . join(s:heading_tags, '\|') . '\)[^>]*>',
       \
       \ 'highlight_rules': [
       \   { 'name'   : 'level_1',
@@ -40,13 +45,24 @@ let s:outline_info = {
       \}
 
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
-  let level = str2nr(matchstr(a:heading_line, '<[hH]\zs[1-6]\ze[^>]*>'))
   let heading = {
-        \ 'word' : "h" . level . ". " . s:get_text_content(level, a:context),
-        \ 'level': level,
+        \ 'word' : a:heading_line,
+        \ 'level': 0,
         \ 'type' : 'generic',
         \ }
-  return heading
+  if heading.word =~ '<head[^>]*>'
+    let heading.level = 1
+    let heading.word = 'head'
+  else
+    let level = str2nr(matchstr(a:heading_line, '<[hH]\zs[1-6]\ze[^>]*>'))
+    let heading.level = level
+    let heading.word = 'h' . level . '. ' . s:get_text_content(level, a:context)
+  endif
+  if heading.level > 0
+    return heading
+  else
+    return {}
+  endif
 endfunction
 
 function! s:get_text_content(level, context)
