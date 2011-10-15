@@ -42,7 +42,7 @@ let s:OUTLINE_ALIASES = {
       \ 'dosini'  : ['cfg'],
       \ 'tex'     : ['plaintex'],
       \ 'conf'    : ['snippet'],
-      \ 'html'    : ['xhtml'],
+      \ 'html'    : ['eruby', 'xhtml'],
       \ 'sh'      : ['zsh'],
       \ }
 
