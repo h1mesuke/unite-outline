@@ -30,17 +30,17 @@ let s:outline_info = {
       \
       \ 'highlight_rules': [
       \   { 'name'   : 'level_1',
-      \     'pattern': '/h1\. .*/' },
+      \     'pattern': '/H1\. .*/' },
       \   { 'name'   : 'level_2',
-      \     'pattern': '/h2\. .*/' },
+      \     'pattern': '/H2\. .*/' },
       \   { 'name'   : 'level_3',
-      \     'pattern': '/h3\. .*/' },
+      \     'pattern': '/H3\. .*/' },
       \   { 'name'   : 'level_4',
-      \     'pattern': '/h4\. .*/' },
+      \     'pattern': '/H4\. .*/' },
       \   { 'name'   : 'level_5',
-      \     'pattern': '/h5\. .*/' },
+      \     'pattern': '/H5\. .*/' },
       \   { 'name'   : 'level_6',
-      \     'pattern': '/h6\. .*/' },
+      \     'pattern': '/H6\. .*/' },
       \ ],
       \}
 
@@ -52,11 +52,11 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
         \ }
   if heading.word =~ '<head[^>]*>'
     let heading.level = 1
-    let heading.word = 'head'
+    let heading.word = 'Head'
   else
     let level = str2nr(matchstr(a:heading_line, '<[hH]\zs[1-6]\ze[^>]*>'))
     let heading.level = level
-    let heading.word = 'h' . level . '. ' . s:get_text_content(level, a:context)
+    let heading.word = 'H' . level . '. ' . s:get_text_content(level, a:context)
   endif
   if heading.level > 0
     return heading
