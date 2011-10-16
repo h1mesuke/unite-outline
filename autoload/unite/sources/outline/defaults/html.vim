@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/html.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-15
+" Updated : 2011-10-16
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -26,7 +26,7 @@ let s:heading_tags = ['head', '[hH][1-6]']
 " Outline Info
 
 let s:outline_info = {
-      \ 'heading': '<\%(' . join(s:heading_tags, '\|') . '\)[^>]*>',
+      \ 'heading': '<\%(' . join(s:heading_tags, '\|') . '\)\>[^>]*>',
       \
       \ 'highlight_rules': [
       \   { 'name'   : 'level_1',
