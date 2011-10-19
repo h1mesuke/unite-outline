@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-14
+" Updated : 2011-10-19
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -1384,7 +1384,7 @@ endfunction
 function! s:update_headings(bufnr)
   call s:Util.print_debug('event', 'update_headings')
   " Update the Model data (headings).
-  call s:get_candidates(a:bufnr, { 'event': 'auto_update', 'is_force': 1 })
+  call s:get_candidates(a:bufnr, { 'trigger': 'auto_update', 'is_force': 1 })
 
   " Update the View (unite.vim' buffer) if the visible outline buffer exists.
   let outline_bufnrs = s:find_outline_buffers(a:bufnr)
