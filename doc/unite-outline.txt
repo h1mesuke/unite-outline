@@ -1,7 +1,7 @@
 *unite-outline.txt*	outline source for unite.vim
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-10-14
+Updated : 2011-10-23
 Version : 0.5.0
 License : MIT license {{{
 
@@ -263,13 +263,14 @@ OUTLINE INFO					*unite-outline-info*
 
 	Outline info is a Dictionary that implements the filetype specific way
 	of extracting headings. Usually, it has some regexp patterns of
-	headings and a callback function to create a heading from a line.
+	headings and a callback function to create a heading from a line of
+	the buffer.
 
 	You can customize the creation of a heading list as you like by creating
 	your own outline infos or modifying the default ones.
 
 	When you try to show the heading list, the outline info for the
-	current buffer's filetype is searched. 
+	current buffer's filetype is searched for. 
 	
 	The search order is as follows:
 
@@ -283,7 +284,25 @@ CREATE OUTLINE INFO				*unite-outline-info-create*
 
 	There are two ways to create and use your own outline infos.
 
-    [A]	Register the outline info to the global variable.
+    [A]	Define an autoload function to return the outline info.	 [RECOMMENDED]
+
+      *	Create {filetype}.vim at
+	$HOME/.vim/autoload/outline/
+
+      *	Define outline#{filetype}#outline_info() in the file.
+
+      *	Returns the outline info from the autoload function as its return
+	value.
+
+	I recommend you to define outline infos in this manner because loading
+	of the outline infos will be delayed until they'll be actually needed
+	and it doesn't enlarge your vimrc.
+	
+	The default outline infos at
+	$HOME/.vim/autoload/unite/sources/outline/defaults/ have been defined
+	in this manner.
+
+    [B]	Register the outline info to the global variable.
 
       *	Define a Dictionary as the outline info and set it to
 	g:unite_source_outline_info.{filetype} at your vimrc.
@@ -297,31 +316,6 @@ CREATE OUTLINE INFO				*unite-outline-info-create*
 	      \ },
 	      \}
 <
-    [B]	Define an autoload function to return the outline info. [RECOMMENDED]
-
-      *	Create a file {filetype}.vim at
-	$HOME/.vim/autoload/unite/sources/outline/
-
-      *	Define unite#sources#outline#{filetype}#outline_info() in the file.
-
-		or
-
-	      *	Create {filetype}.vim at
-		$HOME/.vim/autoload/outline/
-
-	      *	Define outline#{filetype}#outline_info() in the file.
-
-      *	Returns the outline info from the autoload function as the return
-	value.
-
-	As a result of the benefit of autoload functions, loading of the
-	outline infos defined in this manner is delayed until they are
-	actually needed. Furthermore, it doesn't enlarge your vimrc.
-	
-	The default outline infos at
-	$HOME/.vim/autoload/unite/sources/outline/defaults/ have been defined
-	in this manner.
-
 ------------------------------------------------------------------------------
 ATTRIBUTES					*unite-outline-info-attributes*
 

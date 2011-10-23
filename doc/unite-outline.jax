@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-10-14
+Updated : 2011-10-23
 Version : 0.5.0
 License : MIT license {{{
 
@@ -121,7 +121,7 @@ g:unite_source_outline_info			*g:unite_source_outline_info*
 	のみ、作成した outline info をこの辞書に登録します。
 
 	outline info ついては
-	|unite-outline-info|、|unite-outline-info-create|を参照
+	|unite-outline-info|, |unite-outline-info-create|を参照
 
 	初期値は {}
 
@@ -283,10 +283,24 @@ outline info の作成				*unite-outline-info-create*
 	unite-outline に同梱されている outline info ではなく、ユーザー独自の
 	outline info を作成／使用したい場合、その方法は以下の２つです。
 
-    [A]	vimrc にてグローバル変数に設定する
+    [A]	オートロード関数を定義する。				[推奨]
+
+      *	$HOME/.vim/autoload/outline/ に {filetype}.vim を作成する。
+
+      *	そこにオートロード関数 outline#{filetype}#outline_info() を定義し、
+	その返値として、outline info（辞書）を返す。
+
+	この方法で定義した outline info は必要になるまでロードされません。
+	vimrc を肥大化させることもないので、outline info を作り込むのであれば
+	こちらの方法がおすすめです。
+
+	$HOME/.vim/autoload/unite/sources/outline/defaults/ にあるデフォルトの
+	outline info はすべてこの方法で定義されています。
+
+    [B]	vimrc にてグローバル変数に設定する。			[非推奨]
 
       *	vimrc にて g:unite_source_outline_info.{filetype} に直接 outline info
-	を設定します。
+	を設定する。
 
 	定義例（Ruby用）： >
 	let g:unite_source_outline_info.ruby = {
@@ -297,25 +311,6 @@ outline info の作成				*unite-outline-info-create*
 	      \ },
 	      \}
 <
-    [B]	オートロード関数を定義する
-
-      *	$HOME/.vim/autoload/unite/sources/outline/ に {filetype}.vim を作成し、
-	そこに unite#sources#outline#{filetype}#outline_info() を定義します。
-
-		または
-
-		$HOME/.vim/autoload/outline/ に {filetype}.vim を作成し、
-		そこに outline#{filetype}#outline_info() を定義します。
-
-      *	その関数の返値として、outline info（辞書）を返します。
-
-	こちらは遅延ロードになるため必要になるまでロードされません。 vimrc を
-	肥大化させることもないので、outline info を作り込むのであればこちらの
-	方法がおすすめです。
-
-	$HOME/.vim/autoload/unite/sources/outline/defaults/ にあるデフォルトの
-	outline info がこの方法で定義されており、参考になると思います。
-
 ------------------------------------------------------------------------------
 outline info の属性				*unite-outline-info-attributes*
 
@@ -364,7 +359,7 @@ heading			文字列（任意） 		*unite-outline-info-heading*
 	      \ }
 <
 				*unite-outline-info-heading-pattern-restrictions*
-	重要：使用できる正規表現の制限事項 ~
+	重要：使用できる正規表現の制約 ~
 
 	heading-1, heaging, heading+1 のパターンとして使用できる正規表現には
 	以下の制約があります。
