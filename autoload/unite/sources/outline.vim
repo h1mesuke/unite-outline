@@ -83,13 +83,13 @@ endfunction
 " Defines an alias of {filetype}.
 "
 function! unite#sources#outline#alias(alias, filetype)
-  call s:define_filetype_aliases(a:filetype, a:alias)
+  call s:define_filetype_aliases([a:alias], a:filetype)
 endfunction
 
 let s:ftype_alias_table = {}
 
-function! s:define_filetype_aliases(filetype, ...)
-  for alias in a:000
+function! s:define_filetype_aliases(aliases, filetype)
+  for alias in a:aliases
     let s:ftype_alias_table[alias] = a:filetype
   endfor
 endfunction
@@ -431,7 +431,7 @@ endif
 
 " Define the default filetype aliases.
 for [ftype, aliases] in items(s:OUTLINE_ALIASES)
-  call call('s:define_filetype_aliases', [ftype] + aliases)
+  call call('s:define_filetype_aliases', [aliases, ftype])
 endfor
 
 "-----------------------------------------------------------------------------
