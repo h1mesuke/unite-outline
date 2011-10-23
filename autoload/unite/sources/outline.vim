@@ -182,6 +182,7 @@ function! s:get_outline_info(filetype, ...)
       return oinfo
     endfor
   endfor
+  return {}
 endfunction
 
 " Reloads the outline info for {load_func}.
