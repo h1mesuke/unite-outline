@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-19
+" Updated : 2011-10-23
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -161,6 +161,7 @@ function! unite#sources#outline#get_outline_info(filetype)
 endfunction
 
 function! s:get_outline_info(filetype, ...)
+  echomsg "hoge"
   let reload = (a:0 ? a:1 : 0)
   for filetype in s:resolve_filetype(a:filetype)
     if has_key(g:unite_source_outline_info, filetype)
@@ -620,9 +621,10 @@ function! s:get_candidates(bufnr, options)
   " Update the context Dictionary.
   let context = s:create_context(a:bufnr, a:options)
   call s:set_outline_data(a:bufnr, 'context', context)
-  " If triggered by <C-l>, reload the outline info.
   if context.is_force || !s:has_outline_data(a:bufnr, 'outline_info')
-    let outline_info = s:get_outline_info(context.buffer.filetype, context.is_force)
+    " If triggered by <C-l>, reload the outline info.
+    let reload = (context.is_force && context.trigger ==# 'user')
+    let outline_info = s:get_outline_info(context.buffer.filetype, reload)
     call s:set_outline_data(a:bufnr, 'outline_info', outline_info)
   else
     let outline_info = s:get_outline_data(a:bufnr, 'outline_info')
@@ -808,10 +810,6 @@ endfunction
 "
 function! s:extract_filetype_headings(context)
   let buffer  = a:context.buffer
-  if a:context.is_force && a:context.trigger ==# 'user'
-    " Re-source the outline info if updated.
-    let a:context.outline_info = s:get_outline_info(buffer.filetype, 1)
-  endif
   let outline_info = a:context.outline_info
   if empty(outline_info)
     if empty(buffer.filetype)
