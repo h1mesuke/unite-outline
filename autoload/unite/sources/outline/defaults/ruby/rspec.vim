@@ -1,7 +1,7 @@
 "=============================================================================
-" File    : autoload/unite/sources/outline/defaults/ruby_rspec.vim
+" File    : autoload/unite/sources/outline/defaults/ruby/rspec.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-29
+" Updated : 2011-10-23
 "
 " Contributed by kenchan
 "
@@ -10,10 +10,10 @@
 "
 "=============================================================================
 
-" Default outline info for Ruby.RSpec
+" Default outline info for Ruby/RSpec
 " Version: 0.1.0
 
-function! unite#sources#outline#defaults#ruby_rspec#outline_info()
+function! unite#sources#outline#defaults#ruby#rspec#outline_info()
   return s:outline_info
 endfunction
 
