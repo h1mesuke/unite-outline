@@ -161,7 +161,6 @@ function! unite#sources#outline#get_outline_info(filetype)
 endfunction
 
 function! s:get_outline_info(filetype, ...)
-  echomsg "hoge"
   let reload = (a:0 ? a:1 : 0)
   for filetype in s:resolve_filetype(a:filetype)
     if has_key(g:unite_source_outline_info, filetype)
