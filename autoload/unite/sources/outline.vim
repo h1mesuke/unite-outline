@@ -96,8 +96,8 @@ function! s:define_filetype_aliases(filetype, ...)
 endfunction
 
 " Accessor functions for the outline data, that is a Dictionary assigned to
-" the script local variable.
-"
+" the buffer local variable.
+ 
 function! unite#sources#outline#has_outline_data(...)
   return call('s:has_outline_data', a:000)
 endfunction
