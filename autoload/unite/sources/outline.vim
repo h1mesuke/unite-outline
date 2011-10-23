@@ -162,24 +162,24 @@ endfunction
 
 function! s:get_outline_info(filetype, ...)
   let reload = (a:0 ? a:1 : 0)
-  for filetype in s:resolve_filetype(a:filetype)
-    if has_key(g:unite_source_outline_info, filetype)
-      return g:unite_source_outline_info[filetype]
+  for ftype in s:resolve_filetype(a:filetype)
+    if has_key(g:unite_source_outline_info, ftype)
+      return g:unite_source_outline_info[ftype]
     endif
     for dir in s:OUTLINE_INFO_PATH
       let load_func  = substitute(substitute(dir, '^autoload/', '', ''), '/', '#', 'g')
-      let load_func .= substitute(filetype, '\.', '_', 'g') . '#outline_info'
+      let load_func .= substitute(ftype, '\.', '_', 'g') . '#outline_info'
       try
-        let outline_info = {load_func}()
+        let oinfo = {load_func}()
       catch /^Vim\%((\a\+)\)\=:E117:/
         " E117: Unknown function:
         continue
       endtry
       if reload
-        let outline_info = s:reload_outline_info(load_func)
+        let oinfo = s:reload_outline_info(load_func)
       endif
-      call s:initialize_outline_info(outline_info)
-      return outline_info
+      call s:initialize_outline_info(oinfo)
+      return oinfo
     endfor
   endfor
 endfunction
@@ -266,9 +266,9 @@ function! unite#sources#outline#get_filetype_option(...)
   return call('s:get_filetype_option', a:000)
 endfunction
 function! s:get_filetype_option(filetype, key, ...)
-  for filetype in s:resolve_filetype(a:filetype)
-    if has_key(g:unite_source_outline_filetype_options, filetype)
-      let options = g:unite_source_outline_filetype_options[filetype]
+  for ftype in s:resolve_filetype(a:filetype)
+    if has_key(g:unite_source_outline_filetype_options, ftype)
+      let options = g:unite_source_outline_filetype_options[ftype]
       if has_key(options, a:key)
         return options[a:key]
       endif
@@ -314,21 +314,21 @@ endfunction
 
 function! s:resolve_filetype_alias(filetype)
   let seen = {}
-  let candidates = []
-  let filetype = a:filetype
+  let ftcands = []
+  let ftype = a:filetype
   while 1
-    if has_key(s:filetype_alias_table, filetype)
-      if has_key(seen, filetype)
+    if has_key(s:filetype_alias_table, ftype)
+      if has_key(seen, ftype)
         throw "unite-outline: Cyclic alias definition detected."
       endif
-      let filetype = s:filetype_alias_table[filetype]
-      call add(candidates, filetype)
-      let seen[filetype] = 1
+      let ftype = s:filetype_alias_table[ftype]
+      call add(ftcands, ftype)
+      let seen[ftype] = 1
     else
       break
     endif
   endwhile
-  return candidates
+  return ftcands
 endfunction
 
 function! unite#sources#outline#get_highlight(...)
@@ -414,8 +414,8 @@ endif
 " Aliases
 
 " Define the default filetype aliases.
-for [filetype, aliases] in items(s:OUTLINE_ALIASES)
-  call call('s:define_filetype_aliases', [filetype] + aliases)
+for [ftype, aliases] in items(s:OUTLINE_ALIASES)
+  call call('s:define_filetype_aliases', [ftype] + aliases)
 endfor
 
 "-----------------------------------------------------------------------------
@@ -481,11 +481,11 @@ endfunction
 function! s:Source_Hooks_on_syntax(source_args, unite_context)
   let bufnr = a:unite_context.source__outline_source_bufnr
   let context = s:get_outline_data(bufnr, 'context')
-  let outline_info = context.outline_info
+  let oinfo = context.outline_info
   if context.extracted_by ==# 'filetype'
     " Method: Filetype
-    if has_key(outline_info, 'highlight_rules')
-      for hl_rule in outline_info.highlight_rules
+    if has_key(oinfo, 'highlight_rules')
+      for hl_rule in oinfo.highlight_rules
         if !has_key(hl_rule, 'highlight')
           let hl_rule.highlight = s:get_highlight(hl_rule.name)
         endif
@@ -627,13 +627,14 @@ function! s:get_candidates(bufnr, options)
   call s:set_outline_data(a:bufnr, 'context', context)
   if context.is_force || !s:has_outline_data(a:bufnr, 'outline_info')
     " If triggered by <C-l>, reload the outline info.
+    let ftype = join(context.buffer.filetypes, '.')
     let reload = (context.is_force && context.trigger ==# 'user')
-    let outline_info = s:get_outline_info(context.buffer.filetype, reload)
-    call s:set_outline_data(a:bufnr, 'outline_info', outline_info)
+    let oinfo = s:get_outline_info(ftype, reload)
+    call s:set_outline_data(a:bufnr, 'outline_info', oinfo)
   else
-    let outline_info = s:get_outline_data(a:bufnr, 'outline_info')
+    let oinfo = s:get_outline_data(a:bufnr, 'outline_info')
   end
-  let context.outline_info = outline_info
+  let context.outline_info = oinfo
 
   if !context.is_force && s:has_outline_data(a:bufnr, 'candidates')
     " Path A: Get candidates from the buffer local cache.
@@ -669,7 +670,7 @@ function! s:get_candidates(bufnr, options)
   " Convert the headings into candidates.
   let candidates = s:convert_headings_to_candidates(headings, a:bufnr)
 
-  let is_volatile = get(context.outline_info, 'is_volatile', 0)
+  let is_volatile = get(oinfo, 'is_volatile', 0)
   if !is_volatile
     " Save the candidates to the buffer local cache.
     call s:set_outline_data(a:bufnr, 'candidates', candidates)
@@ -814,8 +815,8 @@ endfunction
 "
 function! s:extract_filetype_headings(context)
   let buffer  = a:context.buffer
-  let outline_info = a:context.outline_info
-  if empty(outline_info)
+  let oinfo = a:context.outline_info
+  if empty(oinfo)
     if empty(buffer.filetype)
       call unite#print_message("[unite-outline] Please set the filetype.")
     else
@@ -826,18 +827,18 @@ function! s:extract_filetype_headings(context)
   endif
 
   " Extract headings.
-  if has_key(outline_info, 'initialize')
-    call outline_info.initialize(a:context)
+  if has_key(oinfo, 'initialize')
+    call oinfo.initialize(a:context)
   endif
-  if has_key(outline_info, 'extract_headings')
-    let headings = outline_info.extract_headings(a:context)
+  if has_key(oinfo, 'extract_headings')
+    let headings = oinfo.extract_headings(a:context)
     let headings_normalized = 0
   else
     let headings = s:builtin_extract_headings(a:context)
     let headings_normalized = 1
   endif
-  if has_key(outline_info, 'finalize')
-    call outline_info.finalize(a:context)
+  if has_key(oinfo, 'finalize')
+    call oinfo.finalize(a:context)
   endif
 
   " Normalize headings.
@@ -859,10 +860,10 @@ function! s:extract_filetype_headings(context)
 endfunction
 
 function! s:builtin_extract_headings(context)
-  let outline_info = a:context.outline_info
-  let [which, pattern] = s:build_heading_pattern(outline_info)
+  let oinfo = a:context.outline_info
+  let [which, pattern] = s:build_heading_pattern(oinfo)
 
-  let has_create_heading = has_key(outline_info, 'create_heading')
+  let has_create_heading = has_key(oinfo, 'create_heading')
   let num_lines = line('$')
 
   let skip_ranges = s:get_skip_ranges(a:context)
@@ -917,7 +918,7 @@ function! s:builtin_extract_headings(context)
         let heading_line = getline(a:context.heading_lnum)
         let matched_line = getline(a:context.matched_lnum)
         if has_create_heading
-          let heading = outline_info.create_heading(
+          let heading = oinfo.create_heading(
                 \ which[submatch], heading_line, matched_line, a:context)
         else
           let heading = heading_line
@@ -977,17 +978,17 @@ endfunction
 " Returns a List of ranges to be skipped while the extraction.
 "
 function! s:get_skip_ranges(context)
-  let outline_info = a:context.outline_info
-  if !has_key(outline_info, 'skip') | return [] | endif
+  let oinfo = a:context.outline_info
+  if !has_key(oinfo, 'skip') | return [] | endif
   let ranges = []
-  if has_key(outline_info.skip, 'header')
+  if has_key(oinfo.skip, 'header')
     let header_range = s:get_header_range(a:context)
     if !empty(header_range)
       call add(ranges, header_range)
     endif
   endif
-  if has_key(outline_info.skip, 'block')
-    let block = outline_info.skip.block
+  if has_key(oinfo.skip, 'block')
+    let block = oinfo.skip.block
     let num_lines = line('$')
     call cursor(1, 1)
     while 1
@@ -1011,8 +1012,8 @@ function! s:get_skip_ranges(context)
 endfunction
 
 function! s:get_header_range(context)
-  let outline_info = a:context.outline_info
-  let header = outline_info.skip.header
+  let oinfo = a:context.outline_info
+  let header = oinfo.skip.header
   let has_leading = has_key(header, 'leading')
   let has_block   = has_key(header, 'block')
 
@@ -1090,7 +1091,7 @@ function! s:extract_folding_headings(context)
 endfunction
 
 function! s:normalize_heading(heading, context)
-  let outline_info = a:context.outline_info
+  let oinfo = a:context.outline_info
   let a:heading.id = s:heading_id
   let a:heading.word = s:normalize_heading_word(a:heading.word)
   call extend(a:heading, {
@@ -1103,13 +1104,13 @@ function! s:normalize_heading(heading, context)
   let a:heading.signature = s:calc_signature(a:heading.lnum, a:context.lines)
   " group
   if !has_key(a:heading, 'group')
-    let group_map = get(outline_info, 'heading_group_map', {})
+    let group_map = get(oinfo, 'heading_group_map', {})
     let a:heading.group = get(group_map, a:heading.type, 'generic')
   endif
   " keyword => candidate.word
-  if has_key(outline_info, '__not_match_pattern__')
+  if has_key(oinfo, '__not_match_pattern__')
     let a:heading.keyword =
-          \ substitute(a:heading.word, outline_info.__not_match_pattern__, '', 'g')
+          \ substitute(a:heading.word, oinfo.__not_match_pattern__, '', 'g')
   endif
   let s:heading_id += 1
   return a:heading
