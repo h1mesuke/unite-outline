@@ -280,32 +280,37 @@ function! s:get_filetype_option(filetype, key, ...)
 endfunction
 
 " Returns a List of filetypes that are {filetype} itself and its fallback
-" filetypes.
+" filetypes and aliases of each of them.
 "
-"  {filetype}
-"    |/
-"   aaa.bbb.ccc -(alias)-> ddd -(alias)-> eee
-"    |/
-"   aaa.bbb     -(alias)-> fff -(alias)-> ggg
-"    |/
-"   aaa
-"
-"   => [aaa.bbb.ccc, ddd, eee, aaa.bbb, fff, ggg, aaa]
+"   {filetype}
+"     |/
+"   (1)aaa.bbb.ccc -> (2)aliases
+"   (3)aaa/bbb/ccc -> (4)aliases
+"     |/
+"   (5)aaa.bbb     -> (6)aliases
+"   (7)aaa/bbb     -> (8)aliases
+"     |/
+"   (9)aaa         -> ($)aliases
 "
 function! s:resolve_filetype(filetype)
-  let candidates = []
-  let filetype = a:filetype
+  let ftcands = []
+  let ftype = a:filetype
   while 1
-    call add(candidates, filetype)
-    let candidates += s:resolve_filetype_alias(filetype)
-    if filetype =~ '\.\w\+$'
-      let filetype = substitute(filetype, '\.\w\+$', '', '')
+    call add(ftcands, ftype)
+    let ftcands += s:resolve_filetype_alias(ftype)
+    if ftype =~ '\.'
+      let dsl_ftype = substitute(ftype, '\.', '/', 'g')
+      call add(ftcands, dsl_ftype)
+      let ftcands += s:resolve_filetype_alias(dsl_ftype)
+    endif
+    if ftype =~ '[./]\w\+$'
+      let ftype = substitute(ftype, '[./]\w\+$', '', '')
     else
       break
     endif
   endwhile
-  call add(candidates, '*')
-  return candidates
+  call add(ftcands, '*')
+  return ftcands
 endfunction
 
 function! s:resolve_filetype_alias(filetype)
