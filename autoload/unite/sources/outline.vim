@@ -86,12 +86,11 @@ function! unite#sources#outline#alias(alias, filetype)
   call s:define_filetype_aliases(a:filetype, a:alias)
 endfunction
 
-let s:{"filetype"}_alias_table = {}
-" NOTE: Workaround for Vim's syntax highlight bug.
+let s:ftype_alias_table = {}
 
 function! s:define_filetype_aliases(filetype, ...)
   for alias in a:000
-    let s:filetype_alias_table[alias] = a:filetype
+    let s:ftype_alias_table[alias] = a:filetype
   endfor
 endfunction
 
@@ -334,11 +333,11 @@ function! s:resolve_filetype_alias(filetype)
   let ftcands = []
   let ftype = a:filetype
   while 1
-    if has_key(s:filetype_alias_table, ftype)
+    if has_key(s:ftype_alias_table, ftype)
       if has_key(seen, ftype)
         throw "unite-outline: Cyclic alias definition detected."
       endif
-      let ftype = s:filetype_alias_table[ftype]
+      let ftype = s:ftype_alias_table[ftype]
       call add(ftcands, ftype)
       let seen[ftype] = 1
     else
