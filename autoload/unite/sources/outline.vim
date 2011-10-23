@@ -156,21 +156,37 @@ endfunction
 " Returns the outline info for {filetype}. If not found, returns an empty
 " Dictionary.
 "
-function! unite#sources#outline#get_outline_info(filetype)
-  return s:get_outline_info(a:filetype)
+function! unite#sources#outline#get_outline_info(...)
+  return call('s:get_outline_info', a:000)
 endfunction
-
 function! s:get_outline_info(filetype, ...)
+  if type(a:filetype) == type({})
+    let filetype = join(a:filetype.buffer.filetypes, '.')
+    let context = a:filetype
+  else
+    let filetype = a:filetype
+    let context = {}
+  endif
   let reload = (a:0 ? a:1 : 0)
-  for ftype in s:resolve_filetype(a:filetype)
+  for ftype in s:resolve_filetype(filetype)
     if has_key(g:unite_source_outline_info, ftype)
       return g:unite_source_outline_info[ftype]
     endif
-    for dir in s:OUTLINE_INFO_PATH
-      let load_func  = substitute(substitute(dir, '^autoload/', '', ''), '/', '#', 'g')
-      let load_func .= substitute(ftype, '\.', '_', 'g') . '#outline_info'
+    let ftype = substitute(ftype, '\.', '_', 'g')
+    for path in s:OUTLINE_INFO_PATH
+      let path = substitute(path, '^autoload/', '', '') . ftype
+      let load_func = substitute(path . '#outline_info', '/', '#', 'g')
       try
-        let oinfo = {load_func}()
+        if !empty(context)
+          try
+            let oinfo = {load_func}(context)
+          catch /^Vim\%((\a\+)\)\=:E118:/
+            " E118: Too many arguments for function:
+            let oinfo = {load_func}()
+          endtry
+        else
+          let oinfo = {load_func}()
+        endif
       catch /^Vim\%((\a\+)\)\=:E117:/
         " E117: Unknown function:
         continue
@@ -628,9 +644,8 @@ function! s:get_candidates(bufnr, options)
   call s:set_outline_data(a:bufnr, 'context', context)
   if context.is_force || !s:has_outline_data(a:bufnr, 'outline_info')
     " If triggered by <C-l>, reload the outline info.
-    let ftype = join(context.buffer.filetypes, '.')
     let reload = (context.is_force && context.trigger ==# 'user')
-    let oinfo = s:get_outline_info(ftype, reload)
+    let oinfo = s:get_outline_info(context, reload)
     call s:set_outline_data(a:bufnr, 'outline_info', oinfo)
   else
     let oinfo = s:get_outline_data(a:bufnr, 'outline_info')
