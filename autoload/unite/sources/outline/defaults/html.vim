@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/html.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-19
+" Updated : 2011-10-24
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -74,7 +74,7 @@ function! s:get_text_content(level, context)
   let h_lnum = a:context.heading_lnum
   let text = s:Util.join_to(a:context, h_lnum, '</[hH]' . a:level . '[^>]*>')
   let text = substitute(text, '\n', '', 'g')
-  let text = substitute(text, '<[^>]*>', '', 'g')
+  let text = substitute(text, '<[[:alpha:]/][^>]*>', '', 'g')
   return text
 endfunction
 
