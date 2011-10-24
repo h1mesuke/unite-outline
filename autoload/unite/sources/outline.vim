@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-23
+" Updated : 2011-10-24
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -175,42 +175,51 @@ function! s:get_outline_info(filetype, ...)
     for path in s:OUTLINE_INFO_PATH
       let path = substitute(path, '^autoload/', '', '') . ftype
       let load_func = substitute(path . '#outline_info', '/', '#', 'g')
-      try
+      if s:autoload_function_exists(load_func)
+        if reload
+          call s:reload_autoload_script(load_func)
+        endif
         if !empty(context)
           try
-            let oinfo = {load_func}(context)
+            let oinfo = call(load_func, [context])
           catch /^Vim\%((\a\+)\)\=:E118:/
             " E118: Too many arguments for function:
-            let oinfo = {load_func}()
+            let oinfo = call(load_func, [])
           endtry
         else
-          let oinfo = {load_func}()
+          let oinfo = call(load_func, [])
         endif
-      catch /^Vim\%((\a\+)\)\=:E117:/
-        " E117: Unknown function:
-        continue
-      endtry
-      if reload
-        let oinfo = s:reload_outline_info(load_func)
+        call s:initialize_outline_info(oinfo)
+        return oinfo
       endif
-      call s:initialize_outline_info(oinfo)
-      return oinfo
     endfor
   endfor
   return {}
 endfunction
 
-" Reloads the outline info for {load_func}.
+" NOTE: This function is a workaround for that exists('*auto#load#func')
+" always returns 0 when used in other than the toplevel.
 "
-function! s:reload_outline_info(load_func)
-  " path#to#filetype#outline_info() -> autoload/path/to/filetype.vim
-  let path_list = split(a:load_func, '#')
-  let rel_path = 'autoload/' . join(path_list[:-2], '/') . '.vim'
-  let script_path = get(split(globpath(&runtimepath, rel_path), "\<NL>"), 0, '')
-  " Reload the outline info.
-  let script_path = fnamemodify(script_path, ':p')
-  source `=script_path`
-  return {a:load_func}()
+function! s:autoload_function_exists(funcname)
+  try
+    call call(a:funcname, ['dummy'])
+  catch /^Vim\%((\a\+)\)\=:E117:/
+    " E117: Unknown function:
+    return 0
+  catch
+  endtry
+  return 1
+endfunction
+
+" Reloads an autoload script where autoload function {funcname} is defined.
+"
+function! s:reload_autoload_script(funcname)
+  " path#to#file#func() -> autoload/path/to/file.vim -> full path
+  let path = 'autoload/' . join(split(a:funcname, '#')[:-2], '/') . '.vim'
+  let path = get(split(globpath(&runtimepath, path), "\<NL>"), 0, '')
+  let path = fnamemodify(path, ':p')
+  " Re-source the autoload script.
+  source `=path`
 endfunction
 
 function! s:initialize_outline_info(outline_info)
