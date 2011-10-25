@@ -226,6 +226,9 @@ function! s:initialize_outline_info(outline_info)
   if has_key(a:outline_info, '__initialized__')
     return a:outline_info
   endif
+  if has_key(a:outline_info, 'initialize')
+    call a:outline_info.initialize()
+  endif
   call extend(a:outline_info, { 'is_volatile': 0 }, 'keep' )
   if has_key(a:outline_info, 'skip')
     call s:normalize_skip_info(a:outline_info)
