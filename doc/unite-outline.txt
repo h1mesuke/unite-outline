@@ -1,7 +1,7 @@
 *unite-outline.txt*	outline source for unite.vim
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-10-23
+Updated : 2011-10-25
 Version : 0.5.0
 License : MIT license {{{
 
@@ -732,23 +732,30 @@ is_volatile		Number (Optional)	*unite-outline-info-is_volatile*
 	If set to none-zero, headings are not cached.
 
 HOOKS ~
-
+						*unite-outline-info-hooks*
 initialize		Funcref (Optional) 	*unite-outline-info-initialize()*
 
-	initialize( {context})
+	initialize()
 
-	If defined, called before extracting headings to initialize the
-	outline info.
+	If defined, called after loading the outline info.
 
 	See |unite-outline-context-object| for {context}
 
 
-finalize		Funcref (Optional) 	*unite-outline-info-finalize()*
+before			Funcref (Optional) 	*unite-outline-info-before()*
 
-	finalize( {context})
+	before( {context})
 
-	If defined, called after extracting headings to finalize the outline
-	info. The cleanup task of the outline info can be done here.
+	If defined, called before extracting headings.
+
+	See |unite-outline-context-object| for {context}
+
+
+after			Funcref (Optional) 	*unite-outline-info-after()*
+
+	after( {context})
+
+	If defined, called after extracting headings.
 
 	See |unite-outline-context-object| for {context}
 
@@ -914,18 +921,23 @@ INCORRECT STRUCTURED TREE ~
 ==============================================================================
 CHANHELOG					*unite-outline-changelog*
 
-http://github.com/h1mesuke/unite-outline/commits/master
-
 0.5.1	2011-10-xx
+
+	* Added a new hook.
+	  - initialize			|unite-outline-info-initialize|
+
+	* Changed hook names.
+	  - initialize -> before	|unite-outline-info-before|
+	  - finalize   -> after		|unite-outline-info-after|
 
 	* Refactoring the internal data management.
 
-	*  Improve the speed of tree-aware matching.
+	* Improved the speed of tree-aware matching.
 	  - No recursive calls. The matcher does its task iteratively.
 
 0.5.0	2011-9-06
 
-	* Implemented the auto-update feature and addes the following
+	* Implemented the auto-update feature and added the following
 	  filetype specific options.
 	  - auto_update	 |unite-outline-filetype-option-auto-update|
 	  - auto_update_event

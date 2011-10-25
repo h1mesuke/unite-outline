@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-10-23
+Updated : 2011-10-25
 Version : 0.5.0
 License : MIT license {{{
 
@@ -699,23 +699,31 @@ is_volatile		数値（任意）		*unite-outline-info-is_volatile*
 	1 を設定すると、見出しはキャッシュされません。
 
 HOOKS ~
-
+						*unite-outline-info-hooks*
 initialize		関数（任意） 		*unite-outline-info-initialize()*
 
-	initialize( {context})
+	initialize()
 
-	設定されていると、見出しの抽出に先立って呼ばれ、outline info に初期化
-	の機会を与えます。
+	設定されていると、outline info がロードした後に呼び出されます。
+	outline info の初期化のために実行すべき処理があればここに記述します。
+
+
+before			関数（任意） 		*unite-outline-info-before()*
+
+	before( {context})
+
+	設定されていると、見出しの抽出が始まる前に呼び出されます。
+	見出し抽出前に実行すべき処理があればここに記述します。
 
 	{context} については、|unite-outline-context-object|を参照
 
 
-finalize		関数（任意） 		*unite-outline-info-finalize()*
+after			関数（任意） 		*unite-outline-info-after()*
 
-	finalize( {context})
+	after( {context})
 
-	設定されていると、見出しの抽出が完了した後に呼ばれ、outline info に後
-	始末の機会を与えます。
+	設定されていると、見出しの抽出が完了した後に呼び出されます。
+	見出し抽出後に実行すべき処理があればここに記述します。
 
 	{context} については、|unite-outline-context-object|を参照
 
@@ -883,9 +891,14 @@ outline info 募集！
 ==============================================================================
 更新履歴					*unite-outline-changelog*
 
-http://github.com/h1mesuke/unite-outline/commits/master
-
 0.5.1	2011-10-xx
+
+	* フックを追加
+	  - initialize			|unite-outline-info-initialize|
+
+	* フックの名前を変更
+	  - initialize -> before	|unite-outline-info-before|
+	  - finalize   -> after		|unite-outline-info-after|
 
 	* 内部データの管理を改善
 
