@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for Ruby
-" Version: 0.1.1
+" Version: 0.1.2
 
 function! unite#sources#outline#defaults#ruby#outline_info(...)
   if a:0
@@ -78,6 +78,30 @@ function! s:outline_info.initialize()
   let self.heading = '^\s*\(' . join(self.heading_keywords, '\|') . '\)\>'
 endfunction
 
+" NOTE: In Ruby, not a few developers indent non-public methods one more
+" primarily for readability. Because this convention causes an incorrect
+" structured tree, we can't use the level of indentation as the heading level
+" of a method. To correct the level of non-public methods, I use a stack for
+" keeping track of the current scope level.
+
+function! s:outline_info.before(context)
+  let s:scope_levels = map(range(20), 3)
+  let s:slp = 0
+endfunction
+
+function! s:scope_level()
+  return s:scope_levels[s:slp]
+endfunction
+
+function! s:scope_in(level)
+  let s:slp += 1
+  let s:scope_levels[s:slp] = a:level
+endfunction
+
+function! s:scope_out()
+  let s:slp -= 1
+endfunction
+
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
   let word = a:heading_line
   let type = 'generic'
@@ -93,6 +117,10 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     let level = s:Util.get_indent_level(a:context, h_lnum) + 3
     " NOTE: Level 1 to 3 are reserved for toplevel comment headings.
 
+    while level <= s:scope_level()
+      call s:scope_out()
+    endwhile
+
     let matches = matchlist(a:heading_line, self.heading)
     let keyword = matches[1]
     let type = keyword
@@ -105,6 +133,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
         " Module, Class
         let word = matchstr(word, '^\s*\%(module\|class\)\s\+\zs\h\w*') . ' : ' . keyword
       endif
+      call s:scope_in(level)
     elseif keyword == 'def'
       if word =~ '#{'
         " Meta-method
@@ -133,6 +162,11 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
       " __END__
     endif
     let word = substitute(word, '\%(;\|#{\@!\).*$', '', '')
+
+    if type == 'method'
+      " Correct the method's level.
+      let level = s:scope_level() + 1
+    endif
   endif
 
   if level > 0
