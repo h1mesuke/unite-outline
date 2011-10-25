@@ -34,8 +34,13 @@ let s:Util = unite#sources#outline#import('Util')
 " Outline Info
 
 let s:outline_info = {
+      \ 'name': 'Ruby',
       \ 'heading-1': s:Util.shared_pattern('sh', 'heading-1'),
-      \ 'heading'  : '^\%(\s*\%(module\|class\|def\|BEGIN\|END\)\>\|__END__$\)',
+      \ 'heading_keywords': [
+      \   'module', 'class',
+      \   'def', 'attr_\(accessor\|reader\|writer\)', 'alias',
+      \   'BEGIN', 'END', '__END__',
+      \   ],
       \
       \ 'skip': {
       \   'header': s:Util.shared_pattern('sh', 'header'),
@@ -55,7 +60,7 @@ let s:outline_info = {
       \   { 'name'     : 'comment',
       \     'pattern'  : '/#.*/' },
       \   { 'name'     : 'method',
-      \     'pattern'  : '/:\@<! \zs[_[:alnum:]=\[\]<>!?.]\+/' },
+      \     'pattern'  : '/:\@<! \zs\%(=>\)\@![_[:alnum:]=\[\]<>!?.]\+/' },
       \   { 'name'     : 'type',
       \     'pattern'  : '/\S\+\ze : \%(module\|class\)/' },
       \   { 'name'     : 'eigen_class',
@@ -69,51 +74,77 @@ let s:outline_info = {
       \ ],
       \}
 
+function! s:outline_info.initialize()
+  let self.heading = '^\s*\(' . join(self.heading_keywords, '\|') . '\)\>'
+endfunction
+
 function! s:outline_info.create_heading(which, heading_line, matched_line, context)
-  let h_lnum = a:context.heading_lnum
-  " Level 1 to 3 are reserved for comment headings.
-  let level = s:Util.get_indent_level(a:context, h_lnum) + 3
-  let heading = {
-        \ 'word' : a:heading_line,
-        \ 'level': level,
-        \ 'type' : 'generic',
-        \ }
+  let word = a:heading_line
+  let type = 'generic'
+  let level = 0
 
   if a:which == 'heading-1' && a:heading_line =~ '^\s*#'
     let m_lnum = a:context.matched_lnum
-    let heading.type = 'comment'
-    let heading.level = s:Util.get_comment_heading_level(a:context, m_lnum)
+    let type = 'comment'
+    let level = s:Util.get_comment_heading_level(a:context, m_lnum)
+
   elseif a:which == 'heading'
-    if a:heading_line =~ '^\s*\%(BEGIN\|END\)\>'
-      let heading.word = substitute(heading.word, '\s*{.*$', '', '')
-    endif
-    if heading.word =~ '^\s*module\>'
-      " Module
-      let heading.type = 'module'
-      let heading.word = matchstr(heading.word, '^\s*module\s\+\zs\h\w*') . ' : module'
-    elseif heading.word =~ '^\s*class\>'
-      if heading.word =~ '\s\+<<\s\+'
-        " Eigen Class
-        let heading.type = 'eigen_class'
+    let h_lnum = a:context.heading_lnum
+    let level = s:Util.get_indent_level(a:context, h_lnum) + 3
+    " NOTE: Level 1 to 3 are reserved for toplevel comment headings.
+
+    let matches = matchlist(a:heading_line, self.heading)
+    let keyword = matches[1]
+    let type = keyword
+
+    if keyword == 'module' || keyword == 'class'
+      if word =~ '\s\+<<\s\+'
+        " Eigen-class
+        let type = 'eigen_class'
       else
-        " Class
-        let heading.type = 'class'
-        let heading.word = matchstr(heading.word, '^\s*class\s\+\zs\h\w*') . ' : class'
+        " Module, Class
+        let word = matchstr(word, '^\s*\%(module\|class\)\s\+\zs\h\w*') . ' : ' . keyword
       endif
-    elseif heading.word =~ '^\s*def\>'
-      if heading.word =~ '#{'
-        " Meta Method
-        let heading.type = 'meta_method'
+    elseif keyword == 'def'
+      if word =~ '#{'
+        " Meta-method
+        let type = 'meta_method'
       else
         " Method
-        let heading.type = 'method'
-        let heading.word = substitute(heading.word, '\<def\s*', '', '')
+        let type = 'method'
+        let word = substitute(word, '\<def\s*', '', '')
       endif
-      let heading.word = substitute(heading.word, '\S\zs(', ' (', '')
+      let word = substitute(word, '\S\zs(', ' (', '')
+    elseif keyword =~ '^attr_'
+      " Accessor
+      let type = 'method'
+      let access = matches[2]
+      let word = substitute(word, '\<attr_\w\+\s*', '', '')
+      let word = substitute(word, '\s*:', ' ', 'g') . ' : ' . access
+    elseif keyword == 'alias'
+      " Alias
+      let type = 'method'
+      let word = substitute(word, '\<alias\s*', '', '')
+      let word = substitute(word, ':\=\(\S\+\)\s\+:\=\(\S\+\)', '\1 => \2', '')
+    elseif keyword =~ '^\%(BEGIN\|END\)$'
+      " BEGIN, END
+      let word = substitute(word, '\s*{.*$', '', '')
+    else
+      " __END__
     endif
-    let heading.word = substitute(heading.word, '\%(;\|#{\@!\).*$', '', '')
+    let word = substitute(word, '\%(;\|#{\@!\).*$', '', '')
   endif
-  return heading
+
+  if level > 0
+    let heading = {
+          \ 'word' : word,
+          \ 'level': level,
+          \ 'type' : type,
+          \ }
+    return heading
+  else
+    return {}
+  endif
 endfunction
 
 function! s:outline_info.need_blank_between(cand1, cand2, memo)
