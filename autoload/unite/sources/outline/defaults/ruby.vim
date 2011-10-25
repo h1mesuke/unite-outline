@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/ruby.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-22
+" Updated : 2011-10-26
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,10 +9,23 @@
 "=============================================================================
 
 " Default outline info for Ruby
-" Version: 0.1.0
+" Version: 0.1.1
 
-function! unite#sources#outline#defaults#ruby#outline_info()
-  return s:outline_info
+function! unite#sources#outline#defaults#ruby#outline_info(...)
+  if a:0
+    " Redirect to DSL's outline info.
+    let context = a:1
+    let path = context.buffer.path
+    if path =~ '_spec\.rb$'
+      " RSpec
+      let oinfo = unite#sources#outline#get_outline_info('ruby/rspec')
+    else
+      let oinfo = s:outline_info
+    endif
+  else
+    let oinfo = s:outline_info
+  endif
+  return oinfo
 endfunction
 
 let s:Util = unite#sources#outline#import('Util')
