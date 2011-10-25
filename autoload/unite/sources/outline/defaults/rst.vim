@@ -22,7 +22,7 @@ let s:outline_info = {
       \ 'heading+1': '^[[:punct:]]\{4,}$',
       \ }
 
-function! s:outline_info.initialize(context)
+function! s:outline_info.before(context)
   let s:adornment_levels = {}
   let s:adornment_id = 2
 endfunction

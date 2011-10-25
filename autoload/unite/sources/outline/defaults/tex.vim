@@ -33,7 +33,7 @@ let s:unit_level_map = {
       \ 'subsubsection': 6,
       \ }
 
-function! s:outline_info.initialize(context)
+function! s:outline_info.before(context)
   let s:unit_count = map(copy(s:unit_level_map), '0')
   let s:bib_level = 6
 endfunction

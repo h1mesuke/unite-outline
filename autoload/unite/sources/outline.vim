@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-24
+" Updated : 2011-10-25
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -851,8 +851,8 @@ function! s:extract_filetype_headings(context)
   endif
 
   " Extract headings.
-  if has_key(oinfo, 'initialize')
-    call oinfo.initialize(a:context)
+  if has_key(oinfo, 'before')
+    call oinfo.before(a:context)
   endif
   if has_key(oinfo, 'extract_headings')
     let headings = oinfo.extract_headings(a:context)
@@ -861,8 +861,8 @@ function! s:extract_filetype_headings(context)
     let headings = s:builtin_extract_headings(a:context)
     let headings_normalized = 1
   endif
-  if has_key(oinfo, 'finalize')
-    call oinfo.finalize(a:context)
+  if has_key(oinfo, 'after')
+    call oinfo.after(a:context)
   endif
 
   " Normalize headings.
