@@ -1,7 +1,7 @@
 *unite-outline.txt*	outline source for unite.vim
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-10-25
+Updated : 2011-10-26
 Version : 0.5.0
 License : MIT license {{{
 
@@ -877,8 +877,6 @@ TODO						*unite-outline-todo*
 
 	* Improve JavaScript's outline info.
 
-	* Improve Ruby's outline info.
-
 	* Add outline infos for D, Erlang, Go, Haskell, etc...
 
 ------------------------------------------------------------------------------
@@ -912,11 +910,11 @@ INCORRECT STRUCTURED TREE ~
 	matched headings but also their ancestors are displayed as the results
 	of the narrowing.
 
-	Outline infos for some filetypes, for example Ruby, decide the level
-	of headings from their indentation depth at the buffer. In this case,
-	the built tree may be structured incorrectly. As a result, the results
-	of narrowing may contain headings that are neither matched nor
-	ancestors of matched ones.
+	Outline infos for some filetypes decide the level of headings from
+	their indentation depth at the buffer. In this case, the built tree
+	may be structured incorrectly. As a result, the results of narrowing
+	may contain headings that are neither matched nor ancestors of matched
+	ones.
 
 ==============================================================================
 CHANHELOG					*unite-outline-changelog*
