@@ -499,7 +499,7 @@ function! s:initialize_outline_data()
   let bufnr = bufnr('%')
   let bufvars  = getbufvar(bufnr, '')
   if !has_key(bufvars, s:BUFVAR_OUTLINE_DATA)
-    let bufvars[s:BUFVAR_OUTLINE_DATA] = {}
+    let bufvars[s:BUFVAR_OUTLINE_DATA] = { 'state': 'OK' }
     call s:register_autocmds()
   endif
   call s:update_buffer_changenr()
@@ -519,8 +519,11 @@ endfunction
 
 function! s:Source_Hooks_on_syntax(source_args, unite_context)
   let bufnr = a:unite_context.source__outline_source_bufnr
-  let context = s:get_outline_data(bufnr, 'context')
-  let oinfo = context.outline_info
+  let odata = s:get_outline_data(bufnr)
+  if odata.state !=# 'OK'
+    return
+  endif
+  let oinfo = odata.context.outline_info
   if context.extracted_by ==# 'filetype'
     " Method: Filetype
     if has_key(oinfo, 'highlight_rules')
@@ -584,8 +587,13 @@ function! s:Source_gather_candidates(source_args, unite_context)
     return []
 
   catch
-    call unite#util#print_error(v:throwpoint)
-    call unite#util#print_error(v:exception)
+    if s:get_outline_data(bufnr, 'state') ==# 'OK'
+      call unite#util#print_error(v:throwpoint)
+      call unite#util#print_error(v:exception)
+      call s:set_outline_data(bufnr, 'state', 'Error')
+    endif
+    call unite#print_message("[unite-outline] " . v:throwpoint)
+    call unite#print_message("[unite-outline] " . v:exception)
     return []
 
   finally
