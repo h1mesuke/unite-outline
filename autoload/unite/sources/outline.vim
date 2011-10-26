@@ -1433,9 +1433,15 @@ endfunction
 
 function! s:update_headings(bufnr)
   call s:Util.print_debug('event', 'update_headings')
-  " Update the Model data (headings).
-  call s:get_candidates(a:bufnr, { 'trigger': 'auto_update', 'is_force': 1 })
-
+  try
+    " Update the Model data (headings).
+    call s:get_candidates(a:bufnr, { 'trigger': 'auto_update', 'is_force': 1 })
+  catch
+    " Ignore all errors caused by auto-updates because they are so annoying.
+    " We can know the error details from the error which was caught at
+    " gather_candidates() not here.
+    return
+  endtry
   " Update the View (unite.vim' buffer) if the visible outline buffer exists.
   let outline_bufnrs = s:find_outline_buffers(a:bufnr)
   " NOTE: An outline buffer is an unite.vim's buffer that is displaying the
