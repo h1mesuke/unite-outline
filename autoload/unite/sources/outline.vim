@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-26
+" Updated : 2011-10-27
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -166,35 +166,40 @@ function! s:get_outline_info(ftype, ...)
     let ftype = a:ftype
     let context = {}
   endif
+  let oinfo = {}
   let reload = (a:0 ? a:1 : 0)
   for ftype in s:resolve_filetype(ftype)
     if has_key(g:unite_source_outline_info, ftype)
-      return g:unite_source_outline_info[ftype]
-    endif
-    let ftype = substitute(ftype, '\.', '_', 'g')
-    for path in s:OUTLINE_INFO_PATH
-      let path = substitute(path, '^autoload/', '', '') . ftype
-      let load_func = substitute(path . '#outline_info', '/', '#', 'g')
-      if s:autoload_function_exists(load_func)
-        if reload
-          call s:reload_autoload_script(load_func)
-        endif
-        if !empty(context)
-          try
-            let oinfo = call(load_func, [context])
-          catch /^Vim\%((\a\+)\)\=:E118:/
-            " E118: Too many arguments for function:
+      let oinfo = g:unite_source_outline_info[ftype]
+    else
+      let ftype = substitute(ftype, '\.', '_', 'g')
+      for path in s:OUTLINE_INFO_PATH
+        let path = substitute(path, '^autoload/', '', '') . ftype
+        let load_func = substitute(path . '#outline_info', '/', '#', 'g')
+        if s:autoload_function_exists(load_func)
+          if reload
+            call s:reload_autoload_script(load_func)
+          endif
+          if !empty(context)
+            try
+              let oinfo = call(load_func, [context])
+            catch /^Vim\%((\a\+)\)\=:E118:/
+              " E118: Too many arguments for function:
+              let oinfo = call(load_func, [])
+            endtry
+          else
             let oinfo = call(load_func, [])
-          endtry
-        else
-          let oinfo = call(load_func, [])
+          endif
+          break
         endif
-        call s:initialize_outline_info(oinfo)
-        return oinfo
-      endif
-    endfor
+      endfor
+    endif
+    if !empty(oinfo)
+      call s:initialize_outline_info(oinfo)
+      break
+    endif
   endfor
-  return {}
+  return oinfo
 endfunction
 
 " NOTE: This function is a workaround for that exists('*auto#load#func')
