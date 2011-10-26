@@ -640,6 +640,7 @@ function! s:create_context(bufnr, ...)
         \ 'extracted_by': '?',
         \ }
   call extend(context, (a:0 ? a:1 : {}))
+  let context.is_reload = (context.is_force && context.trigger ==# 'user')
   return context
 endfunction
 
