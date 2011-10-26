@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/ruby.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-26
+" Updated : 2011-10-27
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -34,7 +34,6 @@ let s:Util = unite#sources#outline#import('Util')
 " Outline Info
 
 let s:outline_info = {
-      \ 'name': 'Ruby',
       \ 'heading-1': s:Util.shared_pattern('sh', 'heading-1'),
       \ 'heading_keywords': [
       \   'module', 'class',

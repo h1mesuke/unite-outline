@@ -195,7 +195,7 @@ function! s:get_outline_info(ftype, ...)
       endfor
     endif
     if !empty(oinfo)
-      call s:initialize_outline_info(oinfo)
+      call s:initialize_outline_info(oinfo, ftype)
       break
     endif
   endfor
@@ -227,14 +227,14 @@ function! s:reload_autoload_script(funcname)
   source `=path`
 endfunction
 
-function! s:initialize_outline_info(oinfo)
+function! s:initialize_outline_info(oinfo, name)
   if has_key(a:oinfo, '__initialized__')
     return
   endif
   if has_key(a:oinfo, 'initialize')
     call a:oinfo.initialize()
   endif
-  call extend(a:oinfo, { 'is_volatile': 0 }, 'keep' )
+  call extend(a:oinfo, { 'name': a:name, 'is_volatile': 0 }, 'keep' )
   if has_key(a:oinfo, 'skip')
     call s:normalize_skip_info(a:oinfo)
   endif
