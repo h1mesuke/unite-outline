@@ -498,9 +498,6 @@ let s:source.hooks.on_init = function(s:SID . 'Source_Hooks_on_init')
 function! s:initialize_outline_data()
   let bufnr = bufnr('%')
   let bufvars  = getbufvar(bufnr, '')
-  if !exists('s:outline_data')
-    let s:outline_data = {}
-  endif
   if !has_key(bufvars, s:BUFVAR_OUTLINE_DATA)
     let bufvars[s:BUFVAR_OUTLINE_DATA] = {}
     call s:register_autocmds()
