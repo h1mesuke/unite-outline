@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-25
+" Updated : 2011-10-26
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -224,7 +224,7 @@ endfunction
 
 function! s:initialize_outline_info(outline_info)
   if has_key(a:outline_info, '__initialized__')
-    return a:outline_info
+    return
   endif
   if has_key(a:outline_info, 'initialize')
     call a:outline_info.initialize()
@@ -841,7 +841,7 @@ endfunction
 " the filetype's outline info.
 "
 function! s:extract_filetype_headings(context)
-  let buffer  = a:context.buffer
+  let buffer = a:context.buffer
   let oinfo = a:context.outline_info
   if empty(oinfo)
     if empty(buffer.filetype)
