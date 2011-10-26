@@ -80,17 +80,17 @@ function! unite#sources#outline#define()
   return s:source
 endfunction
 
-" Defines an alias of {filetype}.
+" Defines an alias of filetype {ftype}.
 "
-function! unite#sources#outline#alias(alias, filetype)
-  call s:define_filetype_aliases([a:alias], a:filetype)
+function! unite#sources#outline#alias(alias, ftype)
+  call s:define_filetype_aliases([a:alias], a:ftype)
 endfunction
 
 let s:ftype_alias_table = {}
 
-function! s:define_filetype_aliases(aliases, filetype)
+function! s:define_filetype_aliases(aliases, ftype)
   for alias in a:aliases
-    let s:ftype_alias_table[alias] = a:filetype
+    let s:ftype_alias_table[alias] = a:ftype
   endfor
 endfunction
 
@@ -152,22 +152,22 @@ function! s:get_outline_buffer_ids(winnr)
   return winvars[s:WINVAR_OUTLINE_BUFFER_IDS]
 endfunction
 
-" Returns the outline info for {filetype}. If not found, returns an empty
-" Dictionary.
+" Returns the outline info for filetype {ftype}. If not found, returns an
+" empty Dictionary.
 "
 function! unite#sources#outline#get_outline_info(...)
   return call('s:get_outline_info', a:000)
 endfunction
-function! s:get_outline_info(filetype, ...)
-  if type(a:filetype) == type({})
-    let filetype = join(a:filetype.buffer.filetypes, '.')
-    let context = a:filetype
+function! s:get_outline_info(ftype, ...)
+  if type(a:ftype) == type({})
+    let ftype = join(a:ftype.buffer.filetypes, '.')
+    let context = a:ftype
   else
-    let filetype = a:filetype
+    let ftype = a:ftype
     let context = {}
   endif
   let reload = (a:0 ? a:1 : 0)
-  for ftype in s:resolve_filetype(filetype)
+  for ftype in s:resolve_filetype(ftype)
     if has_key(g:unite_source_outline_info, ftype)
       return g:unite_source_outline_info[ftype]
     endif
@@ -222,45 +222,45 @@ function! s:reload_autoload_script(funcname)
   source `=path`
 endfunction
 
-function! s:initialize_outline_info(outline_info)
-  if has_key(a:outline_info, '__initialized__')
+function! s:initialize_outline_info(oinfo)
+  if has_key(a:oinfo, '__initialized__')
     return
   endif
-  if has_key(a:outline_info, 'initialize')
-    call a:outline_info.initialize()
+  if has_key(a:oinfo, 'initialize')
+    call a:oinfo.initialize()
   endif
-  call extend(a:outline_info, { 'is_volatile': 0 }, 'keep' )
-  if has_key(a:outline_info, 'skip')
-    call s:normalize_skip_info(a:outline_info)
+  call extend(a:oinfo, { 'is_volatile': 0 }, 'keep' )
+  if has_key(a:oinfo, 'skip')
+    call s:normalize_skip_info(a:oinfo)
   endif
-  call s:normalize_heading_groups(a:outline_info)
-  if has_key(a:outline_info, 'not_match_patterns')
-    let a:outline_info.__not_match_pattern__ =
-          \ '\%(' . join(a:outline_info.not_match_patterns, '\|') . '\)'
+  call s:normalize_heading_groups(a:oinfo)
+  if has_key(a:oinfo, 'not_match_patterns')
+    let a:oinfo.__not_match_pattern__ =
+          \ '\%(' . join(a:oinfo.not_match_patterns, '\|') . '\)'
   endif
-  let a:outline_info.__initialized__ = 1
+  let a:oinfo.__initialized__ = 1
 endfunction
 
-function! s:normalize_skip_info(outline_info)
-  if has_key(a:outline_info.skip, 'header')
-    let value_type = type(a:outline_info.skip.header)
+function! s:normalize_skip_info(oinfo)
+  if has_key(a:oinfo.skip, 'header')
+    let value_type = type(a:oinfo.skip.header)
     if value_type == type("")
-      let a:outline_info.skip.header = { 'leading': a:outline_info.skip.header }
+      let a:oinfo.skip.header = { 'leading': a:oinfo.skip.header }
     elseif value_type == type([])
-      let a:outline_info.skip.header =
-            \ { 'block': s:normalize_block_patterns(a:outline_info.skip.header) }
+      let a:oinfo.skip.header =
+            \ { 'block': s:normalize_block_patterns(a:oinfo.skip.header) }
     elseif value_type == type({})
-      if has_key(a:outline_info.skip.header, 'block') &&
-            \ type(a:outline_info.skip.header.block) == type([])
-        let a:outline_info.skip.header.block =
-              \ s:normalize_block_patterns(a:outline_info.skip.header.block)
+      if has_key(a:oinfo.skip.header, 'block') &&
+            \ type(a:oinfo.skip.header.block) == type([])
+        let a:oinfo.skip.header.block =
+              \ s:normalize_block_patterns(a:oinfo.skip.header.block)
       endif
     endif
   endif
-  if has_key(a:outline_info.skip, 'block')
-    let value_type = type(a:outline_info.skip.block)
+  if has_key(a:oinfo.skip, 'block')
+    let value_type = type(a:oinfo.skip.block)
     if value_type == type([])
-      let a:outline_info.skip.block = s:normalize_block_patterns(a:outline_info.skip.block)
+      let a:oinfo.skip.block = s:normalize_block_patterns(a:oinfo.skip.block)
     endif
   endif
 endfunction
@@ -269,32 +269,32 @@ function! s:normalize_block_patterns(patterns)
   return { 'begin': a:patterns[0], 'end': a:patterns[1] }
 endfunction
 
-function! s:normalize_heading_groups(outline_info)
-  if !has_key(a:outline_info, 'heading_groups')
-    let a:outline_info.heading_groups = {}
+function! s:normalize_heading_groups(oinfo)
+  if !has_key(a:oinfo, 'heading_groups')
+    let a:oinfo.heading_groups = {}
     let group_map = {}
   else
-    let groups = keys(a:outline_info.heading_groups)
+    let groups = keys(a:oinfo.heading_groups)
     let group_map = {}
     for group in groups
-      let group_types = a:outline_info.heading_groups[group]
+      let group_types = a:oinfo.heading_groups[group]
       for heading_type in group_types
         let group_map[heading_type] = group
       endfor
     endfor
   endif
   let group_map.generic = 'generic'
-  let a:outline_info.heading_group_map = group_map
+  let a:oinfo.heading_group_map = group_map
 endfunction
 
-" Returns the value of filetype option {key} for {filetype}.
+" Returns the value of filetype option {key} for filetype {ftype}.
 " If the value isn't available, returns {default}.
 "
 function! unite#sources#outline#get_filetype_option(...)
   return call('s:get_filetype_option', a:000)
 endfunction
-function! s:get_filetype_option(filetype, key, ...)
-  for ftype in s:resolve_filetype(a:filetype)
+function! s:get_filetype_option(ftype, key, ...)
+  for ftype in s:resolve_filetype(a:ftype)
     if has_key(g:unite_source_outline_filetype_options, ftype)
       let options = g:unite_source_outline_filetype_options[ftype]
       if has_key(options, a:key)
@@ -306,10 +306,10 @@ function! s:get_filetype_option(filetype, key, ...)
   return get(s:default_filetype_options, a:key, default)
 endfunction
 
-" Returns a List of filetypes that are {filetype} itself and its fallback
-" filetypes and aliases of each of them.
+" Returns a List of filetypes that are filetype {ftype} itself and its
+" fallback filetypes and aliases of each of them.
 "
-"   {filetype}
+"   the given filetype {ftype}
 "     |/
 "   (1)aaa.bbb.ccc -> (2)aliases
 "   (3)aaa/bbb/ccc -> (4)aliases
@@ -319,9 +319,9 @@ endfunction
 "     |/
 "   (9)aaa         -> ($)aliases
 "
-function! s:resolve_filetype(filetype)
+function! s:resolve_filetype(ftype)
   let ftcands = []
-  let ftype = a:filetype
+  let ftype = a:ftype
   while 1
     call add(ftcands, ftype)
     let ftcands += s:resolve_filetype_alias(ftype)
@@ -340,10 +340,10 @@ function! s:resolve_filetype(filetype)
   return ftcands
 endfunction
 
-function! s:resolve_filetype_alias(filetype)
+function! s:resolve_filetype_alias(ftype)
   let seen = {}
   let ftcands = []
-  let ftype = a:filetype
+  let ftype = a:ftype
   while 1
     if has_key(s:ftype_alias_table, ftype)
       if has_key(seen, ftype)
@@ -976,21 +976,21 @@ endfunction
 "   [ ['dummy', 'dummy', 'heading-1', 'heading', 'heading+1'],
 "     '\%(\(heading-1\)\|\(heading\)\|\(heading+1\)\)' ]
 "
-function! s:build_heading_pattern(outline_info)
+function! s:build_heading_pattern(oinfo)
   let which = ['dummy', 'dummy']
   " NOTE: searchpos() returns submatch counted from 2.
   let sub_patterns = []
-  if has_key(a:outline_info, 'heading-1')
+  if has_key(a:oinfo, 'heading-1')
     call add(which, 'heading-1')
-    call add(sub_patterns, a:outline_info['heading-1'])
+    call add(sub_patterns, a:oinfo['heading-1'])
   endif
-  if has_key(a:outline_info, 'heading')
+  if has_key(a:oinfo, 'heading')
     call add(which, 'heading')
-    call add(sub_patterns, a:outline_info.heading)
+    call add(sub_patterns, a:oinfo.heading)
   endif
-  if has_key(a:outline_info, 'heading+1')
+  if has_key(a:oinfo, 'heading+1')
     call add(which, 'heading+1')
-    call add(sub_patterns, a:outline_info['heading+1'])
+    call add(sub_patterns, a:oinfo['heading+1'])
   endif
   call map(sub_patterns, 's:_substitue_sub_pattern(v:val)')
   let pattern = '\%(' . join(sub_patterns, '\|') . '\)'
