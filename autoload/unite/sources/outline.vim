@@ -111,15 +111,23 @@ function! s:has_outline_data(bufnr, ...)
   endif
 endfunction
 
-" Returns the value of outline data {key} for buffer {bufnr}.
-" If the value isn't available, returns {default}.
+" Returns the value of outline data {key} for buffer {bufnr}. If the value
+" isn't available, returns {default}. When {key} is omitted, returns an
+" outline data's Dictionary.
 "
 function! unite#sources#outline#get_outline_data(...)
   return call('s:get_outline_data', a:000)
 endfunction
-function! s:get_outline_data(bufnr, key, ...)
+function! s:get_outline_data(bufnr, ...)
   let data = getbufvar(a:bufnr, s:BUFVAR_OUTLINE_DATA)
-  return (a:0 ? get(data, a:key, a:1) : data[a:key])
+  let argc = len(a:000)
+  if argc == 0
+    return data
+  elseif argc == 1
+    return data[a:1]
+  else
+    return get(data, a:1, a:2)
+  endif
 endfunction
 
 " Sets the value of outline data {key} for buffer {bufnr} to {value}.
