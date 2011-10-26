@@ -161,7 +161,8 @@ function! s:get_outline_buffer_ids(winnr)
 endfunction
 
 " Returns the outline info for filetype {ftype}. If not found, returns an
-" empty Dictionary.
+" empty Dictionary. When {ftype} is a Dictionary, assumes it is a Context and
+" takes the context buffer's filetype.
 "
 function! unite#sources#outline#get_outline_info(...)
   return call('s:get_outline_info', a:000)
