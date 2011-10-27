@@ -524,7 +524,7 @@ function! s:Source_Hooks_on_syntax(source_args, unite_context)
     return
   endif
   let oinfo = odata.context.outline_info
-  if context.extracted_by ==# 'filetype'
+  if odata.context.extracted_by ==# 'filetype'
     " Method: Filetype
     if has_key(oinfo, 'highlight_rules')
       for hl_rule in oinfo.highlight_rules
