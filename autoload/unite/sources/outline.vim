@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-27
+" Updated : 2011-10-28
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -175,54 +175,50 @@ function! s:get_outline_info(ftype, ...)
     let ftype = a:ftype
     let context = {}
   endif
-  let oinfo = {}
-  let reload = (a:0 ? a:1 : 0)
+  let reload = get(a:000, 0, 0)
+  let nouser = get(a:000, 1, 0)
+  let oinfo_paths = (nouser ? s:OUTLINE_INFO_PATH[-1:] : s:OUTLINE_INFO_PATH)
+
   for ftype in s:resolve_filetype(ftype)
     if has_key(g:unite_source_outline_info, ftype)
+      let name = ftype
       let oinfo = g:unite_source_outline_info[ftype]
-    else
-      let ftype = substitute(ftype, '\.', '_', 'g')
-      for path in s:OUTLINE_INFO_PATH
-        let path = substitute(path, '^autoload/', '', '') . ftype
-        let load_func = substitute(path . '#outline_info', '/', '#', 'g')
-        if s:autoload_function_exists(load_func)
-          if reload
-            call s:reload_autoload_script(load_func)
-          endif
-          if !empty(context)
-            try
-              let oinfo = call(load_func, [context])
-            catch /^Vim\%((\a\+)\)\=:E118:/
-              " E118: Too many arguments for function:
-              let oinfo = call(load_func, [])
-            endtry
-          else
-            let oinfo = call(load_func, [])
-          endif
-          break
-        endif
-      endfor
-    endif
-    if !empty(oinfo)
       call s:initialize_outline_info(oinfo, ftype)
-      break
+      return oinfo
+    endif
+    let load_func = s:find_loadable_func(ftype, oinfo_paths)
+    if !empty(load_func)
+      let name = load_func
+      let oinfo = s:load_outline_info(load_func, context, reload)
+      if type(oinfo) == type("")
+        " Redirect.
+        let redir_ftype = oinfo | unlet oinfo
+        let oinfo = s:get_outline_info(redir_ftype, reload, nouser)
+      else
+        call s:initialize_outline_info(oinfo, load_func)
+      endif
+      return oinfo
     endif
   endfor
-  return oinfo
+  return {}
 endfunction
 
-" NOTE: This function is a workaround for that exists('*auto#load#func')
-" always returns 0 when used in other than the toplevel.
-"
-function! s:autoload_function_exists(funcname)
-  try
-    call call(a:funcname, ['dummy'])
-  catch /^Vim\%((\a\+)\)\=:E117:/
-    " E117: Unknown function:
-    return 0
-  catch
-  endtry
-  return 1
+function! s:find_loadable_func(ftype, paths)
+  let ftype = substitute(a:ftype, '\.', '_', 'g')
+  for path in a:paths
+    let path = substitute(path, '^autoload/', '', '') . ftype
+    let load_func = substitute(path . '#outline_info', '/', '#', 'g')
+    try
+      " NOTE: This is a workaround for that exists('*auto#load#func') always
+      " returns 0 when used in a function other than the toplevel.
+      call call(load_func, [])
+      return load_func
+    catch /^Vim\%((\a\+)\)\=:E117:/
+      " E117: Unknown function:
+    catch
+    endtry
+  endfor
+  return ''
 endfunction
 
 " Reloads an autoload script where autoload function {funcname} is defined.
@@ -234,6 +230,23 @@ function! s:reload_autoload_script(funcname)
   let path = fnamemodify(path, ':p')
   " Re-source the autoload script.
   source `=path`
+endfunction
+
+function! s:load_outline_info(load_func, context, reload)
+  if a:reload
+    call s:reload_autoload_script(a:load_func)
+  endif
+  if !empty(a:context)
+    try
+      let oinfo = call(a:load_func, [a:context])
+    catch /^Vim\%((\a\+)\)\=:E118:/
+      " E118: Too many arguments for function:
+      let oinfo = call(a:load_func, [])
+    endtry
+  else
+    let oinfo = call(a:load_func, [])
+  endif
+  return oinfo
 endfunction
 
 function! s:initialize_outline_info(oinfo, name)

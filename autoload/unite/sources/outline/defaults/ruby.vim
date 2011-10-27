@@ -18,14 +18,10 @@ function! unite#sources#outline#defaults#ruby#outline_info(...)
     let path = context.buffer.path
     if path =~ '_spec\.rb$'
       " RSpec
-      let oinfo = unite#sources#outline#get_outline_info('ruby/rspec')
-    else
-      let oinfo = s:outline_info
+      return 'ruby/rspec'
     endif
-  else
-    let oinfo = s:outline_info
   endif
-  return oinfo
+  return s:outline_info
 endfunction
 
 let s:Util = unite#sources#outline#import('Util')
