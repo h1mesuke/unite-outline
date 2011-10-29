@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/ruby.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-27
+" Updated : 2011-10-29
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -170,10 +170,10 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
           \ 'level': level,
           \ 'type' : type,
           \ }
-    return heading
   else
-    return {}
+    let heading = {}
   endif
+  return heading
 endfunction
 
 function! s:outline_info.need_blank_between(cand1, cand2, memo)
