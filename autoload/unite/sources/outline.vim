@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-28
+" Updated : 2011-10-29
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -183,7 +183,7 @@ function! s:get_outline_info(ftype, ...)
     if has_key(g:unite_source_outline_info, ftype)
       let name = ftype
       let oinfo = g:unite_source_outline_info[ftype]
-      call s:initialize_outline_info(oinfo, ftype)
+      call s:Oinfo_initialize(oinfo, ftype)
       return oinfo
     endif
     let load_func = s:find_loadable_func(ftype, oinfo_paths)
@@ -195,7 +195,7 @@ function! s:get_outline_info(ftype, ...)
         let redir_ftype = oinfo | unlet oinfo
         let oinfo = s:get_outline_info(redir_ftype, reload, nouser)
       else
-        call s:initialize_outline_info(oinfo, load_func)
+        call s:Oinfo_initialize(oinfo, load_func)
       endif
       return oinfo
     endif
@@ -249,8 +249,8 @@ function! s:load_outline_info(load_func, context, reload)
   return oinfo
 endfunction
 
-function! s:initialize_outline_info(oinfo, name)
-  if has_key(a:oinfo, '__initialized__')
+function! s:Oinfo_initialize(oinfo, name)
+  if s:Oinfo_is_initialized(a:oinfo)
     return
   endif
   if has_key(a:oinfo, 'initialize')
@@ -265,7 +265,19 @@ function! s:initialize_outline_info(oinfo, name)
     let a:oinfo.__not_match_pattern__ =
           \ '\%(' . join(a:oinfo.not_match_patterns, '\|') . '\)'
   endif
-  let a:oinfo.__initialized__ = 1
+  if has_key(a:oinfo, 'super')
+    let a:oinfo.__initialized__ = a:oinfo.super.__initialized__ + 1
+  else
+    let a:oinfo.__initialized__ = 1
+  endif
+endfunction
+
+function! s:Oinfo_is_initialized(oinfo)
+  if has_key(a:oinfo, 'super')
+    return (a:oinfo.__initialized__ > a:oinfo.super.__initialized__)
+  else
+    return has_key(a:oinfo, '__initialized__')
+  endif
 endfunction
 
 function! s:normalize_skip_info(oinfo)
