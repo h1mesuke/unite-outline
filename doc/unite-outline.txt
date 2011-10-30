@@ -1,7 +1,7 @@
 *unite-outline.txt*	outline source for unite.vim
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-10-30
+Updated : 2011-10-31
 Version : 0.5.0
 License : MIT license {{{
 
@@ -788,21 +788,30 @@ unite#sources#outline#alias( {alias}, {filetype})
 	call unite#sources#outline#alias('zsh',   'sh')
 <
 				*unite#sources#outline#get_outline_info()*
-unite#sources#outline#get_outline_info( {filetype})
+unite#sources#outline#get_outline_info( {filetype} [, {reload} [, {nouser}]])
 
 	Returns the outline info of {filetype}.
-	If not found, returns an empty Dictionary.
+	When {reload} is non-zero, sources the script where the outline info
+	is defined before getting it.
+	When {nouser} is non-zero, skips searching user defined outline infos
+	and returns one of the bundled.
+	If the outline info is not found, returns an empty Dictionary.
 
 				*unite#sources#outline#get_filetype_option()*
 unite#sources#outline#get_filetype_option( {filetype}, {key} [, {default}])
 
 	Returns a value of option {key} for {filetype}.
-	If the value of option {key} is not available, returns {default} if it
-	is given otherwise returns 0.
+	If the value of option {key} is not available, returns {default} if
+	given otherwise returns 0.
 					*unite#sources#outline#get_highlight()*
-unite#sources#outline#get_highlight( {name})
+unite#sources#outline#get_highlight( {name} ...)
 
-	Returns a highlight group associated with {name}.
+	Returns a highlight group name associated with {name}.
+	If {name} has no association, tries following arguments until the
+	association is found. If not found finally, returns the value of
+	|g:unite_abbr_highlight|.
+
+	See |g:unite_source_outline_highlight|.
 
 					*unite#sources#outline#import()*
 unite#sources#outline#import( {module})
@@ -845,8 +854,8 @@ Util.join_to( {context}, {lnum}, {pattern} [, {limit}])
 	String and then returns it. "\n" is put in between the joined lines.
 
 	{limit} specifies the maximum number of lines to be joined.
-	If {limit} is omitted, the default value 3 is used.
-	If {limit} is negative, searches the matched line backward.
+	When {limit} is omitted, the default value 3 is used.
+	When {limit} is negative, searches the matched line backward.
 
 					*unite-outline-Util.neighbor_match()*
 Util.neighbor_match( {context}, {lnum}, {pattern} [, {range} [, {exclusive}]])
@@ -855,12 +864,12 @@ Util.neighbor_match( {context}, {lnum}, {pattern} [, {range} [, {exclusive}]])
 	{pattern}, otherwise returns False.
 
 	{range} specifies the range of the neighbors to be tried to match.
-	If {range} is omitted, the default value 1 is used. It means the
+	When {range} is omitted, the default value 1 is used. It means the
 	neighbors are only the previous line and the next line.
-	If {range} is a List, for example [m, n], it specifies that the
+	When {range} is a List, for example [m, n], it specifies that the
 	neighbors are the previous m lines and the next n lines.
 
-	If {exclusive} is given and non-zero, line {lnum} itself isn't be
+	When {exclusive} is given and non-zero, line {lnum} itself isn't be
 	tried to match.
 
 					*unite-outline-Util.neighbor_matchstr()*

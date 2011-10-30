@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-10-26
+Updated : 2011-10-31
 Version : 0.5.0
 License : MIT license {{{
 
@@ -756,9 +756,14 @@ unite#sources#outline#alias( {alias}, {source})
 	call unite#sources#outline#alias('zsh',   'sh')
 <
 				*unite#sources#outline#get_outline_info()*
-unite#sources#outline#get_outline_info( {filetype})
+unite#sources#outline#get_outline_info( {filetype} [, {reload} [, {nouser}]])
 
 	{filetype} の outline info を返します。
+	{reload} が non-zero の場合、outline info を取得する前にスクリプトを
+	source し直します。（outline info がオートロード関数を使ってファイルに
+	定義されている場合にのみ有効）
+	{nouser} が non-zero の場合、ユーザー定義の outline info の探索をス
+	キップします。
 	outline info が見つからない場合は空の辞書 {} を返します。
 
 				*unite#sources#outline#get_filetype_option()*
@@ -769,9 +774,14 @@ unite#sources#outline#get_filetype_option( {filetype}, {key} [, {default}])
 	そうでないなら 0 を返します。
 
 					*unite#sources#outline#get_highlight()*
-unite#sources#outline#get_highlight( {name})
+unite#sources#outline#get_highlight( {name} ...)
 
-	{name} に関連付けられたハイライトグループを返します。
+	{name} に関連付けられたハイライトグループ名を返します。
+	関連付けがない場合は、引数を順次調べ関連付けを探します。関連付けが最後
+	まで見つからなかった場合は |g:unite_abbr_highlight| の値を返します。
+
+	ハイライトグループ名への関連付けについては
+	|g:unite_source_outline_highlight| を参照
 
 					*unite#sources#outline#import()*
 unite#sources#outline#import( {module})
