@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/ruby/rspec.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-29
+" Updated : 2011-10-30
 "
 " Contributed by kenchan
 "
@@ -11,7 +11,7 @@
 "=============================================================================
 
 " Default outline info for Ruby/RSpec
-" Version: 0.1.1
+" Version: 0.1.2
 
 function! unite#sources#outline#defaults#ruby#rspec#outline_info()
   return s:outline_info
@@ -30,14 +30,37 @@ call extend(s:outline_info, {
       \ 'super': s:super,
       \
       \ 'rspec_heading_keywords': [
-      \   'before', 'describe', 'its\=', 'after',
-      \   'context', 'let!\=', 'specify', 'subject',
+      \   'shared\=_\%(as\|context\|examples\%(_for\)\=\)',
+      \   'describe', 'context', 'before', 'after', 'let!\=',
+      \   'subject\%(\s*\%(do\|{\)\)\@=', 'it\%(_\w\+\|s\)\=', 'specify', 
+      \ ],
+      \
+      \ 'rspec_highlight_rules': [
+      \   { 'name'     : 'shared_context',
+      \     'pattern'  : '/\<shared\=_\%(as\|context\|examples\%(_for\)\=\)\>.*/',
+      \     'highlight': unite#sources#outline#get_highlight('level_1') },
+      \   { 'name'     : 'describe',
+      \     'pattern'  : '/\<\%(describe\|context\)\>.*/',
+      \     'highlight': unite#sources#outline#get_highlight('level_1') },
+      \   { 'name'     : 'hook',
+      \     'pattern'  : '/\<\%(before\|after\)\>.*/',
+      \     'highlight': unite#sources#outline#get_highlight('level_3') },
+      \   { 'name'     : 'let',
+      \     'pattern'  : '/\<let!\=\>.*/',
+      \     'highlight': unite#sources#outline#get_highlight('level_3') },
+      \   { 'name'     : 'subject',
+      \     'pattern'  : '/\<subject\>.*/',
+      \     'highlight': unite#sources#outline#get_highlight('level_2') },
+      \   { 'name'     : 'example',
+      \     'pattern'  : '/\<\%(it\%(_\w\+\|s\)\=\|specify\)\>.*/',
+      \     'highlight': unite#sources#outline#get_highlight('level_2') },
       \ ],
       \})
 
 function! s:outline_info.initialize()
   let self.rspec_heading = '^\s*\(' . join(self.rspec_heading_keywords, '\|') . '\)\>'
   let self.heading_keywords += self.rspec_heading_keywords
+  let self.highlight_rules += self.rspec_highlight_rules
   call call(self.super.initialize, [], self)
 endfunction
 
@@ -53,7 +76,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
 
     let type = 'rspec'
     let word = substitute(word, '\s*\%(do\|{\)\%(\s*|[^|]*|\)\=\s*$', '', '')
-    let word = substitute(word, '\%(;\|#{\@!\).*$', '', '')
+    "let word = substitute(word, '\%(;\|#{\@!\).*$', '', '')
   endif
 
   if level > 0
