@@ -1,7 +1,7 @@
 *unite-outline.txt*	outline source for unite.vim
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-10-26
+Updated : 2011-10-30
 Version : 0.5.0
 License : MIT license {{{
 
@@ -45,7 +45,7 @@ CONTENTS					*unite-outline-contents*
 ==============================================================================
 INTRODUCTION					*unite-outline-introduction*
 
-	*unite-outline* is an |unite|'s source which parses the current
+	*unite-outline* is a |unite|'s source which parses the current
 	buffer's content and extracts headings from the buffer and then shows
 	the list of the headings with unite.vim's interface. When you select
 	a heading from the list, you can jump to the corresponding location of

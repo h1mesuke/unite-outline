@@ -2,7 +2,7 @@
 
 ## Introduction
 
-unite-outline is an [unite.vim](http://github.com/Shougo/unite.vim)'s source
+unite-outline is a [unite.vim](http://github.com/Shougo/unite.vim)'s source
 which parses the current buffer's content and extracts headings from the
 buffer and then shows the list of the headings with unite.vim's interface.
 When you select a heading from the list, you can jump to the corresponding
