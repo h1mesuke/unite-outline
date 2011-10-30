@@ -88,6 +88,10 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   else
     let heading = call(self.super.create_heading,
           \ [a:which, a:heading_line, a:matched_line, a:context], self.super)
+    if heading.type == 'method'
+      let h_lnum = a:context.heading_lnum
+      let heading.level = s:Util.get_indent_level(a:context, h_lnum) + 3
+    endif
   endif
   return heading
 endfunction
