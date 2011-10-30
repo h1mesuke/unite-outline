@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-29
+" Updated : 2011-10-31
 " Version : 0.5.0
 " License : MIT license {{{
 "
@@ -401,9 +401,15 @@ endfunction
 function! unite#sources#outline#get_highlight(...)
   return call('s:get_highlight', a:000)
 endfunction
-function! s:get_highlight(name)
-  return (has_key(g:unite_source_outline_highlight, a:name)
-        \ ? g:unite_source_outline_highlight[a:name] : s:default_highlight[a:name])
+function! s:get_highlight(...)
+  for name in a:000
+    if has_key(g:unite_source_outline_highlight, name)
+      return g:unite_source_outline_highlight[name]
+    elseif has_key(s:default_highlight, name)
+      return s:default_highlight[name]
+    endif
+  endfor
+  return s:default_highlight.normal
 endfunction
 
 function! unite#sources#outline#import(name, ...)
