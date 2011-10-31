@@ -668,7 +668,7 @@ function! s:create_context(bufnr, ...)
         \ 'ts'  : getbufvar(a:bufnr, '&tabstop'),
         \ }
   let buffer.filetypes = split(getbufvar(a:bufnr, '&filetype'), '\.')
-  let buffer.filetype = buffer.filetypes[0]
+  let buffer.filetype = get(buffer.filetypes, 0, '')
   let context = {
         \ 'trigger': 'user', 'is_force': 0, 'buffer': buffer,
         \ 'extracted_by': '?',
