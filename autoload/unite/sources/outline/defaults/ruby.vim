@@ -33,7 +33,7 @@ let s:outline_info = {
       \ 'heading-1': s:Util.shared_pattern('sh', 'heading-1'),
       \ 'heading_keywords': [
       \   'module', 'class', 'protected', 'private',
-      \   'def', 'attr_\(accessor\|reader\|writer\)', 'alias',
+      \   'def', '[mc]\=attr_\(accessor\|reader\|writer\)', 'alias',
       \   'BEGIN', 'END', '__END__',
       \   ],
       \
@@ -124,11 +124,12 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
         let word = substitute(word, '\<def\s*', '', '')
       endif
       let word = substitute(word, '\S\zs(', ' (', '')
-    elseif keyword =~ '^attr_'
+    elseif keyword =~ '^[mc]\=attr_'
       " Accessor
       let type = 'method'
       let access = matches[2]
-      let word = substitute(word, '\<attr_\w\+\s*', '', '')
+      let word = substitute(word, '\<[mc]\=attr_\w\+\s*', '', '')
+      let word = substitute(word, ',\s*\S\+\s*=>.*', '', '')
       let word = substitute(word, '\s*:', ' ', 'g') . ' : ' . access
     elseif keyword == 'alias'
       " Alias
