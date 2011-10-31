@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/ruby.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-29
+" Updated : 2011-10-31
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -174,6 +174,15 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     let heading = {}
   endif
   return heading
+endfunction
+
+function! s:outline_info.fold_ruby_block(context, lnum)
+  let line = a:context.lines[a:lnum]
+  let indent = matchlist(line, '^\(\s*\)')[1]
+  let line = s:Util.join_to(a:context, a:lnum, indent . '%\(end\>\|}\)')
+  let line = substitute(line, '\s*\n\s*', '; ', 'g')
+  let line = substitute(substitute(line, 'do;', '{', ''), '; end', ' }', '')
+  return line
 endfunction
 
 function! s:outline_info.need_blank_between(cand1, cand2, memo)

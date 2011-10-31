@@ -81,6 +81,10 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     let type = 'rspec'
     let word = substitute(word, '\s*\%(do\|{\)\%(\s*|[^|]*|\)\=\s*$', '', '')
     "let word = substitute(word, '\%(;\|#{\@!\).*$', '', '')
+
+    if word =~ '^\s*\%(subject\|it\)\s*$'
+      let word = self.fold_ruby_block(a:context, h_lnum)
+    endif
   endif
 
   if level > 0
