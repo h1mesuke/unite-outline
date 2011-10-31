@@ -45,11 +45,11 @@ CONTENTS					*unite-outline-contents*
 ==============================================================================
 INTRODUCTION					*unite-outline-introduction*
 
-	*unite-outline* is a |unite|'s source which parses the current
-	buffer's content and extracts headings from the buffer and then shows
-	the list of the headings with unite.vim's interface. When you select
-	a heading from the list, you can jump to the corresponding location of
-	the buffer.
+	*unite-outline* is a |unite|'s source which provides your Vim's buffer
+	with the outline view. It parses the current buffer's content and
+	extracts headings from the buffer. And then it shows the list of the
+	headings using unite.vim's interface. When you select a heading from
+	the list, you can jump to the corresponding location in the buffer.
 
 	The methods for extracting headings can be implemented for each
 	individual filetypes. You can customize them as you like with Vim
@@ -77,12 +77,16 @@ SHOW HEADINGS ~
 <
 	unite-outline parses the current buffer's content and extracts
 	headings from the buffer. And then it shows the list of the headings
-	with unite.vim's interface. When you select a heading from the list,
-	you can jump to the corresponding location of the buffer.
+	using unite.vim's interface. When you select a heading from the list,
+	you can jump to the corresponding location in the buffer.
 
 	In most cases, extracted headings are cached. Because unite-outline
-	reuses the cached data as possible, subsequent executions for the
+	reuses the cached data as possible, subsequent extraction for the
 	buffer will get much faster than the first time.
+
+FILTER HEADINGS ~
+
+	See |unite-usage|.
 
 UPDATE HEADINGS ~
 
@@ -97,10 +101,6 @@ UPDATE HEADINGS ~
 
 	NOTE: From verion 0.5.0, unite-outline updates headings automatically.
 	See |unite-outline-filetype-option-auto-update| .
-
-FILTER HEADINGS ~
-
-	See |unite-usage|.
 
 ==============================================================================
 SETTINGS					*unite-outline-settings*
