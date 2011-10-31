@@ -1540,7 +1540,6 @@ function! s:on_buf_win_enter()
   let old_bufnr = bufnr('#')
   call s:Util.print_debug('event', 'on_buf_win_enter at window #' . winnr .
         \ ' from buffer #' . old_bufnr . ' to #' . new_bufnr)
-  call s:initialize_outline_data()
   call s:swap_headings(s:get_outline_buffer_ids(winnr), new_bufnr)
 endfunction
 
@@ -1562,6 +1561,7 @@ function! s:swap_headings(outline_buffer_ids, new_bufnr)
               let unite_context.source__outline_source_bufnr = a:new_bufnr
               let unite_context.source__outline_swapping = 1
               call s:Util.print_debug('event', 'redraw outline buffer #' . bufnr)
+              call s:initialize_outline_data()
               call unite#force_redraw(bufwinnr(bufnr))
             endif
           endif
