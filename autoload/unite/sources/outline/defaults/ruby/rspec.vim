@@ -35,6 +35,10 @@ call extend(s:outline_info, {
       \   'subject\%(\s*\%(do\|{\)\)\@=', 'it\%(_\w\+\|s\)\=', 'specify', 
       \ ],
       \
+      \ 'not_match_patterns': [
+      \   '^\s*\%(let!\=\)\@!\S\+\s*\zs([^)]*)',
+      \ ],
+      \
       \ 'rspec_highlight_rules': [
       \   { 'name'     : 'shared_context',
       \     'pattern'  : '/\<shared\=_\%(as\|context\|examples\%(_for\)\=\)\>.*/',
