@@ -285,10 +285,16 @@ outline info の作成				*unite-outline-info-create*
 
     [A]	オートロード関数を定義する。				[推奨]
 
-      *	$HOME/.vim/autoload/outline/ に {filetype}.vim を作成する。
+      *	$HOME/.vim/autoload/unite/sources/outline/ に {filetype}.vim を作成し、
+	そこにオートロード関数 unite#sources#outline#{filetype}#outline_info()
+	を定義する。
 
-      *	そこにオートロード関数 outline#{filetype}#outline_info() を定義し、
-	その返値として、outline info（辞書）を返す。
+         または
+
+         $HOME/.vim/autoload/outline/ に {filetype}.vim を作成し、
+         そこにオートロード関数 outline#{filetype}#outline_info() を定義する。
+
+      *	関数の返値として、outline info（辞書）を返す。
 
 	この方法で定義した outline info は必要になるまでロードされません。
 	vimrc を肥大化させることもないので、outline info を作り込むのであれば

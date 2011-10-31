@@ -76,7 +76,7 @@ SHOW HEADINGS ~
 	:Unite outline
 <
 	unite-outline parses the current buffer's content and extracts
-	headings from the buffer. And then, it shows the list of the headings
+	headings from the buffer. And then it shows the list of the headings
 	with unite.vim's interface. When you select a heading from the list,
 	you can jump to the corresponding location of the buffer.
 
@@ -286,6 +286,13 @@ CREATE OUTLINE INFO				*unite-outline-info-create*
 
     [A]	Define an autoload function to return the outline info.	 [RECOMMENDED]
 
+      *	Create a file {filetype}.vim at
+	$HOME/.vim/autoload/unite/sources/outline/
+
+      *	Define unite#sources#outline#{filetype}#outline_info() in the file.
+
+	or
+
       *	Create {filetype}.vim at
 	$HOME/.vim/autoload/outline/
 
@@ -294,9 +301,9 @@ CREATE OUTLINE INFO				*unite-outline-info-create*
       *	Returns the outline info from the autoload function as its return
 	value.
 
-	I recommend you to define outline infos in this manner because loading
-	of the outline infos will be delayed until they'll be actually needed
-	and it doesn't enlarge your vimrc.
+	I recommend you to define an outline info in this manner because
+	loading of the outline info is delayed until it is actually needed and
+	it doesn't enlarge your vimrc.
 	
 	The default outline infos at
 	$HOME/.vim/autoload/unite/sources/outline/defaults/ have been defined
