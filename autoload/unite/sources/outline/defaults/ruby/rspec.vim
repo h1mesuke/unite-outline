@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/ruby/rspec.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-30
+" Updated : 2011-10-31
 "
 " Contributed by kenchan
 "
@@ -38,22 +38,22 @@ call extend(s:outline_info, {
       \ 'rspec_highlight_rules': [
       \   { 'name'     : 'shared_context',
       \     'pattern'  : '/\<shared\=_\%(as\|context\|examples\%(_for\)\=\)\>.*/',
-      \     'highlight': unite#sources#outline#get_highlight('level_1') },
-      \   { 'name'     : 'describe',
+      \     'highlight': unite#sources#outline#get_highlight('rspec_shared_context', 'level_1') },
+      \   { 'name'     : 'behavior',
       \     'pattern'  : '/\<\%(describe\|context\)\>.*/',
-      \     'highlight': unite#sources#outline#get_highlight('level_1') },
+      \     'highlight': unite#sources#outline#get_highlight('rspec_behaviour', 'level_1') },
       \   { 'name'     : 'hook',
       \     'pattern'  : '/\<\%(before\|after\)\>.*/',
-      \     'highlight': unite#sources#outline#get_highlight('level_3') },
+      \     'highlight': unite#sources#outline#get_highlight('rspec_hook', 'level_3') },
       \   { 'name'     : 'let',
       \     'pattern'  : '/\<let!\=\>.*/',
-      \     'highlight': unite#sources#outline#get_highlight('level_3') },
+      \     'highlight': unite#sources#outline#get_highlight('rspec_let', 'level_3') },
       \   { 'name'     : 'subject',
       \     'pattern'  : '/\<subject\>.*/',
-      \     'highlight': unite#sources#outline#get_highlight('level_2') },
+      \     'highlight': unite#sources#outline#get_highlight('rspec_subject', 'level_2') },
       \   { 'name'     : 'example',
       \     'pattern'  : '/\<\%(it\%(_\w\+\|s\)\=\|specify\)\>.*/',
-      \     'highlight': unite#sources#outline#get_highlight('level_2') },
+      \     'highlight': unite#sources#outline#get_highlight('rspec_example', 'level_2') },
       \ ],
       \})
 
