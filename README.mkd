@@ -29,7 +29,7 @@ To show the heading list of the current buffer, execute |:Unite| command with
     :Unite outline
 
 unite-outline parses the current buffer's content and extracts headings from
-the buffer. And then, it shows the list of the headings with unite.vim's
+the buffer. And then it shows the list of the headings with unite.vim's
 interface. When you select a heading from the list, you can jump to the
 corresponding location of the buffer.
 

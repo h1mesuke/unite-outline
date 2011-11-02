@@ -1,7 +1,7 @@
 *unite-outline.txt*	outline source for unite.vim
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-10-31
+Updated : 2011-11-02
 Version : 0.5.0
 License : MIT license {{{
 
@@ -99,7 +99,7 @@ UPDATE HEADINGS ~
 	Or, execute |<Plug>(unite_redraw)|, which is mapped to <C-l> by
 	default, at the heading list in Normal mode.
 
-	NOTE: From verion 0.5.0, unite-outline updates headings automatically.
+	NOTE: From version 0.5.0, unite-outline updates headings automatically.
 	See |unite-outline-filetype-option-auto-update| .
 
 ==============================================================================
@@ -935,7 +935,13 @@ INCORRECT STRUCTURED TREE ~
 ==============================================================================
 CHANHELOG					*unite-outline-changelog*
 
-0.5.1	2011-10-xx
+0.5.1	2011-11-01
+
+	* Changed unite#sources#outline#get_outline_info()'s interface.
+	  - And supported filetype redirection.
+				|unite#sources#outline#get_outline_info()|
+
+	* Deleted unite#sources#outline#get_default_outline_info()
 
 	* Added a new hook.
 	  - initialize			|unite-outline-info-initialize|
