@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-28
+" Updated : 2011-11-07
 " Version : 0.5.1
 " License : MIT license {{{
 "
@@ -198,7 +198,7 @@ function! s:FileCache_clear()
     call s:cleanup_all_cache_files()
     echomsg "unite-outline: Deleted all cache files."
   else
-    call unite#util#print_error("unite-outline: FileCache directory doesn't exist.")
+    call unite#util#print_error("unite-outline: Cache directory doesn't exist.")
   endif
 endfunction
 call s:FileCache.function('clear')
