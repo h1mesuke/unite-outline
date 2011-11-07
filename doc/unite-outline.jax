@@ -1,7 +1,7 @@
 *unite-outline.txt*	バッファの見出し一覧を表示し、ジャンプ機能を提供する。
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-11-02
+Updated : 2011-11-07
 Version : 0.5.1
 License : MIT license {{{
 
@@ -39,7 +39,7 @@ License : MIT license {{{
 	関数			|unite-outline-functions|
 	  ユーティリティ関数	  |unite-outline-utility-functions|
 	ToDo			|unite-outline-todo|
-	既知の問題		|unite-outline-bugs|
+	既知の問題		|unite-outline-known-issues|
 	更新履歴		|unite-outline-changelog|
 
 ==============================================================================
@@ -850,27 +850,12 @@ Util.neighbor_matchstr( {context}, {lnum}, {pattern} [, {range} [, {exclusive}]]
 ==============================================================================
 TODO						*unite-outline-todo*
 
-	* 絞り込み時の hlsearch
-
-	* JavaScript用 outline info の改善
-
-		jsctags を使えばよさげ。
-
 	* D, Erlang, Go, Haskell などの outline info
-
-		話題の言語には一通り対応したいもの。
-		が、作者にとって未知の言語なため対応が遅れています。
-		なんとかしなければ。
 
 	* 対応ファイルタイプの充実
 
-		対応ファイルタイプの充実はぼちぼちやっていこうと考えていますが、
-
-		あるファイルタイプにおける妥当な見出し抽出を実現するには、その
-		ファイルタイプに対する知見がどうしても必要なため、作者が普段使
-		わない言語については対応が後手にまわっています。
-
-		そこで↓
+	* Issues - h1mesuke/unite-outline - GitHub
+	  https://github.com/h1mesuke/unite-outline/issues
 
 ------------------------------------------------------------------------------
 outline info 募集！
@@ -880,13 +865,13 @@ outline info 募集！
 	布アーカイブにそのまま同梱）させていただきます。
 
 	* Issues - h1mesuke/unite-outline - GitHub
-	  http://github.com/h1mesuke/unite-outline/issues
+	  https://github.com/h1mesuke/unite-outline/issues
 	
 	* Send a pull request - GitHub
-	  http://github.com/h1mesuke/unite-outline/pull/new/master
+	  https://github.com/h1mesuke/unite-outline/pull/new/master
 	
 ==============================================================================
-既知の問題					*unite-outline-bugs*
+既知の問題					*unite-outline-known-issues*
 
 親子関係の誤認識 ~
 
@@ -905,28 +890,28 @@ outline info 募集！
 0.5.1	2011-11-01
 
 	* unite#sources#outline#get_outline_info() のインターフェースを変更
-	  - ファイルタイプリダイレクトに対応
+	- ファイルタイプリダイレクトに対応
 				|unite#sources#outline#get_outline_info()|
 
 	* unite#sources#outline#get_default_outline_info() を削除
 
 	* フックを追加
-	  - initialize			|unite-outline-info-initialize|
+	- initialize			|unite-outline-info-initialize|
 
 	* フックの名前を変更
-	  - initialize -> before	|unite-outline-info-before|
-	  - finalize   -> after		|unite-outline-info-after|
+	- initialize -> before		|unite-outline-info-before|
+	- finalize   -> after		|unite-outline-info-after|
 
 	* 内部データの管理を改善
 
 	* 見出しの絞り込みを高速化
-	  - 再帰呼び出しをなくし、反復的に処理するように改善
+	- 再帰呼び出しをなくし、反復的に処理するように改善
 
 0.5.0	2011-09-06
 
 	* 見出しの自動更新を実装し、以下のファイルタイプオプションを追加
-	  - auto_update	 |unite-outline-filetype-option-auto-update|
-	  - auto_update_event
+	- auto_update	 |unite-outline-filetype-option-auto-update|
+	- auto_update_event
 
 0.3.8	2011-08-25
 
@@ -936,12 +921,12 @@ outline info 募集！
 			|unite-outline-info-heading-pattern-restrictions|
 
 	* ファイルタイプごとのオプション設定をまとめるため、以下の変数を追加
-	  -|g:unite_source_outline_filetype_options|
-	  - g:unite_source_outline_ignore_heading_types は上記の変数に統合
+	-|g:unite_source_outline_filetype_options|
+	- g:unite_source_outline_ignore_heading_types は上記の変数に統合
 
 	* 以下のキーマッピングを deprecated とした
-	  - <Plug>(unite_outline_loop_cursor_down)
-	  - <Plug>(unite_outline_loop_cursor_up)
+	- <Plug>(unite_outline_loop_cursor_down)
+	- <Plug>(unite_outline_loop_cursor_up)
 
 0.3.7	2011-08-14
 
@@ -953,40 +938,40 @@ outline info 募集！
 0.3.6	2011-08-08
 
 	* 見出し一覧のシンタックスハイライトに対応し、以下の変数を追加
-	  -|g:unite_source_outline_highlight|
+	-|g:unite_source_outline_highlight|
 
 	* outline info の仕様に以下の属性を追加
-	  - highlight_rules		|unite-outline-info-highlight_rules|
+	- highlight_rules		|unite-outline-info-highlight_rules|
 
 0.3.5	2011-05-14
 
 	* outline info の仕様に以下の属性を追加
-	  - heading_groups		|unite-outline-info-heading_groups|
-	  - need_blank_between()	|unite-outline-info-need_blank_between|
+	- heading_groups		|unite-outline-info-heading_groups|
+	- need_blank_between()		|unite-outline-info-need_blank_between|
 
 0.3.4	2011-04-26
 
 	* キャッシュの管理ロジックを改善し、以下の変数を削除
-	  - g:unite_source_outline_cache_buffers
+	- g:unite_source_outline_cache_buffers
 
 	* outline info の仕様に以下の属性を追加
-	  - not_match_patterns		|unite-outline-info-not_match_patterns|
+	- not_match_patterns		|unite-outline-info-not_match_patterns|
 
 	* 親子関係に配慮した matcher を実装
 
 0.3.3	2011-03-19
 
 	* outline info の仕様から以下の属性を削除
-	  - skip_header()
+	- skip_header()
 
 	* キャッシュの保存ディレクトリを g:unite_data_directory以下に固定し、
 	  以下の変数を削除
-	  - g:unite_source_outline_cache_dir
+	- g:unite_source_outline_cache_dir
 
 	* キャッシュに関するオプション変数を整理
-	  - g:unite_source_outline_cache_serialize_limit を
-	   |g:unite_source_outline_cache_limit|に変更
-	  - 従来の g:unite_source_outline_cache_limit は削除
+	- g:unite_source_outline_cache_serialize_limit を
+	 |g:unite_source_outline_cache_limit|に変更
+	- 従来の g:unite_source_outline_cache_limit は削除
 
 0.3.2	2011-03-01
 
@@ -998,8 +983,8 @@ outline info 募集！
 	* {context} の仕様を変更
 	  context.lines の先頭にダミーの空行を付加し、リストの添字と行番号が
 	  一致するように修正し、以下の属性名を変更
-	  - heading_index -> heading_lnum
-	  - matched_index -> matched_lnum
+	- heading_index -> heading_lnum
+	- matched_index -> matched_lnum
 
 	* ユーティリティ関数のインターフェースを変更
 	  引数として、{lines} ではなく {context} を、{idx} ではなく {lnum} を
@@ -1008,7 +993,7 @@ outline info 募集！
 0.3.1	2011-01-29
 
 	* 特定の種類の見出しを非表示にする機能を追加し、以下の変数を追加
-	  -|g:unite_source_outline_ignore_heading_types|
+	-|g:unite_source_outline_ignore_heading_types|
 
 0.3.0	2011-01-10
 
@@ -1018,7 +1003,7 @@ outline info 募集！
 0.2.1	2011-01-04
 
 	* キャッシュの一部永続化を実装し、以下の変数を追加
-	  -|g:unite_source_outline_cache_dir|
-	  -|g:unite_source_outline_cache_serialize_limit|
+	-|g:unite_source_outline_cache_dir|
+	-|g:unite_source_outline_cache_serialize_limit|
 
 vim:tw=78:ts=8:ft=help:norl:noet:ai
