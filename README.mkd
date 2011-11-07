@@ -15,7 +15,7 @@ create new ones for unsupported filetypes.
 ## Install
 
 Install the distributed files into your Vim script directory which is usually
-~/.vim/, or $HOME/vimfiles on Windows.
+$HOME/.vim, or $HOME/vimfiles on Windows.
 
 You can show the heading list of the current buffer with ":Unite outline"
 command if you succeeded the installation (and unite-outline supports the

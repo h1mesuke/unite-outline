@@ -1,7 +1,7 @@
 *unite-outline.txt*	outline source for unite.vim
 
 Author  : h1mesuke <himesuke@gmail.com>
-Updated : 2011-11-07
+Updated : 2011-11-08
 Version : 0.5.1
 License : MIT license {{{
 
@@ -59,7 +59,7 @@ INTRODUCTION					*unite-outline-introduction*
 INSTALL						*unite-outline-install*
 
 	Install the distributed files into your Vim script directory which is
-	usually ~/.vim/, or $HOME/vimfiles on Windows.
+	usually $HOME/.vim, or $HOME/vimfiles on Windows.
 
 	You can show the heading list of the current buffer with ":Unite
 	outline" command if you succeeded the installation (and unite-outline
