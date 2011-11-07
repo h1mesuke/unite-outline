@@ -100,7 +100,7 @@ endfunction
 " Encodes a full pathname to a basename.
 "
 " Original source from Shougo's neocomplcache
-" http://github.com/Shougo/neocomplcache
+" https://github.com/Shougo/neocomplcache
 "
 function! s:encode_file_path(path)
   if len(s:FileCache.DIR) + len(a:path) < 150
