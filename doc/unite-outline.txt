@@ -643,54 +643,6 @@ heading_groups		Dictionary (Optional)
 	  \   'macro'    : ['macro'],
 	  \ },
 	  \}
-<				 *unite-outline-info-need_blank_between()*
-need_blank_between	Funcref (Optional)
-
-	need_blank_between( {cand-1}, {cand-2}, {memo})
-
-	If defined, called for each headings with its next sibling during the
-	formatting process of the headings.
-	If returns True, a blank line is inserted between {cand-1} and
-	{cand-2}.
-
-	By defining this callback function, you can implement your original
-	formatter of heading lists. Even if the built-in formatter doesn't
-	works expectedly, you can replace it with your implementation.
-
-	NOTE: {cand-1}, {cand-2} are not Heading objects. They are unite.vim's
-	Candidate objects created from Heading objects. So, their attribute
-	names are different from Headings'. See |unite-notation-{candidate}|.
-	    
-	    	ATTRIBUTE NAME MAPPING TABLE~
-
-		Heading		Unite's Candidate
-		--------	----------------------
-		id		source__heading_id
-		word		abbr
-		level		source__heading_level
-		type		source__heading_type
-		group		source__heading_group
-
-	{memo} is a Dictionary for memoization. The Dictionary passed to
-	{memo} is the same instance during the formatting process. If you need
-	to calculate something about a heading, you can skip the second
-	calculation for the heading by using the last result saved to {memo}.
-
-	NOTE: Memoization is a very effective strategy here because most of
-	headings are passed to this function twice. The first time as {cand-2}
-	and the second time as {cand-1}.
-
-	Example (for Python): >
-	function! s:outline_info.need_blank_between(cand1, cand2, memo)
-	  if a:cand1.source__heading_group == 'function' &&
-	   \ a:cand2.source__heading_group == 'function'
-	    " Don't insert a blank between two sibling functions.
-	    return 0
-	  else
-	    return (a:cand1.source__heading_group != a:cand2.source__heading_group ||
-	          \ a:cand1.source__has_marked_child || a:cand2.source__has_marked_child)
-	  endif
-	endfunction
 <
 NARROWING ~
 
