@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/tex.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-29
+" Updated : 2011-11-16
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -9,7 +9,7 @@
 "=============================================================================
 
 " Default outline info for TeX
-" Version: 0.0.9
+" Version: 0.1.0
 
 function! unite#sources#outline#defaults#tex#outline_info()
   return s:outline_info
@@ -21,7 +21,7 @@ let s:Util = unite#sources#outline#import('Util')
 " Outline Info
 
 let s:outline_info = {
-      \ 'heading': '^\\\%(title\|part\|chapter\|\%(sub\)\{,2}section\|begin{thebibliography}\){',
+      \ 'heading': '^\s*\\\%(title\|part\|chapter\|\%(sub\)\{,2}section\|begin{thebibliography}\){',
       \}
 
 let s:unit_level_map = {
