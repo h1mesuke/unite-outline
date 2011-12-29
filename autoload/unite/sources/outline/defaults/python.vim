@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/python.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-22
+" Updated : 2011-12-29
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -25,7 +25,7 @@ let s:outline_info = {
       \
       \ 'skip': {
       \   'header': s:Util.shared_pattern('sh', 'header'),
-      \   'block' : ['^\s*r\="""', '^\s*"""'],
+      \   'block' : ['r\="""', '\\\@<!"""'],
       \ },
       \
       \ 'heading_groups': {

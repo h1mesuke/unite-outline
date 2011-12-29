@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-31
+" Updated : 2011-12-29
 " Version : 0.5.1
 " License : MIT license {{{
 "
@@ -1067,7 +1067,7 @@ function! s:get_skip_ranges(context)
     let num_lines = line('$')
     call cursor(1, 1)
     while 1
-      let beg_lnum = search(block.begin, 'cW')
+      let beg_lnum = search(block.begin, 'ceW')
       if beg_lnum == 0 || beg_lnum == num_lines
         break
       endif
