@@ -83,7 +83,13 @@ endfunction
 " Defines an alias of filetype {ftype}.
 "
 function! unite#sources#outline#alias(alias, ftype)
-  call s:define_filetype_aliases([a:alias], a:ftype)
+  if type(a:alias) == type([])
+    call s:define_filetype_aliases(a:alias, a:ftype)
+  elseif type(a:alias) == type('')
+    call s:define_filetype_aliases([a:alias], a:ftype)
+  else
+    echoerr 'unspported alias type:' . string(a:alias)
+  endif
 endfunction
 
 let s:ftype_alias_table = {}
