@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/lib/ctags.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-14
+" Updated : 2012-01-11
 " Version : 0.5.1
 " License : MIT license {{{
 "
@@ -452,5 +452,3 @@ let s:Ctags.lang_info.java = {
       \ 'scope_kinds'  : ['interface', 'class', 'enum'],
       \ 'scope_delim'  : '.',
       \ }
-
-" vim: filetype=vim

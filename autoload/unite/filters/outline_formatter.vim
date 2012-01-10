@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_formatter.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-23
+" Updated : 2012-01-11
 " Version : 0.5.1
 " License : MIT license {{{
 "
@@ -99,5 +99,3 @@ function! s:need_blank_between(cand1, cand2, memo) dict
   return (a:cand1.source__heading_group != a:cand2.source__heading_group ||
         \ a:cand1.source__has_marked_child || a:cand2.source__has_marked_child)
 endfunction
-
-" vim: filetype=vim

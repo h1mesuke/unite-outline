@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/javascript.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-29
+" Updated : 2012-01-11
 "
 " Contributed by hamaco
 "
@@ -139,5 +139,3 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     return {}
   endif
 endfunction
-
-" vim: filetype=vim

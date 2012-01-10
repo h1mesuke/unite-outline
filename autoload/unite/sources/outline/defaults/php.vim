@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/php.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-22
+" Updated : 2012-01-11
 "
 " Contributed by hamaco
 "
@@ -117,5 +117,3 @@ function! s:outline_info.need_blank_between(cand1, cand2, memo)
           \ a:cand1.source__has_marked_child || a:cand2.source__has_marked_child)
   endif
 endfunction
-
-" vim: filetype=vim

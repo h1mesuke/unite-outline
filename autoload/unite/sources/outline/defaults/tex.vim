@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/tex.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-11-16
+" Updated : 2012-01-11
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -109,5 +109,3 @@ function! s:unit_seqnr_prefix(unit)
   let prefix .= (!empty(prefix) ? " " : "")
   return prefix
 endfunction
-
-" vim: filetype=vim

@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/modules/util.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-10-14
+" Updated : 2012-01-11
 " Version : 0.5.1
 " License : MIT license {{{
 "
@@ -308,5 +308,3 @@ function! s:Util__cpp_is_in_comment(heading_line, matched_line)
         \ (a:matched_line =~ '^\s*/\*' && a:matched_line !~ '\*/\s*$'))
 endfunction
 call s:Util.function('_cpp_is_in_comment')
-
-" vim: filetype=vim

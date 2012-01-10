@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/ruby/rspec.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-11-01
+" Updated : 2012-01-11
 "
 " Contributed by kenchan
 "
@@ -99,5 +99,3 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   endif
   return heading
 endfunction
-
-" vim: filetype=vim

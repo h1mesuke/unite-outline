@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/dosini.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-22
+" Updated : 2012-01-11
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -30,5 +30,3 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
         \ }
   return heading
 endfunction
-
-" vim: filetype=vim

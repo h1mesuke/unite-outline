@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/pir.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-08-29
+" Updated : 2012-01-11
 "
 " Licensed under the MIT license:
 " http://www.opensource.org/licenses/mit-license.php
@@ -29,5 +29,3 @@ let s:outline_info = {
       \   'block' : ['^=\%(cut\)\@!\w\+', '^=cut'],
       \ },
       \}
-
-" vim: filetype=vim

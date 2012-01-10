@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/filters/outline_matcher_glob.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-09-21
+" Updated : 2012-01-11
 " Version : 0.5.1
 " License : MIT license {{{
 "
@@ -76,5 +76,3 @@ function! s:matcher.filter(candidates, unite_context)
   let candidates = filter(copy(a:candidates), 'v:val.source__is_marked')
   return candidates
 endfunction
-
-" vim: filetype=vim

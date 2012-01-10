@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline/_cache.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2011-11-07
+" Updated : 2012-01-11
 " Version : 0.5.1
 " License : MIT license {{{
 "
@@ -238,5 +238,3 @@ endfunction
 function! s:print_debug(msg)
   call s:Util.print_debug('cache', a:msg)
 endfunction
-
-" vim: filetype=vim

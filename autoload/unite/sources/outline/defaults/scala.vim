@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/sources/outline/defaults/scala.vim
 " Author  : thinca <thinca+vim@gmail.com>
-" Updated : 2011-08-29
+" Updated : 2012-01-11
 "
 " License : Creative Commons Attribution 2.1 Japan License
 "           <http://creativecommons.org/licenses/by/2.1/jp/deed.en>
@@ -60,5 +60,3 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
   endif
   return heading
 endfunction
-
-" vim: filetype=vim

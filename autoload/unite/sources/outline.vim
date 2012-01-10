@@ -1,7 +1,7 @@
 "=============================================================================
 " File    : autoload/unite/source/outline.vim
 " Author  : h1mesuke <himesuke@gmail.com>
-" Updated : 2012-01-07
+" Updated : 2012-01-11
 " Version : 0.5.1
 " License : MIT license {{{
 "
@@ -1580,5 +1580,3 @@ function! s:swap_headings(outline_buffer_ids, new_bufnr)
     let bufnr += 1
   endwhile
 endfunction
-
-" vim: filetype=vim
