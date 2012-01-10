@@ -26,6 +26,9 @@
 " }}}
 "=============================================================================
 
+let s:save_cpo = &cpo
+set cpo&vim
+
 function! unite#filters#outline_formatter#define()
   return s:formatter
 endfunction
@@ -99,3 +102,6 @@ function! s:need_blank_between(cand1, cand2, memo) dict
   return (a:cand1.source__heading_group != a:cand2.source__heading_group ||
         \ a:cand1.source__has_marked_child || a:cand2.source__has_marked_child)
 endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

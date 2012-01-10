@@ -26,6 +26,9 @@
 " }}}
 "=============================================================================
 
+let s:save_cpo = &cpo
+set cpo&vim
+
 function! unite#sources#outline#modules#base#new(name, sid)
   let module = copy(s:Module)
   let module.__name__ = a:name
@@ -49,3 +52,6 @@ function! s:Module_bind(func_name) dict
 endfunction
 let s:Module.__bind__ = function(s:SID . 'Module_bind')
 let s:Module.function = s:Module.__bind__ | " syntax sugar
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

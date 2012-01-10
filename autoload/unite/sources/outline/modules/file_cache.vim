@@ -26,6 +26,9 @@
 " }}}
 "=============================================================================
 
+let s:save_cpo = &cpo
+set cpo&vim
+
 function! unite#sources#outline#modules#file_cache#import(dir)
   let s:FileCache.DIR = a:dir
   return s:FileCache
@@ -238,3 +241,6 @@ endfunction
 function! s:print_debug(msg)
   call s:Util.print_debug('cache', a:msg)
 endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

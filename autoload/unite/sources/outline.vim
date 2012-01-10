@@ -26,6 +26,9 @@
 " }}}
 "=============================================================================
 
+let s:save_cpo = &cpo
+set cpo&vim
+
 "-----------------------------------------------------------------------------
 " Constants
 
@@ -1580,3 +1583,6 @@ function! s:swap_headings(outline_buffer_ids, new_bufnr)
     let bufnr += 1
   endwhile
 endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

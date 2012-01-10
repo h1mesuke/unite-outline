@@ -26,6 +26,9 @@
 " }}}
 "=============================================================================
 
+let s:save_cpo = &cpo
+set cpo&vim
+
 let s:Util = unite#sources#outline#import('Util')
 
 " NOTE: All of the functions in this file are obsolete now. If you need any of
@@ -105,3 +108,6 @@ endfunction
 function! unite#sources#outline#util#_cpp_is_in_comment(...)
   return call(s:Util._cpp_is_in_comment, a:000)
 endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

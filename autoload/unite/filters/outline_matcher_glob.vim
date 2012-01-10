@@ -26,6 +26,9 @@
 " }}}
 "=============================================================================
 
+let s:save_cpo = &cpo
+set cpo&vim
+
 function! unite#filters#outline_matcher_glob#define()
   return s:matcher
 endfunction
@@ -76,3 +79,6 @@ function! s:matcher.filter(candidates, unite_context)
   let candidates = filter(copy(a:candidates), 'v:val.source__is_marked')
   return candidates
 endfunction
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

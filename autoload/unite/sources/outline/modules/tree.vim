@@ -26,6 +26,9 @@
 " }}}
 "=============================================================================
 
+let s:save_cpo = &cpo
+set cpo&vim
+
 function! unite#sources#outline#modules#tree#import()
   return s:Tree
 endfunction
@@ -271,3 +274,6 @@ endfunction
 call s:List.function('remove')
 
 unlet s:List
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

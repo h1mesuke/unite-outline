@@ -26,6 +26,9 @@
 " }}}
 "=============================================================================
 
+let s:save_cpo = &cpo
+set cpo&vim
+
 function! unite#sources#outline#modules#ctags#import()
   return s:Ctags
 endfunction
@@ -452,3 +455,6 @@ let s:Ctags.lang_info.java = {
       \ 'scope_kinds'  : ['interface', 'class', 'enum'],
       \ 'scope_delim'  : '.',
       \ }
+
+let &cpo = s:save_cpo
+unlet s:save_cpo

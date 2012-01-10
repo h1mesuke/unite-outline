@@ -26,6 +26,9 @@
 " }}}
 "=============================================================================
 
+let s:save_cpo = &cpo
+set cpo&vim
+
 function! unite#sources#outline#modules#util#import()
   return s:Util
 endfunction
@@ -308,3 +311,6 @@ function! s:Util__cpp_is_in_comment(heading_line, matched_line)
         \ (a:matched_line =~ '^\s*/\*' && a:matched_line !~ '\*/\s*$'))
 endfunction
 call s:Util.function('_cpp_is_in_comment')
+
+let &cpo = s:save_cpo
+unlet s:save_cpo
