@@ -1005,7 +1005,7 @@ function! s:builtin_extract_headings(context)
           let heading = oinfo.create_heading(
                 \ which[submatch], heading_line, matched_line, a:context)
         else
-          let heading = heading_line
+          let heading = {'word':heading_line}
         endif
         if !empty(heading)
           call add(headings, s:normalize_heading(heading, a:context))
