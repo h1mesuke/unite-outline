@@ -839,9 +839,9 @@ function! s:extract_headings(context)
 
   finally
     " Remove the temporary context data.
-    unlet a:context.lines
-    unlet a:context.heading_lnum
-    unlet a:context.matched_lnum
+    unlet! a:context.lines
+    unlet! a:context.heading_lnum
+    unlet! a:context.matched_lnum
 
     " Restore the cursor and scroll.
     let save_scrolloff = &scrolloff
