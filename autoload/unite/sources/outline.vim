@@ -793,17 +793,15 @@ function! s:extract_headings(context)
   let save_lazyredraw  = &lazyredraw
   try
     set eventignore=all
-
+    exec 'set winheight='.&winminheight
+    exec 'set winwidth='.&winminwidth
     " NOTE: To keep the window size on :wincmd, set 'winheight' and 'winwidth'
     " to a small value.
-    let &winheight=&winminheight
-    let &winwidth=&winminwidth
-
     set lazyredraw
 
     " Switch: current window -> source buffer's window
     let cur_winnr = winnr()
-    execute src_winnr . 'wincmd w'
+    noautocmd execute src_winnr . 'wincmd w'
     " Save the cursor and scroll.
     let save_cursor  = getpos('.')
     let save_topline = line('w0')
@@ -853,7 +851,7 @@ function! s:extract_headings(context)
     call setpos('.', save_cursor)
     let &scrolloff = save_scrolloff
     " Switch: current window <- source buffer's window
-    execute cur_winnr . 'wincmd w'
+    noautocmd execute cur_winnr . 'wincmd w'
 
     " Restore the Vim options.
     let &lazyredraw  = save_lazyredraw
@@ -1135,7 +1133,7 @@ function! s:skip_while(pattern, from)
 endfunction
 
 function! s:skip_until(pattern, from)
-  let lnum = a:from | let num_lines = line('$')
+  let lnum = a:from + 1 | let num_lines = line('$')
   while lnum <= num_lines
     let line = getline(lnum)
     let lnum += 1
