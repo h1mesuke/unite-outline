@@ -21,7 +21,7 @@ let s:Util = unite#sources#outline#import('Util')
 " Outline Info
 
 let s:outline_info = {
-      \ 'heading': '^\s*\\\%(title\|part\|chapter\|\%(sub\)\{,2}section\|begin{thebibliography}\){',
+      \ 'heading': '^\s*\\\%(title\|part\|chapter\|\%(sub\)\{,2}section\|begin{thebibliography}\)\%(\[.*\]\)\={',
       \}
 
 let s:unit_level_map = {
@@ -54,7 +54,7 @@ function! s:outline_info.create_heading(which, heading_line, matched_line, conte
     let heading.word = (empty(bib_label) ? "Bibliography" : bib_label)
   else
     " Parts, Chapters, Sections, etc
-    let unit = matchstr(a:heading_line, '^\s*\\\zs\w\+\ze{')
+    let unit = matchstr(a:heading_line, '^\s*\\\zs\w\+\ze\%(\[.*\]\)\={')
     let s:unit_count[unit] += 1
     let heading.level = s:unit_level_map[unit]
     if 1 < heading.level && heading.level < s:bib_level
@@ -73,7 +73,7 @@ endfunction
 
 function! s:normalize_heading_word(word, unit)
   let word = substitute(a:word, '\\\\\n', '', 'g')
-  let word = matchstr(word, '^\s*\\\w\+{\zs.*\ze}\s*$')
+  let word = matchstr(word, '^\s*\\\w\+\%(\[.*\]\)\={\zs.*\ze}\s*$')
   let word = s:unit_seqnr_prefix(a:unit) . word
   return word
 endfunction
