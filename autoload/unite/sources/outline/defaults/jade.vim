@@ -1,5 +1,5 @@
 "=============================================================================
-" File: autoload/unite/sources/outline/defaults/coffee.vim
+" File: autoload/unite/sources/outline/defaults/jade.vim
 " Author: Jens Himmelreich <jens.himmelreich@gmail.com>
 " Version: 0.1.0
 "
